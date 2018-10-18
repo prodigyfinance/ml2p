@@ -1,0 +1,6 @@
+include .gitignore
+include README.rst
+include setup.py
+include setup.cfg
+
+recursive-include ml2p *.py
