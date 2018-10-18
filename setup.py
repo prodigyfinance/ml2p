@@ -15,9 +15,15 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
+        'click',
     ],
     extras_require={
         'dev': ['flake8', 'pytest==3.6.0', 'pytest-flake8==1.0.1'],
+    },
+    entry_points={
+        'console_scripts': [
+            'ml2p=ml2p.cli:cli',
+        ],
     },
     classifiers=[
         'Development Status :: 4 - Beta',
