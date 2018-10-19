@@ -30,12 +30,12 @@ class ML2PModel:
         """
         return Estimator()
 
-    def train(self, sgctxt):
+    def train(self, smc):
         """ Perform a training run.
 
             This is run inside the SageMaker Docker container.
 
-            :parameter SageMakerTrainContext sgtxt:
+            :parameter SageMakerTrainContext smc:
                 A convenient way to access the SageMaker docker context in
                 which this training run is happening (e.g. access data,
                 parameters, etc).
@@ -43,12 +43,12 @@ class ML2PModel:
         raise NotImplementedError(
             "ML2PModel sub-classes should implement .train(...)")
 
-    def predict(self, sgctxt):
+    def predict(self, smc):
         """ Perform a prediction.
 
             This is run inside the SageMaker Docker container.
 
-            :parameter SageMakerPredictContext sgtxt:
+            :parameter SageMakerPredictContext smc:
                 A convenient way to access the SageMaker docker context in
                 which this prediction is happening (e.g. parameters, etc).
         """
