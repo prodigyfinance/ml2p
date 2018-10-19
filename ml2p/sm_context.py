@@ -27,10 +27,11 @@ class SageMakerTrainContext:
         * Training job name
         * Input Data Configuration
         * Training Data
+        * Distributed Training Configuration
 
         Not yet implemented:
 
-        * Distributed Training Configuration
+        * Pipe data channels.
     """
 
     def job_name(self):
@@ -79,3 +80,19 @@ class SageMakerTrainContext:
                 "Data channel {} has mode {} but {} is required.".format(
                     data_channel, channel_mode, CHANNEL_MODE_FILE))
         return pathlib.Path("/opt/ml/input/data") / data_channel
+
+
+class SageMakerPredictContext:
+    """ Provides access to a SageMaker Docker predict environment,
+        including:
+
+        * Model folder
+    """
+
+    def model_folder(self):
+        """ Return the model folder.
+
+            :return pathlib.Path:
+                The path of the model folder.
+        """
+        return pathlib.Path("/opt/ml/model")
