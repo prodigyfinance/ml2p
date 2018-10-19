@@ -16,6 +16,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'click',
+        'flask',
+        'sagemaker',
     ],
     extras_require={
         'dev': ['flake8', 'pytest==3.6.0', 'pytest-flake8==1.0.1'],
