@@ -33,7 +33,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'ml2p=ml2p.cli:cli',
+            'ml2p=ml2p.cli:ml2p',
         ],
     },
     classifiers=[
