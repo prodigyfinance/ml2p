@@ -12,3 +12,10 @@ class TestML2P:
         runner = CliRunner()
         result = runner.invoke(ml2p, ["--help"])
         assert result.exit_code == 0
+        assert result.output.splitlines()[:5] == [
+            "Usage: ml2p [OPTIONS] COMMAND [ARGS]...",
+            "",
+            "  Minimal Lovable Machine Learning Pipeline.",
+            "",
+            "  A friendlier interface to AWS SageMaker.",
+        ]

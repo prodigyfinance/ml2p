@@ -12,3 +12,8 @@ class TestML2PDocker:
         runner = CliRunner()
         result = runner.invoke(ml2p_docker, ["--help"])
         assert result.exit_code == 0
+        assert result.output.splitlines()[:3] == [
+            "Usage: ml2p-docker [OPTIONS] COMMAND [ARGS]...",
+            "",
+            "  ML2P Sagemaker Docker container helper CLI.",
+        ]
