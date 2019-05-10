@@ -4,13 +4,10 @@
     containers.
 """
 
-import json
 import os
-import pathlib
 
 import click
 from flask_api import FlaskAPI
-
 
 app = FlaskAPI(__name__)
 
@@ -18,9 +15,7 @@ app = FlaskAPI(__name__)
 @app.route("/invocations", methods=["POST"])
 def invocations():
     # TODO: implement generic invocations
-    response = {
-        "model_version": "XXX",
-    }
+    response = {"model_version": "XXX"}
     return response
 
 
