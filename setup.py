@@ -15,12 +15,21 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
+        'boto3',
         'click',
         'flask',
-        'sagemaker',
+        'flask-API',
+        'PyYAML',
     ],
     extras_require={
-        'dev': ['flake8', 'pytest==3.6.0', 'pytest-flake8==1.0.1'],
+        'dev': [
+            'bumpversion',
+            'coverage',
+            'flake8',
+            'pytest',
+            'pytest-cov',
+            'tox',
+        ],
     },
     entry_points={
         'console_scripts': [
