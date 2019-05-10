@@ -85,9 +85,7 @@ def mk_model(prj, model_name, training_job):
         "PrimaryContainer": {
             "Image": prj.deploy.image,
             "ModelDataUrl": model_tgz_path,
-            "Environment": {
-                "ML2P_MODEL_VERSION": prj.full_job_name(model_name),
-            },
+            "Environment": {"ML2P_MODEL_VERSION": prj.full_job_name(model_name)},
         },
         "ExecutionRoleArn": prj.deploy.role,
         "Tags": prj.tags(),
@@ -349,7 +347,8 @@ def endpoint_delete(prj, endpoint_name):
     response = prj.client.delete_endpoint(EndpointName=full_endpoint_name)
     click_echo_json(response)
     response = prj.client.delete_endpoint_config(
-        EndpointConfigName=full_endpoint_config_name)
+        EndpointConfigName=full_endpoint_config_name
+    )
     click_echo_json(response)
 
 
