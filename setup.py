@@ -34,6 +34,7 @@ setup(
     entry_points={
         'console_scripts': [
             'ml2p=ml2p.cli:ml2p',
+            'ml2p-docker=ml2p.docker:ml2p_docker',
         ],
     },
     classifiers=[
