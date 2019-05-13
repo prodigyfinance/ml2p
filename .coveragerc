@@ -1,0 +1,4 @@
+[run]
+include =
+    ml2p/*
+    tests/*
