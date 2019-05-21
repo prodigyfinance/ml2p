@@ -1,0 +1,7 @@
+black
+bumpversion
+isort
+tox
+mock
+pytest
+pytest-cov
