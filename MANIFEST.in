@@ -1,6 +1,16 @@
+include .coveragerc
 include .gitignore
+include AUTHORS.rst
+include Dockerfile
+include HISTORY.rst
+include Jenkinsfile
+include Makefile
 include README.rst
-include setup.py
+include requirements-dev.txt
+include requirements.txt
 include setup.cfg
+include setup.py
+include tox.ini
 
 recursive-include ml2p *.py
+recursive-include test *.py
