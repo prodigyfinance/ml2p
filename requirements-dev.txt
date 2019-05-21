@@ -1,9 +1,7 @@
+black
 bumpversion
-twine
-wheel
-flake8
+isort
 tox
-codeclimate-test-reporter
+mock
 pytest
-pytest-cov==2.5.1
-coverage==4.3
+pytest-cov
