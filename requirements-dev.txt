@@ -1,0 +1,9 @@
+bumpversion
+twine
+wheel
+flake8
+tox
+codeclimate-test-reporter
+pytest
+pytest-cov==2.5.1
+coverage==4.3
