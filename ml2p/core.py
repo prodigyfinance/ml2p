@@ -3,6 +3,8 @@
 """ ML2P core utilities.
 """
 
+import datetime
+import importlib
 import json
 import os
 import pathlib
@@ -36,42 +38,107 @@ class SageMakerEnv:
             f.write(text)
 
 
-class ML2PDockerInterface:
-    """ An interface that allows ml2p-docker to train and deploy models within
-        SageMaker.
+def import_string(name):
+    """ Import a class given its absolute name.
+
+        :param str name:
+            The name of the model, e.g. mypackage.submodule.ModelTrainerClass.
+    """
+    modname, _, classname = name.rpartition(".")
+    mod = importlib.import_module(modname)
+    return getattr(mod, classname)
+
+
+class ModelTrainer:
+    """ An interface that allows ml2p-docker to train models within SageMaker.
     """
 
     def __init__(self, env):
         self.env = env
 
     def train(self):
+        """ Train the model.
+
+            This method should:
+
+            * Read training data (using self.env to determine where to read data from).
+            * Train the model.
+            * Write the model out (using self.env to determine where to write the model
+              to).
+            * Write out any validation or model analysis alongside the model.
+        """
         raise NotImplementedError("Sub-classes should implement .train()")
 
-    def setup_predict(self):
+
+class ModelPredictor:
+    """ An interface that allows ml2p-docker to make predictions from a model within
+        SageMaker.
+    """
+
+    def __init__(self, env):
+        self.env = env
+
+    def setup(self):
         """ Called once before any calls to .predict(...) are made.
 
-            Any setup required before predictions can be made (e.g. loading the model)
-            should happen in this method.
+            This method should:
+
+            * Load the model (using self.env to determine where to read the model from).
+            * Allocate any other resources needed in order to make predictions.
         """
         pass
 
-    def teardown_predict(self):
+    def teardown(self):
         """ Called once after all calls to .predict(...) have ended.
 
-            Any cleanup of resources acquired in .setup_predict() should be performed
-            here.
+            This method should:
+
+            * Cleanup any resources acquired in .setup().
         """
         pass
 
-    def predict(self, data):
+    def invoke(self, data):
+        """ Invokes the model and returns the full result.
+
+            :param dict data:
+                The input data the model is being invoked with.
+            :rtype: dict
+            :returns:
+                The result as a dictionary.
+
+            By default this method results a dictionary containing:
+
+              * metadata: The result of calling .metadata(data).
+              * result: The result of calling .result(data).
+        """
+        return {"metadata": self.metadata(data), "result": self.result(data)}
+
+    def metadata(self, data):
+        """ Return metadata for a prediction that is about to be made.
+
+            :param dict data:
+                The input data the prediction is going to be made from.
+            :rtype: dict
+            :returns:
+                The metadata as a dictionary.
+
+            By default this method returns a dictionary containing:
+
+              * model_version: The ML2P_MODEL_VERSION (str).
+              * timestamp: The UTC POSIX timestamp in seconds (float).
+        """
+        return {
+            "model_version": self.env.model_version,
+            "timestamp": datetime.datetime.utcnow().timestamp(),
+        }
+
+    def result(self, data):
+        """ Make a prediction given the input data.
+
+            :param dict data:
+                The input data to make a prediction from.
+            :rtype: dict
+            :returns:
+                The prediction result as a dictionary.
+        """
         raise NotImplementedError("Sub-classes should implement .predict()")
-        # TODO: Document that this should just return the prediction result
-        #       Final result is a combination of the prediction and model
-        #       metadata.
-        #       Would be good if model metadata was standardised, but maybe
-        #       we don't know enough yet to know what that should be?
-        #       - e.g. threshold
-        #       There is probably also metadata that ML2P should add:
-        #       - e.g. current timestamp
-        #       - e.g. ml2p_model_version
-        #       - e.g. other stuff from SageMaker?
