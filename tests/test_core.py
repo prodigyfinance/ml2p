@@ -8,7 +8,7 @@ import pathlib
 
 import pytest
 
-from ml2p.core import ModelTrainer, ModelPredictor, SageMakerEnv, import_string
+from ml2p.core import ModelPredictor, ModelTrainer, SageMakerEnv, import_string
 
 sagemaker_type = collections.namedtuple("sagemaker_env_type", ["env", "ml_folder"])
 

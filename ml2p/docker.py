@@ -5,14 +5,14 @@
 """
 
 import atexit
-from functools import update_wrapper
 import traceback
+from functools import update_wrapper
 
 import click
 from flask import request
 from flask_api import FlaskAPI
 
-from .core import import_string, SageMakerEnv
+from .core import SageMakerEnv, import_string
 
 app = FlaskAPI(__name__)
 
