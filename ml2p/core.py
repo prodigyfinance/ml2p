@@ -141,4 +141,4 @@ class ModelPredictor:
             :returns:
                 The prediction result as a dictionary.
         """
-        raise NotImplementedError("Sub-classes should implement .predict()")
+        raise NotImplementedError("Sub-classes should implement .result(...)")
