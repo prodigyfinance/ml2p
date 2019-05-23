@@ -83,7 +83,3 @@ def serve(env, model_predictor, debug):
     atexit.register(predictor.teardown)
     app.run(host="0.0.0.0", port=8080, debug=debug)
     click.echo("Done.")
-
-
-if __name__ == "__main__":
-    ml2p_docker()
