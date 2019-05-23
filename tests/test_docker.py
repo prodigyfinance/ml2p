@@ -2,12 +2,14 @@
 
 """ Tests for ml2p.docker. """
 
+import atexit
 import re
 
 from click.testing import CliRunner
 
+import ml2p.docker
 from ml2p.docker import ml2p_docker
-from ml2p.core import ModelTrainer
+from ml2p.core import ModelPredictor, ModelTrainer
 
 
 def assert_cli_result(result, output, exit_code=0, exception=None):
@@ -57,6 +59,27 @@ class HappyModelTrainer(ModelTrainer):
 class UnhappyModelTrainer(ModelTrainer):
     def train(self):
         raise ValueError("Much unhappiness")
+
+
+class HappyModelPredictor(ModelPredictor):
+
+    setup_called = False
+
+    def setup(self):
+        self.setup_called = True
+
+    def result(self, data):
+        return {"probability": 0.5, "input": data["input"]}
+
+
+class DummyApp:
+    """ A dummy flask app. """
+
+    def __init__(self, runs):
+        self._runs = runs
+
+    def run(self, *args, **kw):
+        self._runs.append((args, kw))
 
 
 class TestML2PDocker:
@@ -135,3 +158,25 @@ class TestML2PDockerServe:
                 "  Serve the model and make predictions.",
             ],
         )
+
+    def test_run(self, monkeypatch, sagemaker):
+        teardowns = []
+        runs = []
+        app = DummyApp(runs)
+        monkeypatch.setattr(atexit, "register", teardowns.append)
+        monkeypatch.setattr(ml2p.docker, "app", app)
+        self.check_serve(
+            [],
+            ["Starting server for model version test-model-1.2.3.", "Done."],
+            sagemaker=sagemaker,
+            model=HappyModelPredictor,
+        )
+        assert isinstance(app.predictor, HappyModelPredictor)
+        assert app.predictor.env.model_folder() == sagemaker.env.model_folder()
+        assert app.predictor.setup_called
+        assert teardowns == [app.predictor.teardown]
+        assert runs == [((), {"host": "0.0.0.0", "port": 8080, "debug": False})]
+
+
+class TestAPI:
+    pass
