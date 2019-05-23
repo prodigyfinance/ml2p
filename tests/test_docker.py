@@ -9,8 +9,8 @@ import pytest
 from click.testing import CliRunner
 
 import ml2p.docker
-from ml2p.docker import ml2p_docker
 from ml2p.core import ModelPredictor, ModelTrainer
+from ml2p.docker import ml2p_docker
 
 
 def assert_cli_result(result, output, exit_code=0, exception=None):
