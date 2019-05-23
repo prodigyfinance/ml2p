@@ -25,17 +25,19 @@ def assert_cli_result(result, output, exit_code=0, exception=None):
 
 
 def check_train_or_serve(
-    cmd, extra_args, output, sagemaker=None, model=None, exit_code=0, exception=None
+    cmd, output, args=None, sagemaker=None, model=None, exit_code=0, exception=None
 ):
     """ Invoke the train or serve command of ml2p_docker and check the result. """
     runner = CliRunner()
-    args = [cmd]
+    cmd_args = []
     if sagemaker:
-        args = ["--ml-folder", str(sagemaker.ml_folder)] + args
+        cmd_args += ["--ml-folder", str(sagemaker.ml_folder)]
     if model:
-        args += ["{}.{}".format(model.__module__, model.__qualname__)]
-    args += extra_args
-    result = runner.invoke(ml2p_docker, args)
+        cmd_args += ["--model", "{}.{}".format(model.__module__, model.__qualname__)]
+    cmd_args += [cmd]
+    if args:
+        cmd_args += args
+    result = runner.invoke(ml2p_docker, cmd_args)
     assert_cli_result(result, output, exit_code=exit_code, exception=exception)
     return result
 
@@ -73,6 +75,16 @@ class HappyModelPredictor(ModelPredictor):
         return {"probability": 0.5, "input": data["input"]}
 
 
+class HappyModel:
+    TRAINER = HappyModelTrainer
+    PREDICTOR = HappyModelPredictor
+
+
+class UnhappyModel:
+    TRAINER = UnhappyModelTrainer
+    PREDICTOR = HappyModelPredictor
+
+
 class DummyApp:
     """ A dummy flask app. """
 
@@ -103,33 +115,27 @@ class TestML2PDockerTrain:
 
     def test_help(self):
         self.check_train(
-            ["--help"],
-            [
-                "Usage: ml2p-docker train [OPTIONS] MODEL_TRAINER",
-                "",
-                "  Train the model.",
-            ],
+            ["Usage: ml2p-docker train [OPTIONS]", "", "  Train the model."],
+            args=["--help"],
         )
 
     def test_training_success(self, sagemaker):
         model_folder = sagemaker.ml_folder.join("model").mkdir()
         self.check_train(
-            [],
             ["Training model version test-model-1.2.3.", "Done."],
             sagemaker=sagemaker,
-            model=HappyModelTrainer,
+            model=HappyModel,
         )
         assert model_folder.join("output.txt").read() == "Success!"
 
     def test_training_exception(self, sagemaker):
         output_folder = sagemaker.ml_folder.join("output").mkdir()
         self.check_train(
-            [],
             ["Training model version test-model-1.2.3."],
             exit_code=1,
             exception=ValueError("Much unhappiness"),
             sagemaker=sagemaker,
-            model=UnhappyModelTrainer,
+            model=UnhappyModel,
         )
         assert_traceback(
             output_folder.join("failure").read(),
@@ -152,12 +158,12 @@ class TestML2PDockerServe:
 
     def test_help(self):
         self.check_serve(
-            ["--help"],
             [
-                "Usage: ml2p-docker serve [OPTIONS] MODEL_PREDICTOR",
+                "Usage: ml2p-docker serve [OPTIONS]",
                 "",
                 "  Serve the model and make predictions.",
             ],
+            args=["--help"],
         )
 
     def test_run(self, monkeypatch, sagemaker):
@@ -167,10 +173,9 @@ class TestML2PDockerServe:
         monkeypatch.setattr(atexit, "register", teardowns.append)
         monkeypatch.setattr(ml2p.docker, "app", app)
         self.check_serve(
-            [],
             ["Starting server for model version test-model-1.2.3.", "Done."],
             sagemaker=sagemaker,
-            model=HappyModelPredictor,
+            model=HappyModel,
         )
         assert isinstance(app.predictor, HappyModelPredictor)
         assert app.predictor.env.model_folder() == sagemaker.env.model_folder()

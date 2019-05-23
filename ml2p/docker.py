@@ -5,6 +5,7 @@
 """
 
 import atexit
+import collections
 import traceback
 from functools import update_wrapper
 
@@ -38,29 +39,49 @@ def pass_sagemaker_env(f):
     return update_wrapper(new_func, f)
 
 
+ML2POptions = collections.namedtuple("ML2POptions", ["model"])
+
+
+def pass_ml2p_docker_options(f):
+    """ Pass the group options into a click command. """
+
+    @click.pass_context
+    def new_func(ctx, *args, **kwargs):
+        return ctx.invoke(f, ctx.obj["opt"], *args, **kwargs)
+
+    return update_wrapper(new_func, f)
+
+
 @click.group()
 @click.option(
     "--ml-folder",
     default="/opt/ml/",
     help="The base folder for the datasets and models.",
 )
+@click.option(
+    "--model",
+    default=None,
+    help="The fully qualified name of the ML2P model interface to use.",
+)
 @click.pass_context
-def ml2p_docker(ctx, ml_folder):
+def ml2p_docker(ctx, ml_folder, model):
     """ ML2P Sagemaker Docker container helper CLI. """
     ctx.ensure_object(dict)
     ctx.obj["env"] = SageMakerEnv(ml_folder)
+    if model is not None:
+        model = import_string(model)
+    ctx.obj["opt"] = ML2POptions(model=model)
 
 
 @ml2p_docker.command("train")
-@click.argument("model_trainer")
 @pass_sagemaker_env
-def train(env, model_trainer):
+@pass_ml2p_docker_options
+def train(opt, env):
     """ Train the model.
     """
     click.echo("Training model version {}.".format(env.model_version))
     try:
-        trainer_cls = import_string(model_trainer)
-        trainer = trainer_cls(env)
+        trainer = opt.model.TRAINER(env)
         trainer.train()
     except Exception:
         env.write_failure(traceback.format_exc())
@@ -69,15 +90,14 @@ def train(env, model_trainer):
 
 
 @ml2p_docker.command("serve")
-@click.argument("model_predictor")
 @click.option("--debug/--no-debug", default=False)
 @pass_sagemaker_env
-def serve(env, model_predictor, debug):
+@pass_ml2p_docker_options
+def serve(opt, env, debug):
     """ Serve the model and make predictions.
     """
     click.echo("Starting server for model version {}.".format(env.model_version))
-    predictor_cls = import_string(model_predictor)
-    predictor = predictor_cls(env)
+    predictor = opt.model.PREDICTOR(env)
     predictor.setup()
     app.predictor = predictor
     atexit.register(predictor.teardown)
