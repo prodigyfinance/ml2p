@@ -2,22 +2,12 @@
 
 """ Tests for ml2p.core. """
 
-import collections
 import datetime
 import pathlib
 
 import pytest
 
 from ml2p.core import ModelPredictor, ModelTrainer, SageMakerEnv, import_string
-
-sagemaker_type = collections.namedtuple("sagemaker_env_type", ["env", "ml_folder"])
-
-
-@pytest.fixture
-def sagemaker(tmpdir, monkeypatch):
-    monkeypatch.setenv("ML2P_MODEL_VERSION", "test-model-1.2.3")
-    env = SageMakerEnv(str(tmpdir))
-    return sagemaker_type(env=env, ml_folder=tmpdir)
 
 
 @pytest.fixture

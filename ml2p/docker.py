@@ -73,7 +73,7 @@ def train(env, model_trainer):
 @click.option("--debug/--no-debug", default=False)
 @pass_sagemaker_env
 def serve(env, model_predictor, debug):
-    """ Serve the model.
+    """ Serve the model and make predictions.
     """
     click.echo("Starting server for model version {}.".format(env.model_version))
     predictor_cls = import_string(model_predictor)
