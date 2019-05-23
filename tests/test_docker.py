@@ -10,13 +10,35 @@ from ml2p.docker import ml2p_docker
 from ml2p.core import ModelTrainer
 
 
-def assert_cli_result(result, output, exit_code=0):
+def assert_cli_result(result, output, exit_code=0, exception=None):
     """ Assert that a CliRunner invocation returned the expected results. """
     assert result.exit_code == exit_code
     assert result.output.splitlines()[: len(output)] == output
+    if exception is not None:
+        assert type(result.exception) is type(exception)
+        assert str(result.exception) == str(exception)
+    else:
+        assert result.exception is None
+
+
+def check_train_or_serve(
+    cmd, extra_args, output, sagemaker=None, model=None, exit_code=0, exception=None
+):
+    """ Invoke the train or serve command of ml2p_docker and check the result. """
+    runner = CliRunner()
+    args = [cmd]
+    if sagemaker:
+        args = ["--ml-folder", str(sagemaker.ml_folder)] + args
+    if model:
+        args += ["{}.{}".format(model.__module__, model.__qualname__)]
+    args += extra_args
+    result = runner.invoke(ml2p_docker, args)
+    assert_cli_result(result, output, exit_code=exit_code, exception=exception)
+    return result
 
 
 def assert_traceback(tb, expected):
+    """ Assert that a traceback matches a given pattern. """
     pattern = re.escape(expected)
     pattern = pattern.replace(r"\.\.\.", '[^"]*')
     pattern = pattern.replace(r"XX", "[0-9]+")
@@ -52,17 +74,8 @@ class TestML2PDocker:
 
 
 class TestML2PDockerTrain:
-    def check_train(self, extra_args, output, sagemaker=None, model=None, exit_code=0):
-        runner = CliRunner()
-        args = ["train"]
-        if sagemaker:
-            args = ["--ml-folder", str(sagemaker.ml_folder)] + args
-        if model:
-            args += ["{}.{}".format(model.__module__, model.__qualname__)]
-        args += extra_args
-        result = runner.invoke(ml2p_docker, args)
-        assert_cli_result(result, output, exit_code=exit_code)
-        return result
+    def check_train(self, *args, **kw):
+        return check_train_or_serve("train", *args, **kw)
 
     def test_help(self):
         self.check_train(
@@ -90,6 +103,7 @@ class TestML2PDockerTrain:
             [],
             ["Training model version test-model-1.2.3."],
             exit_code=1,
+            exception=ValueError("Much unhappiness"),
             sagemaker=sagemaker,
             model=UnhappyModelTrainer,
         )
@@ -109,11 +123,12 @@ class TestML2PDockerTrain:
 
 
 class TestML2PDockerServe:
+    def check_serve(self, *args, **kw):
+        return check_train_or_serve("serve", *args, **kw)
+
     def test_help(self):
-        runner = CliRunner()
-        result = runner.invoke(ml2p_docker, ["serve", "--help"])
-        assert_cli_result(
-            result,
+        self.check_serve(
+            ["--help"],
             [
                 "Usage: ml2p-docker serve [OPTIONS] MODEL_PREDICTOR",
                 "",
