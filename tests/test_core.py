@@ -6,7 +6,7 @@ import pathlib
 
 import pytest
 
-from ml2p.core import ModelPredictor, ModelTrainer, SageMakerEnv, import_string
+from ml2p.core import Model, ModelPredictor, ModelTrainer, SageMakerEnv, import_string
 
 
 class TestSageMakerEnv:
@@ -110,3 +110,33 @@ class TestModelPredictor:
         with pytest.raises(NotImplementedError) as exc_info:
             predictor.result({})
         assert str(exc_info.value) == "Sub-classes should implement .result(...)"
+
+
+class TestModel:
+    def test_trainer_not_set(self, sagemaker):
+        with pytest.raises(ValueError) as exc_info:
+            Model().trainer(sagemaker.env)
+        assert str(exc_info.value) == ".TRAINER should be an instance of ModelTrainer"
+
+    def test_trainer_set(self, sagemaker):
+        class MyModel(Model):
+            TRAINER = ModelTrainer
+
+        trainer = MyModel().trainer(sagemaker.env)
+        assert trainer.__class__ is ModelTrainer
+        assert trainer.env is sagemaker.env
+
+    def test_predictor_not_set(self, sagemaker):
+        with pytest.raises(ValueError) as exc_info:
+            Model().predictor(sagemaker.env)
+        assert (
+            str(exc_info.value) == ".PREDICTOR should be an instance of ModelPredictor"
+        )
+
+    def test_predictor_set(self, sagemaker):
+        class MyModel(Model):
+            PREDICTOR = ModelPredictor
+
+        predictor = MyModel().predictor(sagemaker.env)
+        assert predictor.__class__ is ModelPredictor
+        assert predictor.env is sagemaker.env

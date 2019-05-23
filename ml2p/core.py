@@ -157,7 +157,11 @@ class Model:
     PREDICTOR = None
 
     def trainer(self, env):
+        if self.TRAINER is None:
+            raise ValueError(".TRAINER should be an instance of ModelTrainer")
         return self.TRAINER(env)
 
     def predictor(self, env):
+        if self.PREDICTOR is None:
+            raise ValueError(".PREDICTOR should be an instance of ModelPredictor")
         return self.PREDICTOR(env)
