@@ -142,3 +142,22 @@ class ModelPredictor:
                 The prediction result as a dictionary.
         """
         raise NotImplementedError("Sub-classes should implement .result(...)")
+
+
+class Model:
+    """ A holder for a trainer and predictor.
+
+        Sub-classes should:
+
+        * Set the attribute TRAINER to a ModelTrainer sub-class.
+        * Set the attribute PREDICTOR to a ModelPredictor sub-class.
+    """
+
+    TRAINER = None
+    PREDICTOR = None
+
+    def trainer(self, env):
+        return self.TRAINER(env)
+
+    def predictor(self, env):
+        return self.PREDICTOR(env)

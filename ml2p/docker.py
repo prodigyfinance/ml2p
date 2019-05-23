@@ -79,9 +79,13 @@ def ml2p_docker(ctx, ml_folder, model):
 def train(opt, env):
     """ Train the model.
     """
+    if opt.model is None:
+        raise click.UsageError(
+            "The global parameter --model must be given when calling the train command."
+        )
     click.echo("Training model version {}.".format(env.model_version))
     try:
-        trainer = opt.model.TRAINER(env)
+        trainer = opt.model().trainer(env)
         trainer.train()
     except Exception:
         env.write_failure(traceback.format_exc())
@@ -96,8 +100,12 @@ def train(opt, env):
 def serve(opt, env, debug):
     """ Serve the model and make predictions.
     """
+    if opt.model is None:
+        raise click.UsageError(
+            "The global parameter --model must be given when calling the serve command."
+        )
     click.echo("Starting server for model version {}.".format(env.model_version))
-    predictor = opt.model.PREDICTOR(env)
+    predictor = opt.model().predictor(env)
     predictor.setup()
     app.predictor = predictor
     atexit.register(predictor.teardown)

@@ -9,7 +9,7 @@ import pytest
 from click.testing import CliRunner
 
 import ml2p.docker
-from ml2p.core import ModelPredictor, ModelTrainer
+from ml2p.core import Model, ModelPredictor, ModelTrainer
 from ml2p.docker import ml2p_docker
 
 
@@ -75,12 +75,12 @@ class HappyModelPredictor(ModelPredictor):
         return {"probability": 0.5, "input": data["input"]}
 
 
-class HappyModel:
+class HappyModel(Model):
     TRAINER = HappyModelTrainer
     PREDICTOR = HappyModelPredictor
 
 
-class UnhappyModel:
+class UnhappyModel(Model):
     TRAINER = UnhappyModelTrainer
     PREDICTOR = HappyModelPredictor
 
