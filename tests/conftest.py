@@ -2,4 +2,7 @@
 
 """ Configuration for pytest. """
 
-from .fixtures import sagemaker  # noqa: imported so that pytest can find the fixtures
+from .fixtures import (  # noqa: imported so that pytest can find the fixtures
+    fake_utcnow,
+    sagemaker,
+)

@@ -5,6 +5,7 @@
 import atexit
 import re
 
+import pytest
 from click.testing import CliRunner
 
 import ml2p.docker
@@ -178,5 +179,36 @@ class TestML2PDockerServe:
         assert runs == [((), {"host": "0.0.0.0", "port": 8080, "debug": False})]
 
 
+@pytest.fixture
+def api_client(sagemaker):
+    app = ml2p.docker.app
+    app.config["TESTING"] = True
+    app.predictor = HappyModelPredictor(sagemaker.env)
+    app.predictor.setup()
+    client = app.test_client()
+
+    yield client
+
+    app.predictor.teardown()
+    del app.predictor
+    del app.config["TESTING"]
+
+
 class TestAPI:
-    pass
+    def test_ping(self, api_client):
+        response = api_client.get("/ping")
+        assert response.status_code == 200
+        assert response.content_type == "application/json"
+        assert response.get_json() == {"model_version": "test-model-1.2.3"}
+
+    def test_invocations(self, api_client, fake_utcnow):
+        response = api_client.post("/invocations", json={"input": 12345})
+        assert response.status_code == 200
+        assert response.content_type == "application/json"
+        assert response.get_json() == {
+            "metadata": {
+                "model_version": "test-model-1.2.3",
+                "timestamp": fake_utcnow.timestamp(),
+            },
+            "result": {"probability": 0.5, "input": 12345},
+        }

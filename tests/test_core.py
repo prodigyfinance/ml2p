@@ -2,25 +2,11 @@
 
 """ Tests for ml2p.core. """
 
-import datetime
 import pathlib
 
 import pytest
 
 from ml2p.core import ModelPredictor, ModelTrainer, SageMakerEnv, import_string
-
-
-@pytest.fixture
-def fake_utcnow(monkeypatch):
-    utcnow = datetime.datetime(2019, 1, 31, 12, 0, 2, tzinfo=datetime.timezone.utc)
-
-    class fake_datetime(datetime.datetime):
-        @classmethod
-        def utcnow(cls):
-            return utcnow
-
-    monkeypatch.setattr(datetime, "datetime", fake_datetime)
-    return utcnow
 
 
 class TestSageMakerEnv:
