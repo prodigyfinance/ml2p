@@ -394,7 +394,3 @@ def endpoint_invoke(prj, endpoint_name, json_data):
     )
     response["Body"] = json.loads(response["Body"].read().decode("utf-8"))
     click_echo_json(response)
-
-
-if __name__ == "__main__":
-    ml2p()
