@@ -423,3 +423,38 @@ def endpoint_invoke(prj, endpoint_name, json_data):
     )
     response["Body"] = json.loads(response["Body"].read().decode("utf-8"))
     click_echo_json(response)
+
+
+@ml2p.group("notebook")
+def notebook():
+    """ Create notebooks. """
+
+
+@notebook.command("lifecycle-config")
+@click.agument("notebook-name")
+@pass_prj
+def lifecycle_config(prj, notebook_name):
+    """ Create a notebook instance lifecycle configuration.
+    """
+    client = boto3.client("sagemaker-runtime")
+    notebook_instance_lifecycle_config = mk_notebook_instance_lifecycle_config(
+        prj, notebook_name
+    )
+    response = client.create_notebook_instance_lifecycle_config(
+        notebook_instance_lifecycle_config
+    )
+    response["Body"] = json.loads(response["Body"].read().decode("utf-8"))
+    click_echo_json(response)
+
+
+@notebook.command("create")
+@click.agument("notebook-name")
+@pass_prj
+def lifecycle_config(prj, notebook_name):
+    """ Create a notebook instance.
+    """
+    client = boto3.client("sagemaker-runtime")
+    notebook_config = mk_notebook(prj, notebook_name)
+    response = client.create_notebook_instance(notebook_config)
+    response["Body"] = json.loads(response["Body"].read().decode("utf-8"))
+    click_echo_json(response)

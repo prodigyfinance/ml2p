@@ -11,6 +11,7 @@ from functools import update_wrapper
 
 import click
 from flask import request
+
 from flask_api import FlaskAPI
 
 from .core import SageMakerEnv, import_string
