@@ -112,6 +112,31 @@ def mk_endpoint_config(prj, endpoint_name, model_name):
     }
 
 
+def mk_notebook(prj, notebook_name):
+    """ Return a notebook configuration. """
+    return {
+        "NotebookInstanceName": prj.full_job_name(notebook_name),
+        "InstanceType": prj.notebook.instance_type,
+        "SubnetId": prj.notebook.subnet_id,
+        "SecurityGroupIds": prj.notebook.security_group_ids,
+        "RoleArn": prj.notebook.role,
+        "KmsKeyId": prj.notebook.kms_key_id,
+        "Tags": prj.tags(),
+        "LifecycleConfigName": prj.full_job_name(notebook_name) + "-lifecycle-config",
+        "VolumeSizeInGB": prj.notebook.volume_size,
+    }
+
+
+def mk_notebook_instance_lifecycle_config(prj, notebook_name):
+    """ Return a notebook instance lifecycle configuration. """
+    return {
+        "NotebookInstanceLifecycleConfigName": prj.full_job_name(notebook_name)
+        + "-lifecycle-config",
+        "OnCreate": [{"Content": prj.notebook_instance_lifecycle.on_create}],
+        "OnStart": [{"Content": prj.notebook_instance_lifecycle.on_start}],
+    }
+
+
 class ModellingProject:
     """ Object for holding CLI context. """
 
@@ -122,6 +147,10 @@ class ModellingProject:
         self.client = boto3.client("sagemaker")
         self.train = ModellingSubCfg(self.cfg, "train")
         self.deploy = ModellingSubCfg(self.cfg, "deploy")
+        self.notebook = ModellingSubCfg(self.cfg, "notebook")
+        self.notebook_instance_lifecycle = ModellingSubCfg(
+            self.cfg, "notebook_instance_lifecycle"
+        )
 
     def full_job_name(self, job_name):
         return "{}-{}".format(self.cfg["project"], job_name)
