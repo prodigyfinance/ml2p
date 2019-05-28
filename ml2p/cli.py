@@ -434,9 +434,9 @@ def notebook():
 def lifecycle_config(prj, notebook_name, on_start_path):
     """ Create a notebook instance lifecycle configuration.
     """
-    with open(on_start_path, 'r') as f:
+    with open(on_start_path, "r") as f:
         on_start = f.read()
-    on_start = base64.b64encode(on_start.encode('utf-8')).decode('utf-8')
+    on_start = base64.b64encode(on_start.encode("utf-8")).decode("utf-8")
     notebook_instance_lifecycle_config = mk_notebook_instance_lifecycle_config(
         prj, notebook_name, on_start
     )
