@@ -450,7 +450,7 @@ def lifecycle_config(prj, notebook_name):
 @notebook.command("create")
 @click.agument("notebook-name")
 @pass_prj
-def lifecycle_config(prj, notebook_name):
+def notebook_create(prj, notebook_name):
     """ Create a notebook instance.
     """
     client = boto3.client("sagemaker-runtime")
