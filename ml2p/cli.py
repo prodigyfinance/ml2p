@@ -451,7 +451,6 @@ def lifecycle_config(prj, notebook_name, on_start_path):
 def notebook_create(prj, notebook_name):
     """ Create a notebook instance.
     """
-    # client = boto3.client("sagemaker-runtime")
     notebook_config = mk_notebook(prj, notebook_name)
     prj.client.create_notebook_instance(**notebook_config)
 
