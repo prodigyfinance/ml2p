@@ -2,6 +2,7 @@
 
 """ CLI for Minimal Lovable Machine Learning Pipeline. """
 
+import base64
 import datetime
 import json
 import re
@@ -117,23 +118,19 @@ def mk_notebook(prj, notebook_name):
     return {
         "NotebookInstanceName": prj.full_job_name(notebook_name),
         "InstanceType": prj.notebook.instance_type,
-        "SubnetId": prj.notebook.subnet_id,
-        "SecurityGroupIds": prj.notebook.security_group_ids,
         "RoleArn": prj.notebook.role,
-        "KmsKeyId": prj.notebook.kms_key_id,
         "Tags": prj.tags(),
         "LifecycleConfigName": prj.full_job_name(notebook_name) + "-lifecycle-config",
         "VolumeSizeInGB": prj.notebook.volume_size,
     }
 
 
-def mk_notebook_instance_lifecycle_config(prj, notebook_name):
+def mk_notebook_instance_lifecycle_config(prj, notebook_name, on_start):
     """ Return a notebook instance lifecycle configuration. """
     return {
         "NotebookInstanceLifecycleConfigName": prj.full_job_name(notebook_name)
         + "-lifecycle-config",
-        "OnCreate": [{"Content": prj.notebook_instance_lifecycle.on_create}],
-        "OnStart": [{"Content": prj.notebook_instance_lifecycle.on_start}],
+        "OnStart": [{"Content": on_start}],
     }
 
 
@@ -432,19 +429,20 @@ def notebook():
 
 @notebook.command("lifecycle-config")
 @click.argument("notebook-name")
+@click.argument("on-start-path")
 @pass_prj
-def lifecycle_config(prj, notebook_name):
+def lifecycle_config(prj, notebook_name, on_start_path):
     """ Create a notebook instance lifecycle configuration.
     """
-    client = boto3.client("sagemaker-runtime")
+    with open(on_start_path, 'r') as f:
+        on_start = f.read()
+    on_start = base64.b64encode(on_start.encode('utf-8')).decode('utf-8')
     notebook_instance_lifecycle_config = mk_notebook_instance_lifecycle_config(
-        prj, notebook_name
+        prj, notebook_name, on_start
     )
-    response = client.create_notebook_instance_lifecycle_config(
-        notebook_instance_lifecycle_config
+    response = prj.client.create_notebook_instance_lifecycle_config(
+        **notebook_instance_lifecycle_config
     )
-    response["Body"] = json.loads(response["Body"].read().decode("utf-8"))
-    click_echo_json(response)
 
 
 @notebook.command("create")
@@ -453,8 +451,8 @@ def lifecycle_config(prj, notebook_name):
 def notebook_create(prj, notebook_name):
     """ Create a notebook instance.
     """
-    client = boto3.client("sagemaker-runtime")
+    # client = boto3.client("sagemaker-runtime")
     notebook_config = mk_notebook(prj, notebook_name)
-    response = client.create_notebook_instance(notebook_config)
+    response = prj.client.create_notebook_instance(**notebook_config)
     response["Body"] = json.loads(response["Body"].read().decode("utf-8"))
     click_echo_json(response)
