@@ -454,5 +454,15 @@ def notebook_create(prj, notebook_name):
     # client = boto3.client("sagemaker-runtime")
     notebook_config = mk_notebook(prj, notebook_name)
     response = prj.client.create_notebook_instance(**notebook_config)
-    response["Body"] = json.loads(response["Body"].read().decode("utf-8"))
+
+
+@notebook.command("presigned-url")
+@click.argument("notebook-name")
+@pass_prj
+def presigned_url(prj, notebook_name):
+    """ Create a URL to connect to the Jupyter server from a notebook instance.
+    """
+    response = prj.client.create_presigned_notebook_instance_url(
+        NotebookInstanceName=prj.full_job_name(notebook_name)
+    )
     click_echo_json(response)
