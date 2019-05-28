@@ -440,7 +440,7 @@ def lifecycle_config(prj, notebook_name, on_start_path):
     notebook_instance_lifecycle_config = mk_notebook_instance_lifecycle_config(
         prj, notebook_name, on_start
     )
-    response = prj.client.create_notebook_instance_lifecycle_config(
+    prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
 
@@ -453,7 +453,7 @@ def notebook_create(prj, notebook_name):
     """
     # client = boto3.client("sagemaker-runtime")
     notebook_config = mk_notebook(prj, notebook_name)
-    response = prj.client.create_notebook_instance(**notebook_config)
+    prj.client.create_notebook_instance(**notebook_config)
 
 
 @notebook.command("presigned-url")
