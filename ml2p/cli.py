@@ -431,7 +431,7 @@ def notebook():
 
 
 @notebook.command("lifecycle-config")
-@click.agument("notebook-name")
+@click.argument("notebook-name")
 @pass_prj
 def lifecycle_config(prj, notebook_name):
     """ Create a notebook instance lifecycle configuration.
@@ -448,7 +448,7 @@ def lifecycle_config(prj, notebook_name):
 
 
 @notebook.command("create")
-@click.agument("notebook-name")
+@click.argument("notebook-name")
 @pass_prj
 def notebook_create(prj, notebook_name):
     """ Create a notebook instance.
