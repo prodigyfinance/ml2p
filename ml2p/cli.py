@@ -427,12 +427,12 @@ def notebook():
     """ Create notebooks. """
 
 
-@notebook.command("lifecycle-config")
+@notebook.command("create")
 @click.argument("notebook-name")
 @click.argument("on-start-path")
 @pass_prj
-def lifecycle_config(prj, notebook_name, on_start_path):
-    """ Create a notebook instance lifecycle configuration.
+def notebook_create(prj, notebook_name, on_start_path):
+    """ Create a notebook instance.
     """
     with open(on_start_path, "r") as f:
         on_start = f.read()
@@ -443,14 +443,6 @@ def lifecycle_config(prj, notebook_name, on_start_path):
     prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
-
-
-@notebook.command("create")
-@click.argument("notebook-name")
-@pass_prj
-def notebook_create(prj, notebook_name):
-    """ Create a notebook instance.
-    """
     notebook_config = mk_notebook(prj, notebook_name)
     prj.client.create_notebook_instance(**notebook_config)
 
