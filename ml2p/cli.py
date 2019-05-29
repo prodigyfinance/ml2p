@@ -2,6 +2,7 @@
 
 """ CLI for Minimal Lovable Machine Learning Pipeline. """
 
+import base64
 import datetime
 import json
 import re
@@ -112,6 +113,28 @@ def mk_endpoint_config(prj, endpoint_name, model_name):
     }
 
 
+def mk_notebook(prj, notebook_name):
+    """ Return a notebook configuration. """
+    return {
+        "NotebookInstanceName": prj.full_job_name(notebook_name),
+        "InstanceType": prj.notebook.instance_type,
+        "RoleArn": prj.notebook.role,
+        "Tags": prj.tags(),
+        "LifecycleConfigName": prj.full_job_name(notebook_name) + "-lifecycle-config",
+        "VolumeSizeInGB": prj.notebook.volume_size,
+    }
+
+
+def mk_notebook_instance_lifecycle_config(prj, notebook_name, on_start):
+    """ Return a notebook instance lifecycle configuration. """
+    on_start = base64.b64encode(on_start.encode("utf-8")).decode("utf-8")
+    return {
+        "NotebookInstanceLifecycleConfigName": prj.full_job_name(notebook_name)
+        + "-lifecycle-config",
+        "OnStart": [{"Content": on_start}],
+    }
+
+
 class ModellingProject:
     """ Object for holding CLI context. """
 
@@ -122,6 +145,7 @@ class ModellingProject:
         self.client = boto3.client("sagemaker")
         self.train = ModellingSubCfg(self.cfg, "train")
         self.deploy = ModellingSubCfg(self.cfg, "deploy")
+        self.notebook = ModellingSubCfg(self.cfg, "notebook")
 
     def full_job_name(self, job_name):
         return "{}-{}".format(self.cfg["project"], job_name)
@@ -393,4 +417,40 @@ def endpoint_invoke(prj, endpoint_name, json_data):
         Accept="application/json",
     )
     response["Body"] = json.loads(response["Body"].read().decode("utf-8"))
+    click_echo_json(response)
+
+
+@ml2p.group("notebook")
+def notebook():
+    """ Create notebooks. """
+
+
+@notebook.command("create")
+@click.argument("notebook-name")
+@click.argument("on-start-path")
+@pass_prj
+def notebook_create(prj, notebook_name, on_start_path):
+    """ Create a notebook instance.
+    """
+    with open(on_start_path, "r") as f:
+        on_start = f.read()
+    notebook_instance_lifecycle_config = mk_notebook_instance_lifecycle_config(
+        prj, notebook_name, on_start
+    )
+    prj.client.create_notebook_instance_lifecycle_config(
+        **notebook_instance_lifecycle_config
+    )
+    notebook_config = mk_notebook(prj, notebook_name)
+    prj.client.create_notebook_instance(**notebook_config)
+
+
+@notebook.command("presigned-url")
+@click.argument("notebook-name")
+@pass_prj
+def presigned_url(prj, notebook_name):
+    """ Create a URL to connect to the Jupyter server from a notebook instance.
+    """
+    response = prj.client.create_presigned_notebook_instance_url(
+        NotebookInstanceName=prj.full_job_name(notebook_name)
+    )
     click_echo_json(response)
