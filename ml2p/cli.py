@@ -454,3 +454,34 @@ def presigned_url(prj, notebook_name):
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
     click_echo_json(response)
+
+
+@notebook.command("describe")
+@click.argument("notebook-name")
+@pass_prj
+def notebook_describe(prj, notebook_name):
+    """ Describe a notebook instance.
+    """
+    response = prj.client.describe_notebook_instance(
+        NotebookInstanceName=prj.full_job_name(notebook_name)
+    )
+    click_echo_json(response)
+
+
+@notebook.command("delete")
+@click.argument("notebook-name")
+@pass_prj
+def notebook_delete(prj, notebook_name):
+    """ Delete a notebook instance.
+    """
+    prj.client.stop_notebook_instance(
+        NotebookInstanceName=prj.full_job_name(notebook_name)
+    )
+    prj.client.delete_notebook_instance_lifecycle_config(
+        NotebookInstanceLifecycleConfigName=prj.full_job_name(notebook_name)
+        + "-lifecycle-config"
+    )
+    response = prj.client.delete_notebook_instance(
+        NotebookInstanceName=prj.full_job_name(notebook_name)
+    )
+    click_echo_json(response)
