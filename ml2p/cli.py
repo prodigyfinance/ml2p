@@ -127,6 +127,7 @@ def mk_notebook(prj, notebook_name):
 
 def mk_notebook_instance_lifecycle_config(prj, notebook_name, on_start):
     """ Return a notebook instance lifecycle configuration. """
+    on_start = base64.b64encode(on_start.encode("utf-8")).decode("utf-8")
     return {
         "NotebookInstanceLifecycleConfigName": prj.full_job_name(notebook_name)
         + "-lifecycle-config",
@@ -436,7 +437,6 @@ def notebook_create(prj, notebook_name, on_start_path):
     """
     with open(on_start_path, "r") as f:
         on_start = f.read()
-    on_start = base64.b64encode(on_start.encode("utf-8")).decode("utf-8")
     notebook_instance_lifecycle_config = mk_notebook_instance_lifecycle_config(
         prj, notebook_name, on_start
     )
