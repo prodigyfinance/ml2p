@@ -474,14 +474,45 @@ def notebook_describe(prj, notebook_name):
 def notebook_delete(prj, notebook_name):
     """ Delete a notebook instance.
     """
-    prj.client.stop_notebook_instance(
+    describe_response = prj.client.describe_notebook_instance(
+        NotebookInstanceName=prj.full_job_name(notebook_name)
+    )
+    if describe_response["NotebookInstanceStatus"] == "InService":
+        prj.client.stop_notebook_instance(
+            NotebookInstanceName=prj.full_job_name(notebook_name)
+        )
+        waiter = prj.client.get_waiter("notebook_instance_stopped")
+        waiter.wait(
+            NotebookInstanceName=prj.full_job_name(notebook_name),
+            WaiterConfig={"Delay": 30, "MaxAttempts": 30},
+        )
+    response = prj.client.delete_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
     prj.client.delete_notebook_instance_lifecycle_config(
         NotebookInstanceLifecycleConfigName=prj.full_job_name(notebook_name)
         + "-lifecycle-config"
     )
-    response = prj.client.delete_notebook_instance(
+    click_echo_json(response)
+
+
+@notebook.command("stop")
+@click.argument("notebook-name")
+@pass_prj
+def notebook_stop(prj, notebook_name):
+    """ Stop a notebook instance.
+    """
+    prj.client.stop_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
-    click_echo_json(response)
+
+
+@notebook.command("start")
+@click.argument("notebook-name")
+@pass_prj
+def notebook_start(prj, notebook_name):
+    """ Start a notebook instance.
+    """
+    prj.client.start_notebook_instance(
+        NotebookInstanceName=prj.full_job_name(notebook_name)
+    )
