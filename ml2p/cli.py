@@ -477,6 +477,11 @@ def notebook_delete(prj, notebook_name):
     prj.client.stop_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
+    waiter = prj.client.get_waiter("notebook_instance_stopped")
+    waiter.wait(
+        NotebookInstanceName=prj.full_job_name(notebook_name),
+        WaiterConfig={"Delay": 30, "MaxAttempts": 30},
+    )
     prj.client.delete_notebook_instance_lifecycle_config(
         NotebookInstanceLifecycleConfigName=prj.full_job_name(notebook_name)
         + "-lifecycle-config"
