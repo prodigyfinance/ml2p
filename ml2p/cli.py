@@ -425,6 +425,16 @@ def notebook():
     """ Create notebooks. """
 
 
+@notebook.command("list")
+@pass_prj
+def notebook_list(prj):
+    paginator = prj.client.get_paginator("list_notebook_instances")
+    for page in paginator.paginate():
+        for notebook in page["NotebookInstances"]:
+            if notebook["NotebookInstanceName"].startswith(prj.cfg["project"]):
+                click_echo_json(notebook)
+
+
 @notebook.command("create")
 @click.argument("notebook-name")
 @click.argument("on-start-path")
