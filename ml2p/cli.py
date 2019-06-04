@@ -438,7 +438,7 @@ def repo_create(prj, repo_name):
 @repo.command("describe")
 @click.argument("repo-name")
 @pass_prj
-def repo_create(prj, repo_name):
+def repo_describe(prj, repo_name):
     """ Create a code repository to associate with a notebook instance.
     """
     response = prj.client.describe_code_repository(prj.full_job_name(repo_name))
