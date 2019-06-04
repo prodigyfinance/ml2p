@@ -409,7 +409,7 @@ def notebook_start(prj, notebook_name):
 
 
 @ml2p.group("repo")
-def notebook():
+def repo():
     """ Create and manage code repositories. """
 
 
