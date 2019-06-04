@@ -7,6 +7,8 @@ import datetime
 import json
 import re
 
+import click
+
 
 def date_to_string_serializer(value):
     """ JSON serializer for datetime objects. """

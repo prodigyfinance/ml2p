@@ -9,7 +9,6 @@ import click
 import yaml
 
 import cli_utils
-
 from cli_utils import click_echo_json
 
 
@@ -433,4 +432,23 @@ def repo_create(prj, repo_name):
     """
     repo_params = cli_utils.mk_repo(prj, repo_name)
     response = prj.client.create_code_repository(**repo_params)
+    click_echo_json(response)
+
+
+@repo.command("describe")
+@click.argument("repo-name")
+@pass_prj
+def repo_create(prj, repo_name):
+    """ Create a code repository to associate with a notebook instance.
+    """
+    response = prj.client.describe_code_repository(prj.full_job_name(repo_name))
+    click_echo_json(response)
+
+
+@repo.command("delete")
+@click.argument("repo-name")
+@pass_prj
+def repo_delete(prj, repo_name):
+    """ Delete a repository. """
+    response = prj.client.delete_code_repository(prj.full_job_name(repo_name))
     click_echo_json(response)
