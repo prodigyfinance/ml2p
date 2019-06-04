@@ -414,6 +414,17 @@ def notebook():
     """ Create and manage code repositories. """
 
 
+@repo.command("list")
+@pass_prj
+def repo_list(prj):
+    """ List code repositories. """
+    paginator = prj.client.get_paginator("list_code_repositories")
+    for page in paginator.paginate():
+        for repo in page["CodeRepositorySummaryList"]:
+            if repo["CodeRepositoryName"].startswith(prj.cfg["project"]):
+                click_echo_json(repo)
+
+
 @repo.command("create")
 @click.argument("repo-name")
 @pass_prj
