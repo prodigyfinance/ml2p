@@ -9,8 +9,8 @@ import boto3
 import click
 import yaml
 
-import cli_utils
-from cli_utils import click_echo_json
+from . import cli_utils
+from .cli_utils import click_echo_json
 
 
 class ModellingProject:
