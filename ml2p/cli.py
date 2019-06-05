@@ -325,7 +325,7 @@ def notebook_create(prj, notebook_name, on_start_path):
     """
     with open(on_start_path, "r") as f:
         on_start = f.read()
-    notebook_instance_lifecycle_config = cli_utils.mk_notebook_instance_lifecycle_config(
+    notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
         prj, notebook_name, on_start
     )
     prj.client.create_notebook_instance_lifecycle_config(

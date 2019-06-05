@@ -122,7 +122,7 @@ def mk_notebook(prj, notebook_name):
     }
 
 
-def mk_notebook_instance_lifecycle_config(prj, notebook_name, on_start):
+def mk_lifecycle_config(prj, notebook_name, on_start):
     """ Return a notebook instance lifecycle configuration. """
     on_start = base64.b64encode(on_start.encode("utf-8")).decode("utf-8")
     return {
