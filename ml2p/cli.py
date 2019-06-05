@@ -2,6 +2,7 @@
 
 """ CLI for Minimal Lovable Machine Learning Pipeline. """
 
+import json
 import urllib.parse
 
 import boto3

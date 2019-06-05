@@ -135,8 +135,8 @@ def mk_notebook_instance_lifecycle_config(prj, notebook_name, on_start):
 def mk_repo(prj, repo_name):
     """ Return parameters for creating a repo. """
     return {
-        CodeRepositoryName: prj.full_job_name(repo_name),
-        GitConfig: {
+        "CodeRepositoryName": prj.full_job_name(repo_name),
+        "GitConfig": {
             "RepositoryUrl": prj.repo.url,
             "Branch": prj.repo.branch,
             "SecretArn": prj.repo.secret_arn,
