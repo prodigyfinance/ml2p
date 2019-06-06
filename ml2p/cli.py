@@ -318,13 +318,8 @@ def notebook_list(prj):
 @notebook.command("create")
 @click.argument("notebook-name")
 @click.argument("on-start-path")
-@click.option(
-    "--repo",
-    help="The name of a repo to associate with the notebook instance.",
-    deafult=None,
-)
 @pass_prj
-def notebook_create(prj, notebook_name, on_start_path, repo):
+def notebook_create(prj, notebook_name, on_start_path):
     """ Create a notebook instance.
     """
     with open(on_start_path, "r") as f:
@@ -332,9 +327,11 @@ def notebook_create(prj, notebook_name, on_start_path, repo):
     notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
         prj, notebook_name, on_start
     )
-    if repo:
+    try:
         repo_params = cli_utils.mk_repo(prj, repo)
         prj.client.create_code_repository(**repo_params)
+    except AttributeError:
+        pass
     prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
@@ -393,7 +390,8 @@ def notebook_delete(prj, notebook_name):
         NotebookInstanceLifecycleConfigName=prj.full_job_name(notebook_name)
         + "-lifecycle-config"
     )
-    prj.client.delete_code_repository(prj.full_job_name(repo_name))
+    if repo_name:
+        prj.client.delete_code_repository((repo_name))
     click_echo_json(response)
 
 
