@@ -137,8 +137,8 @@ def mk_repo(prj, repo_name):
     return {
         "CodeRepositoryName": prj.full_job_name(repo_name),
         "GitConfig": {
-            "RepositoryUrl": prj.repo.url,
-            "Branch": prj.repo.branch,
-            "SecretArn": prj.repo.secret_arn,
+            "RepositoryUrl": prj.notebook.repo_url,
+            "Branch": prj.notebook.repo_branch,
+            "SecretArn": prj.notebook.repo_secret_arn,
         },
     }

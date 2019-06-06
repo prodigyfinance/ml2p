@@ -24,7 +24,6 @@ class ModellingProject:
         self.train = ModellingSubCfg(self.cfg, "train")
         self.deploy = ModellingSubCfg(self.cfg, "deploy")
         self.notebook = ModellingSubCfg(self.cfg, "notebook")
-        self.repo = ModellingSubCfg(self.cfg, "repo")
 
     def full_job_name(self, job_name):
         return "{}-{}".format(self.cfg["project"], job_name)
