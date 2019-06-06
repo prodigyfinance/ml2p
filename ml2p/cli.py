@@ -318,8 +318,13 @@ def notebook_list(prj):
 @notebook.command("create")
 @click.argument("notebook-name")
 @click.argument("on-start-path")
+@click.option(
+    "--repo",
+    help="The name of a repo to associate with the notebook instance.",
+    deafult=None,
+)
 @pass_prj
-def notebook_create(prj, notebook_name, on_start_path):
+def notebook_create(prj, notebook_name, on_start_path, repo):
     """ Create a notebook instance.
     """
     with open(on_start_path, "r") as f:
@@ -327,11 +332,15 @@ def notebook_create(prj, notebook_name, on_start_path):
     notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
         prj, notebook_name, on_start
     )
+    if repo:
+        repo_params = cli_utils.mk_repo(prj, repo)
+        prj.client.create_code_repository(**repo_params)
     prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
-    notebook_config = cli_utils.mk_notebook(prj, notebook_name)
-    prj.client.create_notebook_instance(**notebook_config)
+    notebook_config = cli_utils.mk_notebook(prj, notebook_name, repo)
+    response = prj.client.create_notebook_instance(**notebook_config)
+    click_echo_json(response)
 
 
 @notebook.command("presigned-url")
