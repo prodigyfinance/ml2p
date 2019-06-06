@@ -376,6 +376,7 @@ def notebook_delete(prj, notebook_name):
     describe_response = prj.client.describe_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
+    repo_name = describe_response["DefaultCodeRepository"]
     if describe_response["NotebookInstanceStatus"] == "InService":
         prj.client.stop_notebook_instance(
             NotebookInstanceName=prj.full_job_name(notebook_name)
@@ -392,6 +393,7 @@ def notebook_delete(prj, notebook_name):
         NotebookInstanceLifecycleConfigName=prj.full_job_name(notebook_name)
         + "-lifecycle-config"
     )
+    prj.client.delete_code_repository(prj.full_job_name(repo_name))
     click_echo_json(response)
 
 
@@ -440,13 +442,4 @@ def repo_describe(prj, repo_name):
     """ Create a code repository to associate with a notebook instance.
     """
     response = prj.client.describe_code_repository(prj.full_job_name(repo_name))
-    click_echo_json(response)
-
-
-@repo.command("delete")
-@click.argument("repo-name")
-@pass_prj
-def repo_delete(prj, repo_name):
-    """ Delete a repository. """
-    response = prj.client.delete_code_repository(prj.full_job_name(repo_name))
     click_echo_json(response)
