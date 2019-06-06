@@ -419,7 +419,7 @@ def notebook_start(prj, notebook_name):
 
 @ml2p.group("repo")
 def repo():
-    """ Create and manage code repositories. """
+    """ Describe and list code repositories. """
 
 
 @repo.command("list")
@@ -437,7 +437,7 @@ def repo_list(prj):
 @click.argument("repo-name")
 @pass_prj
 def repo_describe(prj, repo_name):
-    """ Create a code repository to associate with a notebook instance.
+    """ Describe a code repository SageMaker resource.
     """
     response = prj.client.describe_code_repository(prj.full_job_name(repo_name))
     click_echo_json(response)
