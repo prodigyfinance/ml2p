@@ -338,8 +338,8 @@ def notebook_create(prj, notebook_name, on_start_path, repo):
     prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
-    notebook_config = cli_utils.mk_notebook(prj, notebook_name, repo)
-    response = prj.client.create_notebook_instance(**notebook_config)
+    notebook_params = cli_utils.mk_notebook(prj, notebook_name, repo)
+    response = prj.client.create_notebook_instance(**notebook_params)
     click_echo_json(response)
 
 
@@ -431,17 +431,6 @@ def repo_list(prj):
         for repo in page["CodeRepositorySummaryList"]:
             if repo["CodeRepositoryName"].startswith(prj.cfg["project"]):
                 click_echo_json(repo)
-
-
-@repo.command("create")
-@click.argument("repo-name")
-@pass_prj
-def repo_create(prj, repo_name):
-    """ Create a code repository to associate with a notebook instance.
-    """
-    repo_params = cli_utils.mk_repo(prj, repo_name)
-    response = prj.client.create_code_repository(**repo_params)
-    click_echo_json(response)
 
 
 @repo.command("describe")
