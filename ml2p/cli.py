@@ -327,15 +327,16 @@ def notebook_create(prj, notebook_name, on_start_path):
     notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
         prj, notebook_name, on_start
     )
+    repo = True
     try:
-        repo_params = cli_utils.mk_repo(prj, repo)
+        repo_params = cli_utils.mk_repo(prj)
         prj.client.create_code_repository(**repo_params)
     except AttributeError:
-        pass
+        repo = False
     prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
-    notebook_params = cli_utils.mk_notebook(prj, notebook_name, repo)
+    notebook_params = cli_utils.mk_notebook(prj, notebook_name, repo=repo)
     response = prj.client.create_notebook_instance(**notebook_params)
     click_echo_json(response)
 
@@ -373,7 +374,6 @@ def notebook_delete(prj, notebook_name):
     describe_response = prj.client.describe_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
-    repo_name = describe_response["DefaultCodeRepository"]
     if describe_response["NotebookInstanceStatus"] == "InService":
         prj.client.stop_notebook_instance(
             NotebookInstanceName=prj.full_job_name(notebook_name)
@@ -390,8 +390,11 @@ def notebook_delete(prj, notebook_name):
         NotebookInstanceLifecycleConfigName=prj.full_job_name(notebook_name)
         + "-lifecycle-config"
     )
-    if repo_name:
-        prj.client.delete_code_repository((repo_name))
+    try:
+        repo_name = describe_response["DefaultCodeRepository"]
+        prj.client.delete_code_repository(CodeRepositoryName=repo_name)
+    except KeyError:
+        pass
     click_echo_json(response)
 
 
