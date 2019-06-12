@@ -376,6 +376,7 @@ def notebook_delete(prj, notebook_name):
     describe_response = prj.client.describe_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
+    repo_name = describe_response["DefaultCodeRepository"]
     if describe_response["NotebookInstanceStatus"] == "InService":
         prj.client.stop_notebook_instance(
             NotebookInstanceName=prj.full_job_name(notebook_name)
@@ -392,7 +393,6 @@ def notebook_delete(prj, notebook_name):
         NotebookInstanceLifecycleConfigName=prj.full_job_name(notebook_name)
         + "-lifecycle-config"
     )
-    repo_name = describe_response["DefaultCodeRepository"]
     if repo_name:
         prj.client.delete_code_repository(repo_name)
     click_echo_json(response)
