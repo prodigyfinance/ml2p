@@ -110,7 +110,7 @@ def mk_endpoint_config(prj, endpoint_name, model_name):
     }
 
 
-def mk_notebook(prj, notebook_name, repo=False):
+def mk_notebook(prj, notebook_name, repo_name=None):
     """ Return a notebook configuration. """
     notebook_params = {
         "NotebookInstanceName": prj.full_job_name(notebook_name),
@@ -120,8 +120,8 @@ def mk_notebook(prj, notebook_name, repo=False):
         "LifecycleConfigName": prj.full_job_name(notebook_name) + "-lifecycle-config",
         "VolumeSizeInGB": prj.notebook.volume_size,
     }
-    if repo:
-        notebook_params["DefaultCodeRepository"] = prj.full_job_name("repo")
+    if repo_name is not None:
+        notebook_params["DefaultCodeRepository"] = prj.full_job_name(repo_name)
     return notebook_params
 
 
@@ -135,10 +135,10 @@ def mk_lifecycle_config(prj, notebook_name, on_start):
     }
 
 
-def mk_repo(prj):
+def mk_repo(prj, repo_name):
     """ Return parameters for creating a repo. """
     return {
-        "CodeRepositoryName": prj.full_job_name("repo"),
+        "CodeRepositoryName": prj.full_job_name(repo_name),
         "GitConfig": {
             "RepositoryUrl": prj.notebook.repo_url,
             "Branch": prj.notebook.repo_branch,
