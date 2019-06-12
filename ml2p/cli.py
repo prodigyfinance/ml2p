@@ -63,6 +63,11 @@ class ModellingSubCfg:
             return self._section[name]
         return self._defaults[name]
 
+    def get(self, name, default=None):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults.get(name, default)
+
 
 # alias pass_obj for readability
 pass_prj = click.pass_obj
@@ -327,11 +332,9 @@ def notebook_create(prj, notebook_name, on_start_path):
     notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
         prj, notebook_name, on_start
     )
-    try:
+    if prj.notebook.get("repo_url"):
         repo_params = cli_utils.mk_repo(prj, repo)
         prj.client.create_code_repository(**repo_params)
-    except AttributeError:
-        pass
     prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
