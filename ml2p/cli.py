@@ -63,6 +63,11 @@ class ModellingSubCfg:
             return self._section[name]
         return self._defaults[name]
 
+    def get(self, name, default=None):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults.get(name, default)
+
 
 # alias pass_obj for readability
 pass_prj = click.pass_obj
@@ -327,12 +332,9 @@ def notebook_create(prj, notebook_name, on_start_path):
     notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
         prj, notebook_name, on_start
     )
-    repo = True
-    try:
-        repo_params = cli_utils.mk_repo(prj)
+    if prj.notebook.get("repo_url"):
+        repo_params = cli_utils.mk_repo(prj, repo)
         prj.client.create_code_repository(**repo_params)
-    except AttributeError:
-        repo = False
     prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
@@ -390,11 +392,9 @@ def notebook_delete(prj, notebook_name):
         NotebookInstanceLifecycleConfigName=prj.full_job_name(notebook_name)
         + "-lifecycle-config"
     )
-    try:
-        repo_name = describe_response["DefaultCodeRepository"]
-        prj.client.delete_code_repository(CodeRepositoryName=repo_name)
-    except KeyError:
-        pass
+    repo_name = describe_response["DefaultCodeRepository"]
+    if repo_name:
+        prj.client.delete_code_repository(repo_name)
     click_echo_json(response)
 
 
