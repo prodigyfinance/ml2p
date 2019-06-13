@@ -396,7 +396,7 @@ def notebook_delete(prj, notebook_name):
         + "-lifecycle-config"
     )
     if repo_name:
-        prj.client.delete_code_repository(repo_name)
+        prj.client.delete_code_repository(CodeRepositoryName=repo_name)
     click_echo_json(response)
 
 
