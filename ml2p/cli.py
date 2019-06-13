@@ -332,13 +332,15 @@ def notebook_create(prj, notebook_name, on_start_path):
     notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
         prj, notebook_name, on_start
     )
+    repo_name = None
     if prj.notebook.get("repo_url"):
-        repo_params = cli_utils.mk_repo(prj, repo)
+        repo_name = "{}-repo".format(notebook_name)
+        repo_params = cli_utils.mk_repo(prj, repo_name)
         prj.client.create_code_repository(**repo_params)
     prj.client.create_notebook_instance_lifecycle_config(
         **notebook_instance_lifecycle_config
     )
-    notebook_params = cli_utils.mk_notebook(prj, notebook_name, repo)
+    notebook_params = cli_utils.mk_notebook(prj, notebook_name, repo_name=repo_name)
     response = prj.client.create_notebook_instance(**notebook_params)
     click_echo_json(response)
 
