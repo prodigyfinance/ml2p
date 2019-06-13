@@ -444,5 +444,5 @@ def repo_list(prj):
 def repo_describe(prj, repo_name):
     """ Describe a code repository SageMaker resource.
     """
-    response = prj.client.describe_code_repository(prj.full_job_name(repo_name))
+    response = prj.client.describe_code_repository(CodeRepositoryName=repo_name)
     click_echo_json(response)
