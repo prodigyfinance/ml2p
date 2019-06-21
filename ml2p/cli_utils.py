@@ -115,6 +115,8 @@ def mk_notebook(prj, notebook_name, repo_name=None):
     notebook_params = {
         "NotebookInstanceName": prj.full_job_name(notebook_name),
         "InstanceType": prj.notebook.instance_type,
+        "SubnetId": prj.notebook.subnet_id,
+        "SecurityGroupIds": prj.notebook.security_group_ids,
         "RoleArn": prj.notebook.role,
         "Tags": prj.tags(),
         "LifecycleConfigName": prj.full_job_name(notebook_name) + "-lifecycle-config",
