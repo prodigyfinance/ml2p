@@ -127,9 +127,9 @@ def mk_notebook(prj, notebook_name, repo_name=None):
     return notebook_params
 
 
-def mk_lifecycle_config(prj, notebook_name, on_start):
+def mk_lifecycle_config(prj, notebook_name):
     """ Return a notebook instance lifecycle configuration. """
-    on_start = base64.b64encode(on_start.encode("utf-8")).decode("utf-8")
+    on_start = base64.b64encode(prj.notebook.on_start.encode("utf-8")).decode("utf-8")
     return {
         "NotebookInstanceLifecycleConfigName": prj.full_job_name(notebook_name)
         + "-lifecycle-config",
