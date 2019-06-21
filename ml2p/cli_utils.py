@@ -131,12 +131,18 @@ def mk_notebook(prj, notebook_name, repo_name=None):
 
 def mk_lifecycle_config(prj, notebook_name):
     """ Return a notebook instance lifecycle configuration. """
-    on_start = base64.b64encode(prj.notebook.on_start.encode("utf-8")).decode("utf-8")
-    return {
+    lifecycle_config = {
         "NotebookInstanceLifecycleConfigName": prj.full_job_name(notebook_name)
-        + "-lifecycle-config",
-        "OnStart": [{"Content": on_start}],
+        + "-lifecycle-config"
     }
+    if prj.notebook.get("on_start"):
+        with open(prj.notebook.on_start, "r") as f:
+            on_start = f.read()
+        on_start = base64.b64encode(prj.notebook.on_start.encode("utf-8")).decode(
+            "utf-8"
+        )
+        lifecycle_config["OnStart"] = [{"Content": on_start}]
+    return
 
 
 def mk_repo(prj, repo_name):
