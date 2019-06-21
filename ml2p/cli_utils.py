@@ -122,9 +122,9 @@ def mk_notebook(prj, notebook_name, repo_name=None):
     }
     if repo_name is not None:
         notebook_params["DefaultCodeRepository"] = prj.full_job_name(repo_name)
-    if prj.get("subnet_id"):
+    if prj.notebook.get("subnet_id"):
         notebook_params["SubnetId"] = prj.notebook.subnet_id
-    if prj.get("security_group_ids"):
+    if prj.notebook.get("security_group_ids"):
         notebook_params["SecurityGroupIds"] = prj.notebook.security_group_ids
     return notebook_params
 
