@@ -142,7 +142,7 @@ def mk_lifecycle_config(prj, notebook_name):
             "utf-8"
         )
         lifecycle_config["OnStart"] = [{"Content": on_start}]
-    return
+    return lifecycle_config
 
 
 def mk_repo(prj, repo_name):
