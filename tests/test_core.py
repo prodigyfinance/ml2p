@@ -6,14 +6,35 @@ import pathlib
 
 import pytest
 
-from ml2p.core import Model, ModelPredictor, ModelTrainer, SageMakerEnv, import_string
+from ml2p.core import (
+    Model,
+    ModelPredictor,
+    ModelTrainer,
+    S3URL,
+    SageMakerEnv,
+    import_string,
+)
+
+
+class TestS3URL:
+    def test_bucket(self):
+        assert S3URL("s3://bucket/foo").bucket() == "bucket"
+
+    def test_path(self):
+        assert S3URL("s3://bucket/foo/").path("bar.txt") == "foo/bar.txt"
+
+    def test_path_with_empty_roo(self):
+        assert S3URL("s3://bucket").path("bar.txt") == "bar.txt"
+
+    def test_url(self):
+        assert S3URL("s3://bucket/foo/").url("bar.txt") == "s3://bucket/foo/bar.txt"
 
 
 class TestSageMakerEnv:
     def test_create_env_without_model_version(self, tmpdir, monkeypatch):
         monkeypatch.delenv("ML2P_MODEL_VERSION", raising=False)
         env = SageMakerEnv(str(tmpdir))
-        assert env.model_version == "Unknown"
+        assert env.model_version is None
 
     def test_create_env_with_model_version(self, sagemaker):
         assert sagemaker.env.model_version == "test-model-1.2.3"
