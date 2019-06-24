@@ -7,10 +7,10 @@ import pathlib
 import pytest
 
 from ml2p.core import (
+    S3URL,
     Model,
     ModelPredictor,
     ModelTrainer,
-    S3URL,
     SageMakerEnv,
     import_string,
 )
