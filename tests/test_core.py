@@ -39,6 +39,22 @@ class TestSageMakerEnv:
     def test_create_env_with_model_version(self, sagemaker):
         assert sagemaker.env.model_version == "test-model-1.2.3"
 
+    def test_create_env_without_project_name(self, tmpdir, monkeypatch):
+        monkeypatch.delenv("ML2P_PROJECT", raising=False)
+        env = SageMakerEnv(str(tmpdir))
+        assert env.project is None
+
+    def test_create_env_with_project_name(self, sagemaker):
+        assert sagemaker.env.project == "test-project"
+
+    def test_create_env_without_s3_url(self, tmpdir, monkeypatch):
+        monkeypatch.delenv("ML2P_S3_URL", raising=False)
+        env = SageMakerEnv(str(tmpdir))
+        assert env.s3 is None
+
+    def test_create_env_with_s3_url(self, sagemaker):
+        assert sagemaker.env.s3.url("baz.txt") == "s3://foo/bar/baz.txt"
+
     def test_hyperparameters(self, sagemaker):
         sagemaker.ml_folder.mkdir("input").mkdir("config").join(
             "hyperparameters.json"
