@@ -122,17 +122,27 @@ def mk_notebook(prj, notebook_name, repo_name=None):
     }
     if repo_name is not None:
         notebook_params["DefaultCodeRepository"] = prj.full_job_name(repo_name)
+    if prj.notebook.get("subnet_id"):
+        notebook_params["SubnetId"] = prj.notebook.subnet_id
+    if prj.notebook.get("security_group_ids"):
+        notebook_params["SecurityGroupIds"] = prj.notebook.security_group_ids
     return notebook_params
 
 
-def mk_lifecycle_config(prj, notebook_name, on_start):
+def mk_lifecycle_config(prj, notebook_name):
     """ Return a notebook instance lifecycle configuration. """
-    on_start = base64.b64encode(on_start.encode("utf-8")).decode("utf-8")
-    return {
+    lifecycle_config = {
         "NotebookInstanceLifecycleConfigName": prj.full_job_name(notebook_name)
-        + "-lifecycle-config",
-        "OnStart": [{"Content": on_start}],
+        + "-lifecycle-config"
     }
+    if prj.notebook.get("on_start"):
+        with open(prj.notebook.on_start, "r") as f:
+            on_start = f.read()
+        on_start = base64.b64encode(prj.notebook.on_start.encode("utf-8")).decode(
+            "utf-8"
+        )
+        lifecycle_config["OnStart"] = [{"Content": on_start}]
+    return lifecycle_config
 
 
 def mk_repo(prj, repo_name):

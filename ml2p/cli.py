@@ -322,15 +322,12 @@ def notebook_list(prj):
 
 @notebook.command("create")
 @click.argument("notebook-name")
-@click.argument("on-start-path")
 @pass_prj
-def notebook_create(prj, notebook_name, on_start_path):
+def notebook_create(prj, notebook_name):
     """ Create a notebook instance.
     """
-    with open(on_start_path, "r") as f:
-        on_start = f.read()
     notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
-        prj, notebook_name, on_start
+        prj, notebook_name
     )
     repo_name = None
     if prj.notebook.get("repo_url"):
