@@ -4,6 +4,8 @@
 
 import datetime
 
+import boto3
+from mock import patch
 import pytest
 from pkg_resources import resource_filename
 
@@ -36,7 +38,8 @@ class TestCliUtils:
         )
         assert cli_utils.endpoint_url_for_arn("") is None
 
-    def test_mk_training_job(self):
+    @patch("boto3.client")
+    def test_mk_training_job(self, client):
         cfg = resource_filename("tests.fixture_files", "ml2p.yml")
         prj = ModellingProject(cfg)
         training_job_cfg = cli_utils.mk_training_job(prj, "training-job-1", "dataset-1")
@@ -77,7 +80,8 @@ class TestCliUtils:
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
         }
 
-    def test_mk_model(self):
+    @patch("boto3.client")
+    def test_mk_model(self, client):
         cfg = resource_filename("tests.fixture_files", "ml2p.yml")
         prj = ModellingProject(cfg)
         model_cfg = cli_utils.mk_model(prj, "model-1", "training-job-1")
@@ -96,7 +100,8 @@ class TestCliUtils:
             "EnableNetworkIsolation": False,
         }
 
-    def test_mk_endpoint_config(self):
+    @patch("boto3.client")
+    def test_mk_endpoint_config(self, client):
         cfg = resource_filename("tests.fixture_files", "ml2p.yml")
         prj = ModellingProject(cfg)
         endpoint_cfg = cli_utils.mk_endpoint_config(prj, "endpoint-1", "model-1")
@@ -114,7 +119,8 @@ class TestCliUtils:
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
         }
 
-    def test_mk_notebook(self):
+    @patch("boto3.client")
+    def test_mk_notebook(self, client):
         cfg = resource_filename("tests.fixture_files", "ml2p.yml")
         prj = ModellingProject(cfg)
         notebook_cfg_no_repo = cli_utils.mk_notebook(prj, "notebook-1")
@@ -154,7 +160,8 @@ class TestCliUtils:
             "VolumeSizeInGB": 8,
         }
 
-    def test_mk_lifecycle_config(self):
+    @patch("boto3.client")
+    def test_mk_lifecycle_config(self, client):
         cfg = resource_filename("tests.fixture_files", "ml2p.yml")
         prj = ModellingProject(cfg)
         notebook_lifecycle_cfg = cli_utils.mk_lifecycle_config(prj, "notebook-1")
@@ -173,7 +180,8 @@ class TestCliUtils:
             "notebook-1-lifecycle-config"
         }
 
-    def test_mk_repo(self):
+    @patch("boto3.client")
+    def test_mk_repo(self, client):
         cfg = resource_filename("tests.fixture_files", "ml2p.yml")
         prj = ModellingProject(cfg)
         repo_cfg = cli_utils.mk_repo(prj, "repo-1")
