@@ -217,3 +217,28 @@ class TestAPI:
             },
             "result": {"probability": 0.5, "input": 12345},
         }
+
+    def test_batch_invocations(self, api_client, fake_utcnow):
+        response = api_client.post(
+            "/invocations", json={"instances": [{"input": 12345}, {"input": 12346}]}
+        )
+        assert response.status_code == 200
+        assert response.content_type == "application/json"
+        assert response.get_json() == {
+            "predictions": [
+                {
+                    "metadata": {
+                        "model_version": "test-model-1.2.3",
+                        "timestamp": fake_utcnow.timestamp(),
+                    },
+                    "result": {"probability": 0.5, "input": 12345},
+                },
+                {
+                    "metadata": {
+                        "model_version": "test-model-1.2.3",
+                        "timestamp": fake_utcnow.timestamp(),
+                    },
+                    "result": {"probability": 0.5, "input": 12346},
+                },
+            ]
+        }

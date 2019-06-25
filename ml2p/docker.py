@@ -20,7 +20,14 @@ app = FlaskAPI(__name__)
 
 @app.route("/invocations", methods=["POST"])
 def invocations():
-    response = app.predictor.invoke(request.data)
+    if "instances" in request.data:
+        response = {
+            "predictions": [
+                app.predictor.invoke(datum) for datum in request.data["instances"]
+            ]
+        }
+    else:
+        response = app.predictor.invoke(request.data)
     return response
 
 
