@@ -94,3 +94,61 @@ class TestCliUtils:
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
             "EnableNetworkIsolation": False,
         }
+
+    def test_mk_endpoint_config(self):
+        cfg = resource_filename("tests.fixture_files", "ml2p.yml")
+        prj = ModellingProject(cfg)
+        endpoint_cfg = cli_utils.mk_endpoint_config(prj, "endpoint-1", "model-1")
+        assert endpoint_cfg == {
+            "EndpointConfigName": "modelling-project-endpoint-1-config",
+            "ProductionVariants": [
+                {
+                    "VariantName": "modelling-project-model-1-variant-1",
+                    "ModelName": "modelling-project-model-1",
+                    "InitialInstanceCount": 1,
+                    "InstanceType": "ml.t2.medium",
+                    "InitialVariantWeight": 1.0,
+                }
+            ],
+            "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
+        }
+
+    def test_mk_notebook(self):
+        cfg = resource_filename("tests.fixture_files", "ml2p.yml")
+        prj = ModellingProject(cfg)
+        notebook_cfg_no_repo = cli_utils.mk_notebook(prj, "notebook-1")
+        assert notebook_cfg_no_repo == {
+            "NotebookInstanceName": "modelling-project-notebook-1",
+            "InstanceType": "ml.t2.medium",
+            "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
+            "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
+            "LifecycleConfigName": "modelling-project-notebook-1-lifecycle-config",
+            "VolumeSizeInGB": 8,
+            "SubnetId": "subnet-1",
+            "SecurityGroupIds": ["sg-1"],
+        }
+        notebook_cfg_repo = cli_utils.mk_notebook(
+            prj, "notebook-1", repo_name="notebook-1-repo"
+        )
+        assert notebook_cfg_repo == {
+            "NotebookInstanceName": "modelling-project-notebook-1",
+            "InstanceType": "ml.t2.medium",
+            "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
+            "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
+            "LifecycleConfigName": "modelling-project-notebook-1-lifecycle-config",
+            "VolumeSizeInGB": 8,
+            "DefaultCodeRepository": "modelling-project-notebook-1-repo",
+            "SubnetId": "subnet-1",
+            "SecurityGroupIds": ["sg-1"],
+        }
+        cfg_no_vpc = resource_filename("tests.fixture_files", "ml2p-no-vpc.yml")
+        prj_no_vpc = ModellingProject(cfg_no_vpc)
+        notebook_cfg_no_vpc = cli_utils.mk_notebook(prj_no_vpc, "notebook-1")
+        assert notebook_cfg_no_vpc == {
+            "NotebookInstanceName": "modelling-project-notebook-1",
+            "InstanceType": "ml.t2.medium",
+            "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
+            "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
+            "LifecycleConfigName": "modelling-project-notebook-1-lifecycle-config",
+            "VolumeSizeInGB": 8,
+        }
