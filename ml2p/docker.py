@@ -31,6 +31,15 @@ def invocations():
     return response
 
 
+@app.route("/execution-parameters", methods=["GET"])
+def execution_parameters():
+    return {
+        "MaxConcurrentTransforms": 1,
+        "BatchStrategy": "MULTI_RECORD",
+        "MaxPayloadInMB": 6,
+    }
+
+
 @app.route("/ping", methods=["GET"])
 def ping():
     return {"model_version": app.predictor.env.model_version}

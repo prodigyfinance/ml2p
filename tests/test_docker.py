@@ -242,3 +242,13 @@ class TestAPI:
                 },
             ]
         }
+
+    def test_execution_parameters(self, api_client, fake_utcnow):
+        response = api_client.get("/execution-parameters")
+        assert response.status_code == 200
+        assert response.content_type == "application/json"
+        assert response.get_json() == {
+            "MaxConcurrentTransforms": 1,
+            "BatchStrategy": "MULTI_RECORD",
+            "MaxPayloadInMB": 6,
+        }
