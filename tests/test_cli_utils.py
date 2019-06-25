@@ -75,3 +75,22 @@ class TestCliUtils:
             "StoppingCondition": {"MaxRuntimeInSeconds": 60 * 60},
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
         }
+
+    def test_mk_model(self):
+        cfg = resource_filename("tests.fixture_files", "ml2p.yml")
+        prj = ModellingProject(cfg)
+        model_cfg = cli_utils.mk_model(prj, "model-1", "training-job-1")
+        assert model_cfg == {
+            "ModelName": "modelling-project-model-1",
+            "PrimaryContainer": {
+                "Image": "123456789012.dkr.ecr.eu-west-1.amazonaws.com/"
+                "modelling-project-sagemaker:latest",
+                "ModelDataUrl": "s3://prodigyfinance-modelling-project-sagemaker"
+                "-production/models/modelling-project-training-job-1/"
+                "output/model.tar.gz",
+                "Environment": {"ML2P_MODEL_VERSION": "modelling-project-model-1"},
+            },
+            "ExecutionRoleArn": "arn:aws:iam::111111111111:role/modelling-project",
+            "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
+            "EnableNetworkIsolation": False,
+        }
