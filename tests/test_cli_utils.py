@@ -5,8 +5,8 @@
 import datetime
 
 import boto3
-from mock import patch
 import pytest
+from mock import patch
 from pkg_resources import resource_filename
 
 from ml2p import cli_utils
