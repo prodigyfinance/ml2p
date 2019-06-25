@@ -3,7 +3,6 @@
 """ CLI for Minimal Lovable Machine Learning Pipeline. """
 
 import json
-import urllib.parse
 
 import boto3
 import click
@@ -11,6 +10,7 @@ import yaml
 
 from . import cli_utils
 from .cli_utils import click_echo_json
+from .core import S3URL
 
 
 class ModellingProject:
@@ -19,35 +19,18 @@ class ModellingProject:
     def __init__(self, cfg):
         with open(cfg) as f:
             self.cfg = yaml.safe_load(f)
-        self.s3 = S3Path(self.cfg["s3folder"])
+        self.project = self.cfg["project"]
+        self.s3 = S3URL(self.cfg["s3folder"])
         self.client = boto3.client("sagemaker")
         self.train = ModellingSubCfg(self.cfg, "train")
         self.deploy = ModellingSubCfg(self.cfg, "deploy")
         self.notebook = ModellingSubCfg(self.cfg, "notebook")
 
     def full_job_name(self, job_name):
-        return "{}-{}".format(self.cfg["project"], job_name)
+        return "{}-{}".format(self.project, job_name)
 
     def tags(self):
         return [{"Key": "ml2p-project", "Value": self.cfg["project"]}]
-
-
-class S3Path:
-    """ Holder for S3 folder. """
-
-    def __init__(self, s3folder):
-        self._s3url = urllib.parse.urlparse(s3folder)
-        self._s3root = self._s3url.path.strip("/")
-
-    def bucket(self):
-        return self._s3url.netloc
-
-    def path(self, suffix):
-        path = self._s3root + "/" + suffix.lstrip("/")
-        return path.lstrip("/")  # handles empty s3root
-
-    def url(self, suffix):
-        return "s3://{}/{}".format(self._s3url.netloc, self.path(suffix))
 
 
 class ModellingSubCfg:

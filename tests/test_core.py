@@ -6,17 +6,54 @@ import pathlib
 
 import pytest
 
-from ml2p.core import Model, ModelPredictor, ModelTrainer, SageMakerEnv, import_string
+from ml2p.core import (
+    S3URL,
+    Model,
+    ModelPredictor,
+    ModelTrainer,
+    SageMakerEnv,
+    import_string,
+)
+
+
+class TestS3URL:
+    def test_bucket(self):
+        assert S3URL("s3://bucket/foo").bucket() == "bucket"
+
+    def test_path(self):
+        assert S3URL("s3://bucket/foo/").path("bar.txt") == "foo/bar.txt"
+
+    def test_path_with_empty_roo(self):
+        assert S3URL("s3://bucket").path("bar.txt") == "bar.txt"
+
+    def test_url(self):
+        assert S3URL("s3://bucket/foo/").url("bar.txt") == "s3://bucket/foo/bar.txt"
 
 
 class TestSageMakerEnv:
     def test_create_env_without_model_version(self, tmpdir, monkeypatch):
         monkeypatch.delenv("ML2P_MODEL_VERSION", raising=False)
         env = SageMakerEnv(str(tmpdir))
-        assert env.model_version == "Unknown"
+        assert env.model_version is None
 
     def test_create_env_with_model_version(self, sagemaker):
         assert sagemaker.env.model_version == "test-model-1.2.3"
+
+    def test_create_env_without_project_name(self, tmpdir, monkeypatch):
+        monkeypatch.delenv("ML2P_PROJECT", raising=False)
+        env = SageMakerEnv(str(tmpdir))
+        assert env.project is None
+
+    def test_create_env_with_project_name(self, sagemaker):
+        assert sagemaker.env.project == "test-project"
+
+    def test_create_env_without_s3_url(self, tmpdir, monkeypatch):
+        monkeypatch.delenv("ML2P_S3_URL", raising=False)
+        env = SageMakerEnv(str(tmpdir))
+        assert env.s3 is None
+
+    def test_create_env_with_s3_url(self, sagemaker):
+        assert sagemaker.env.s3.url("baz.txt") == "s3://foo/bar/baz.txt"
 
     def test_hyperparameters(self, sagemaker):
         sagemaker.ml_folder.mkdir("input").mkdir("config").join(

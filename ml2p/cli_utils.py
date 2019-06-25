@@ -83,7 +83,11 @@ def mk_model(prj, model_name, training_job):
         "PrimaryContainer": {
             "Image": prj.deploy.image,
             "ModelDataUrl": model_tgz_path,
-            "Environment": {"ML2P_MODEL_VERSION": prj.full_job_name(model_name)},
+            "Environment": {
+                "ML2P_MODEL_VERSION": prj.full_job_name(model_name),
+                "ML2P_PROJECT": prj.project,
+                "ML2P_S3_URL": prj.s3.url(),
+            },
         },
         "ExecutionRoleArn": prj.deploy.role,
         "Tags": prj.tags(),

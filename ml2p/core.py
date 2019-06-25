@@ -8,14 +8,50 @@ import importlib
 import json
 import os
 import pathlib
+import urllib.parse
+
+
+class S3URL:
+    """ A friendly interface to an S3 URL. """
+
+    def __init__(self, s3folder):
+        self._s3url = urllib.parse.urlparse(s3folder)
+        self._s3root = self._s3url.path.strip("/")
+
+    def bucket(self):
+        return self._s3url.netloc
+
+    def path(self, suffix):
+        path = self._s3root + "/" + suffix.lstrip("/")
+        return path.lstrip("/")  # handles empty s3root
+
+    def url(self, suffix):
+        return "s3://{}/{}".format(self._s3url.netloc, self.path(suffix))
 
 
 class SageMakerEnv:
-    """ An interface to the SageMaker docker environment. """
+    """ An interface to the SageMaker docker environment.
+
+        Attributes:
+
+        * `project` - The ML2P project name (type: str).
+
+        * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
+
+        * `model_version` - The full job name of the deployed model, or None
+          during training (type: str).
+
+        Note: `project` and `s3` are not currently set in the training environemnt.
+    """
 
     def __init__(self, ml_folder):
         self._ml_folder = pathlib.Path(ml_folder)
-        self.model_version = os.environ.get("ML2P_MODEL_VERSION", "Unknown")
+        # The attributes below are None except during model training.
+        self.model_version = os.environ.get("ML2P_MODEL_VERSION", None)
+        self.project = os.environ.get("ML2P_PROJECT", None)
+        self.s3 = None
+        if "ML2P_S3_URL" in os.environ:
+            self.s3 = S3URL(os.environ["ML2P_S3_URL"])
 
     def hyperparameters(self):
         with (
