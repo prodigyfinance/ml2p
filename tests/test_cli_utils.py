@@ -3,8 +3,9 @@
 """ Tests for ml2p.cli_utils. """
 
 import datetime
-from pkg_resources import resource_filename
+
 import pytest
+from pkg_resources import resource_filename
 
 from ml2p import cli_utils
 from ml2p.cli import ModellingProject
@@ -151,4 +152,37 @@ class TestCliUtils:
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
             "LifecycleConfigName": "modelling-project-notebook-1-lifecycle-config",
             "VolumeSizeInGB": 8,
+        }
+
+    def test_mk_lifecycle_config(self):
+        cfg = resource_filename("tests.fixture_files", "ml2p.yml")
+        prj = ModellingProject(cfg)
+        notebook_lifecycle_cfg = cli_utils.mk_lifecycle_config(prj, "notebook-1")
+        assert notebook_lifecycle_cfg == {
+            "NotebookInstanceLifecycleConfigName": "modelling-project-"
+            "notebook-1-lifecycle-config",
+            "OnStart": [{"Content": "Li90ZXN0cy9maXh0dXJlX2ZpbGVzL29uX3N0YXJ0LnNo"}],
+        }
+        cfg_no_onstart = resource_filename("tests.fixture_files", "ml2p-no-vpc.yml")
+        prj_no_onstart = ModellingProject(cfg_no_onstart)
+        notebook_lifecycle_cfg_no_onstart = cli_utils.mk_lifecycle_config(
+            prj_no_onstart, "notebook-1"
+        )
+        assert notebook_lifecycle_cfg_no_onstart == {
+            "NotebookInstanceLifecycleConfigName": "modelling-project-"
+            "notebook-1-lifecycle-config"
+        }
+
+    def test_mk_repo(self):
+        cfg = resource_filename("tests.fixture_files", "ml2p.yml")
+        prj = ModellingProject(cfg)
+        repo_cfg = cli_utils.mk_repo(prj, "repo-1")
+        assert repo_cfg == {
+            "CodeRepositoryName": "modelling-project-repo-1",
+            "GitConfig": {
+                "RepositoryUrl": "https://github.com/modelling-project",
+                "Branch": "master",
+                "SecretArn": "arn:aws:secretsmanager:eu-west-1:111111111111:"
+                "secret:sagemaker-github-authentication-fLJGfa",
+            },
         }

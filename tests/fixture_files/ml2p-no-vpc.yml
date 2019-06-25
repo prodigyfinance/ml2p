@@ -13,4 +13,3 @@ notebook:
   repo_url: "https://github.com/modelling-project"
   repo_branch: "master"
   repo_secret_arn: "arn:aws:secretsmanager:eu-west-1:111111111111:secret:sagemaker-github-authentication-fLJGfa"
-  on_start: "./on_start.sh"

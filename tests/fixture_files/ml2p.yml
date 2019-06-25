@@ -16,4 +16,4 @@ notebook:
   security_group_ids:
     - "sg-1"
   subnet_id: "subnet-1"
-  on_start: "./on_start.sh"
+  on_start: "./tests/fixture_files/on_start.sh"
