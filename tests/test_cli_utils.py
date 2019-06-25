@@ -4,7 +4,6 @@
 
 import datetime
 
-import boto3
 import pytest
 from mock import patch
 from pkg_resources import resource_filename
