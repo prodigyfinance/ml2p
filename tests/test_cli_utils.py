@@ -2,11 +2,12 @@
 
 """ Tests for ml2p.cli_utils. """
 
+import datetime
+from pkg_resources import resource_filename
 import pytest
 
-import datetime
-
 from ml2p import cli_utils
+from ml2p.cli import ModellingProject
 
 
 class TestCliUtils:
@@ -25,4 +26,52 @@ class TestCliUtils:
         )
 
     def test_endpoint_url_for_arn(self):
-        return
+        endpoint_arn = (
+            "arn:aws:sagemaker:eu-west-1:123456789012:endpoint/endpoint-20190612"
+        )
+        assert cli_utils.endpoint_url_for_arn(endpoint_arn) == (
+            "https://runtime.sagemaker.eu-west-1.amazonaws.com/"
+            "endpoints/endpoint-20190612/invocations"
+        )
+        assert cli_utils.endpoint_url_for_arn("") is None
+
+    def test_mk_training_job(self):
+        cfg = resource_filename("tests.fixture_files", "ml2p.yml")
+        prj = ModellingProject(cfg)
+        training_job_cfg = cli_utils.mk_training_job(prj, "training-job-1", "dataset-1")
+        assert training_job_cfg == {
+            "TrainingJobName": "modelling-project-training-job-1",
+            "AlgorithmSpecification": {
+                "TrainingImage": (
+                    "123456789012.dkr.ecr.eu-west-1"
+                    ".amazonaws.com/modelling-project-sagemaker:latest"
+                ),
+                "TrainingInputMode": "File",
+            },
+            "EnableNetworkIsolation": True,
+            "HyperParameters": {},
+            "InputDataConfig": [
+                {
+                    "ChannelName": "training",
+                    "DataSource": {
+                        "S3DataSource": {
+                            "S3DataType": "S3Prefix",
+                            "S3Uri": "s3://prodigyfinance-modelling-project-"
+                            "sagemaker-production/datasets/dataset-1",
+                        }
+                    },
+                }
+            ],
+            "OutputDataConfig": {
+                "S3OutputPath": "s3://prodigyfinance-modelling-project"
+                "-sagemaker-production/models/"
+            },
+            "ResourceConfig": {
+                "InstanceCount": 1,
+                "InstanceType": "ml.m5.2xlarge",
+                "VolumeSizeInGB": 20,
+            },
+            "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
+            "StoppingCondition": {"MaxRuntimeInSeconds": 60 * 60},
+            "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
+        }
