@@ -25,7 +25,7 @@ class S3URL:
         path = self._s3root + "/" + suffix.lstrip("/")
         return path.lstrip("/")  # handles empty s3root
 
-    def url(self, suffix):
+    def url(self, suffix=""):
         return "s3://{}/{}".format(self._s3url.netloc, self.path(suffix))
 
 

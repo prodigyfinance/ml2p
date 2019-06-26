@@ -29,6 +29,9 @@ class TestS3URL:
     def test_url(self):
         assert S3URL("s3://bucket/foo/").url("bar.txt") == "s3://bucket/foo/bar.txt"
 
+    def test_url_with_no_suffix(self):
+        assert S3URL("s3://bucket/foo/").url() == "s3://bucket/foo/"
+
 
 class TestSageMakerEnv:
     def test_create_env_without_model_version(self, tmpdir, monkeypatch):
