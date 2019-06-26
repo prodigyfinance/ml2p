@@ -1,6 +1,13 @@
 History
 =======
 
+0.0.3 (2019-06-26)
+------------------
+
+* New ml2p notebook command group for creating, inspecting,
+  and deleting SageMaker Notebook instances.
+* New ml2p repo command group for inspecting code repository SageMaker resources.
+
 0.0.2 (2019-05-24)
 ------------------
 
