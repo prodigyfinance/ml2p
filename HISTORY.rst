@@ -1,6 +1,11 @@
 History
 =======
 
+0.0.4 (2019-06-26)
+------------------
+
+* Fix bug in setting of ML2P_S3_URL on model creation.
+
 0.0.3 (2019-06-26)
 ------------------
 
