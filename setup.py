@@ -26,7 +26,6 @@ setup(
             'bumpversion',
             'coverage',
             'flake8',
-            'mock',
             'pytest',
             'pytest-cov',
             'tox',

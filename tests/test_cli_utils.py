@@ -3,9 +3,9 @@
 """ Tests for ml2p.cli_utils. """
 
 import datetime
+from unittest.mock import patch
 
 import pytest
-from mock import patch
 from pkg_resources import resource_filename
 
 from ml2p import cli_utils
