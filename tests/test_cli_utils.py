@@ -13,7 +13,7 @@ from ml2p.cli import ModellingProject
 
 
 @pytest.fixture
-def prj(monkeypatch):
+def prj():
     with patch("boto3.client"):
         cfg = resource_filename("tests.fixture_files", "ml2p.yml")
         prj = ModellingProject(cfg)
@@ -21,7 +21,7 @@ def prj(monkeypatch):
 
 
 @pytest.fixture
-def prj_no_vpc(monkeypatch):
+def prj_no_vpc():
     with patch("boto3.client"):
         cfg_no_vpc = resource_filename("tests.fixture_files", "ml2p-no-vpc.yml")
         prj_no_vpc = ModellingProject(cfg_no_vpc)
