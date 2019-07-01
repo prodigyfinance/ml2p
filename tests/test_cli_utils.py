@@ -144,6 +144,8 @@ class TestCliUtils:
             "SubnetId": "subnet-1",
             "SecurityGroupIds": ["sg-1"],
         }
+
+    def test_mk_notebook_no_onstart(self):
         notebook_cfg_no_vpc = cli_utils.mk_notebook(self.prj_no_vpc, "notebook-1")
         assert notebook_cfg_no_vpc == {
             "NotebookInstanceName": "modelling-project-notebook-1",
