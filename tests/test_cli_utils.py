@@ -187,7 +187,7 @@ class TestCliUtils:
         assert repo_cfg == {
             "CodeRepositoryName": "modelling-project-repo-1",
             "GitConfig": {
-                "RepositoryUrl": "https://github.com/modelling-project",
+                "RepositoryUrl": "https://github.example.com/modelling-project",
                 "Branch": "master",
                 "SecretArn": "arn:aws:secretsmanager:eu-west-1:111111111111:"
                 "secret:sagemaker-github-authentication-fLJGfa",
