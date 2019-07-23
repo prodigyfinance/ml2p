@@ -141,6 +141,7 @@ class TestCliUtils:
         notebook_cfg_no_repo = cli_utils.mk_notebook(prj, "notebook-1")
         assert notebook_cfg_no_repo == {
             "NotebookInstanceName": "modelling-project-notebook-1",
+            "DirectInternetAccess": "Disabled",
             "InstanceType": "ml.t2.medium",
             "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
@@ -155,6 +156,7 @@ class TestCliUtils:
         assert notebook_cfg_repo == {
             "NotebookInstanceName": "modelling-project-notebook-1",
             "InstanceType": "ml.t2.medium",
+            "DirectInternetAccess": "Disabled",
             "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
             "LifecycleConfigName": "modelling-project-notebook-1-lifecycle-config",
@@ -169,11 +171,21 @@ class TestCliUtils:
         assert notebook_cfg_no_vpc == {
             "NotebookInstanceName": "modelling-project-notebook-1",
             "InstanceType": "ml.t2.medium",
+            "DirectInternetAccess": "Disabled",
             "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
             "LifecycleConfigName": "modelling-project-notebook-1-lifecycle-config",
             "VolumeSizeInGB": 8,
         }
+
+    def test_mk_notebook_with_direct_internet_access_enabled(self, prj):
+        prj.cfg["notebook"]["direct_internet_access"] = "Enabled"
+        notebook_cfg = cli_utils.mk_notebook(prj, "notebook-1")
+        assert notebook_cfg["DirectInternetAccess"] == "Enabled"
+
+    def test_mk_notebook_with_direct_internet_access_disabled_by_default(self, prj):
+        notebook_cfg = cli_utils.mk_notebook(prj, "notebook-1")
+        assert notebook_cfg["DirectInternetAccess"] == "Disabled"
 
     def test_mk_lifecycle_config(self, prj):
         notebook_lifecycle_cfg = cli_utils.mk_lifecycle_config(prj, "notebook-1")
