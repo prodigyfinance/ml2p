@@ -30,7 +30,7 @@ def prj_no_vpc():
 
 
 def on_start_fixture():
-    with open(resource_filename("tests.fixture_files", "on_start.sh")) as f:
+    with open(resource_filename("tests.fixture_files", "on_start.sh"), "rb") as f:
         return f.read()
 
 
@@ -189,15 +189,15 @@ class TestCliUtils:
 
     def test_mk_lifecycle_config(self, prj):
         notebook_lifecycle_cfg = cli_utils.mk_lifecycle_config(prj, "notebook-1")
+        assert (
+            base64.b64decode(notebook_lifecycle_cfg["OnStart"][0]["Content"])
+            == on_start_fixture()
+        )
         assert notebook_lifecycle_cfg == {
             "NotebookInstanceLifecycleConfigName": "modelling-project-"
             "notebook-1-lifecycle-config",
             "OnStart": [
-                {
-                    "Content": base64.b64encode(
-                        on_start_fixture().encode("utf-8")
-                    ).decode("utf-8")
-                }
+                {"Content": base64.b64encode(on_start_fixture()).decode("utf-8")}
             ],
         }
 
