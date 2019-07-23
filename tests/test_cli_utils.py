@@ -2,6 +2,7 @@
 
 """ Tests for ml2p.cli_utils. """
 
+import base64
 import datetime
 from unittest.mock import patch
 
@@ -26,6 +27,11 @@ def prj_no_vpc():
         cfg_no_vpc = resource_filename("tests.fixture_files", "ml2p-no-vpc.yml")
         prj_no_vpc = ModellingProject(cfg_no_vpc)
     return prj_no_vpc
+
+
+def on_start_fixture():
+    with open(resource_filename("tests.fixture_files", "on_start.sh"), "rb") as f:
+        return f.read()
 
 
 class TestCliUtils:
@@ -102,7 +108,13 @@ class TestCliUtils:
                 "ModelDataUrl": "s3://prodigyfinance-modelling-project-sagemaker"
                 "-production/models/modelling-project-training-job-1/"
                 "output/model.tar.gz",
-                "Environment": {"ML2P_MODEL_VERSION": "modelling-project-model-1"},
+                "Environment": {
+                    "ML2P_MODEL_VERSION": "modelling-project-model-1",
+                    "ML2P_PROJECT": "modelling-project",
+                    "ML2P_S3_URL": (
+                        "s3://prodigyfinance-modelling-project-sagemaker-production/"
+                    ),
+                },
             },
             "ExecutionRoleArn": "arn:aws:iam::111111111111:role/modelling-project",
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
@@ -165,10 +177,16 @@ class TestCliUtils:
 
     def test_mk_lifecycle_config(self, prj):
         notebook_lifecycle_cfg = cli_utils.mk_lifecycle_config(prj, "notebook-1")
+        assert (
+            base64.b64decode(notebook_lifecycle_cfg["OnStart"][0]["Content"])
+            == on_start_fixture()
+        )
         assert notebook_lifecycle_cfg == {
             "NotebookInstanceLifecycleConfigName": "modelling-project-"
             "notebook-1-lifecycle-config",
-            "OnStart": [{"Content": "Li90ZXN0cy9maXh0dXJlX2ZpbGVzL29uX3N0YXJ0LnNo"}],
+            "OnStart": [
+                {"Content": base64.b64encode(on_start_fixture()).decode("utf-8")}
+            ],
         }
 
     def test_mk_lifecycle_config_no_onstart(self, prj_no_vpc):
