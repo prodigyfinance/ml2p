@@ -123,6 +123,7 @@ def mk_notebook(prj, notebook_name, repo_name=None):
         "Tags": prj.tags(),
         "LifecycleConfigName": prj.full_job_name(notebook_name) + "-lifecycle-config",
         "VolumeSizeInGB": prj.notebook.volume_size,
+        "DirectInternetAccess": prj.notebook.get("direct_internet_access", "Disabled"),
     }
     if repo_name is not None:
         notebook_params["DefaultCodeRepository"] = prj.full_job_name(repo_name)
