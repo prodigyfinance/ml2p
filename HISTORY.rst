@@ -1,6 +1,12 @@
 History
 =======
 
+0.0.5 (2019-07-23)
+------------------
+
+* Disable direct internet access from notebooks by default.
+* Add tests for cli_utils.
+
 0.0.4 (2019-06-26)
 ------------------
 
