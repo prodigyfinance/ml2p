@@ -10,6 +10,11 @@ Welcome to ml2p's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   overview
+   install
+   quickstart
+   reference/index
+   releases
 
 
 Indices and tables
