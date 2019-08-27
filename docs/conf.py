@@ -23,11 +23,10 @@ project = "ml2p"
 copyright = "2019, Prodigy Finance"
 author = "Prodigy Finance"
 
-# The short X.Y version
-version = ""
 # The full version, including alpha/beta/rc tags
 release = "0.0.5"
-
+# The short X.Y version.
+version = "{ver[0]}.{ver[1]}".format(ver=release.split("."))
 
 # -- General configuration ---------------------------------------------------
 
