@@ -2,7 +2,6 @@
 
 """ Pytest fixtures for tests. """
 
-import collections
 import datetime
 
 import pytest
@@ -23,13 +22,34 @@ def fake_utcnow(monkeypatch):
     return utcnow
 
 
-sagemaker_type = collections.namedtuple("sagemaker_env_type", ["env", "ml_folder"])
+class SageMakerFixture:
+    def __init__(self, ml_folder, monkeypatch):
+        self.ml_folder = ml_folder
+        self.monkeypatch = monkeypatch
+
+    def generic(self):
+        return SageMakerEnv(str(self.ml_folder))
+
+    def train(self):
+        self.monkeypatch.setenv("TRAINING_JOB_NAME", "test-train-1.2.3")
+        return SageMakerEnv(str(self.ml_folder))
+
+    def serve(self, **kw):
+        self.monkeypatch.delenv("TRAINING_JOB_NAME", raising=False)
+        envvars = {
+            "ML2P_MODEL_VERSION": "test-model-1.2.3",
+            "ML2P_PROJECT": "test-project",
+            "ML2P_S3_URL": "s3://foo/bar",
+        }
+        envvars.update(kw)
+        for k, v in envvars.items():
+            if v is None:
+                self.monkeypatch.delenv(k, raising=False)
+            else:
+                self.monkeypatch.setenv(k, v)
+        return SageMakerEnv(str(self.ml_folder))
 
 
 @pytest.fixture
 def sagemaker(tmpdir, monkeypatch):
-    monkeypatch.setenv("ML2P_MODEL_VERSION", "test-model-1.2.3")
-    monkeypatch.setenv("ML2P_PROJECT", "test-project")
-    monkeypatch.setenv("ML2P_S3_URL", "s3://foo/bar")
-    env = SageMakerEnv(str(tmpdir))
-    return sagemaker_type(env=env, ml_folder=tmpdir)
+    return SageMakerFixture(ml_folder=tmpdir, monkeypatch=monkeypatch)
