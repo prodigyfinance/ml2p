@@ -10,6 +10,8 @@ import os
 import pathlib
 import urllib.parse
 
+from . import hyperparameters
+
 
 class S3URL:
     """ A friendly interface to an S3 URL. """
@@ -57,7 +59,7 @@ class SageMakerEnv:
         with (
             self._ml_folder / "input" / "config" / "hyperparameters.json"
         ).open() as f:
-            return json.load(f)
+            return hyperparameters.decode(json.load(f))
 
     def resourceconfig(self):
         with (self._ml_folder / "input" / "config" / "resourceconfig.json").open() as f:
