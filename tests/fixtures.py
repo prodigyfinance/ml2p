@@ -3,10 +3,12 @@
 """ Pytest fixtures for tests. """
 
 import datetime
+import json
 
 import pytest
 
 from ml2p.core import SageMakerEnv
+from ml2p import hyperparameters
 
 
 @pytest.fixture
@@ -30,8 +32,16 @@ class SageMakerFixture:
     def generic(self):
         return SageMakerEnv(str(self.ml_folder))
 
-    def train(self):
+    def train(self, **kw):
         self.monkeypatch.setenv("TRAINING_JOB_NAME", "test-train-1.2.3")
+        params = {"ML2P_PROJECT": "test-project", "ML2P_S3_URL": "s3://foo/bar"}
+        params.update(kw)
+        for k, v in kw.items():
+            if v is None:
+                del params[k]
+        self.ml_folder.mkdir("input").mkdir("config").join(
+            "hyperparameters.json"
+        ).write(json.dumps(hyperparameters.encode({"ML2P_ENV": params})))
         return SageMakerEnv(str(self.ml_folder))
 
     def serve(self, **kw):
