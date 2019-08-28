@@ -89,18 +89,22 @@ class SageMakerEnv:
         if "ML2P_S3_URL" in environ:
             self.s3 = S3URL(environ["ML2P_S3_URL"])
         # Attributes that are expected to only be available during training:
-        self.training_job_name = environ.get("TRAINING_JOB_NAME", None)
+        self.training_job_name = os.environ.get("TRAINING_JOB_NAME", None)
         # Attributes that are expected to only be available during serving:
         self.model_version = environ.get("ML2P_MODEL_VERSION", None)
 
     def hyperparameters(self):
-        with (
-            self._ml_folder / "input" / "config" / "hyperparameters.json"
-        ).open() as f:
+        hp_path = self._ml_folder / "input" / "config" / "hyperparameters.json"
+        if not hp_path.exists():
+            return {}
+        with hp_path.open() as f:
             return hyperparameters.decode(json.load(f))
 
     def resourceconfig(self):
-        with (self._ml_folder / "input" / "config" / "resourceconfig.json").open() as f:
+        rc_path = self._ml_folder / "input" / "config" / "resourceconfig.json"
+        if not rc_path.exists():
+            return {}
+        with rc_path.open() as f:
             return json.load(f)
 
     def dataset_folder(self, dataset):
