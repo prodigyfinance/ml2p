@@ -61,8 +61,14 @@ class TestSageMakerEnv:
     def test_hyperparameters(self, sagemaker):
         sagemaker.ml_folder.mkdir("input").mkdir("config").join(
             "hyperparameters.json"
-        ).write('{"param": "value"}')
+        ).write('{"param": "\\"value\\""}')
         assert sagemaker.env.hyperparameters() == {"param": "value"}
+
+    def test_nested_hyperparameters(self, sagemaker):
+        sagemaker.ml_folder.mkdir("input").mkdir("config").join(
+            "hyperparameters.json"
+        ).write('{"a.b": "1", "a.c": "2"}')
+        assert sagemaker.env.hyperparameters() == {"a": {"b": 1, "c": 2}}
 
     def test_resourceconfig(self, sagemaker):
         sagemaker.ml_folder.mkdir("input").mkdir("config").join(

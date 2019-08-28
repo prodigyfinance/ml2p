@@ -9,6 +9,8 @@ import re
 
 import click
 
+from . import hyperparameters
+
 
 def date_to_string_serializer(value):
     """ JSON serializer for datetime objects. """
@@ -49,7 +51,7 @@ def mk_training_job(prj, training_job, dataset):
         },
         # training shouldn't make network calls
         "EnableNetworkIsolation": True,
-        "HyperParameters": {},
+        "HyperParameters": hyperparameters.encode({}),
         "InputDataConfig": [
             {
                 "ChannelName": "training",
