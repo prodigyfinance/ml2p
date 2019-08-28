@@ -80,18 +80,18 @@ class SageMakerEnv:
             # this is a training job instance
             self.env_type = self.TRAIN
             environ = self.hyperparameters().get("ML2P_ENV", {})
+            self.training_job_name = os.environ.get("TRAINING_JOB_NAME", None)
+            self.model_version = None
         else:
             # this is a serving instance
             self.env_type = self.SERVE
             environ = os.environ
+            self.training_job_name = None
+            self.model_version = environ.get("ML2P_MODEL_VERSION", None)
         self.project = environ.get("ML2P_PROJECT", None)
         self.s3 = None
         if "ML2P_S3_URL" in environ:
             self.s3 = S3URL(environ["ML2P_S3_URL"])
-        # Attributes that are expected to only be available during training:
-        self.training_job_name = os.environ.get("TRAINING_JOB_NAME", None)
-        # Attributes that are expected to only be available during serving:
-        self.model_version = environ.get("ML2P_MODEL_VERSION", None)
 
     def hyperparameters(self):
         hp_path = self._ml_folder / "input" / "config" / "hyperparameters.json"
