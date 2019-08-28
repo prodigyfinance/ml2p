@@ -7,8 +7,8 @@ import json
 
 import pytest
 
-from ml2p.core import SageMakerEnv
 from ml2p import hyperparameters
+from ml2p.core import SageMakerEnv
 
 
 @pytest.fixture
