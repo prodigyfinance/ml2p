@@ -4,6 +4,7 @@
 """
 
 import datetime
+import enum
 import importlib
 import json
 import os
@@ -31,29 +32,60 @@ class S3URL:
         return "s3://{}/{}".format(self._s3url.netloc, self.path(suffix))
 
 
+class SageMakerEnvType(enum.Enum):
+    """ The type of SageMakerEnvironment.
+    """
+
+    TRAIN = "train"
+    SERVE = "serve"
+
+
 class SageMakerEnv:
     """ An interface to the SageMaker docker environment.
 
-        Attributes:
+        Attributes that are expected to be available in both training and serving
+        environments:
+
+        * `env_type` - Whether this is a training or serving environment
+          (type: ml2p.core.SageMakerEnvType).
 
         * `project` - The ML2P project name (type: str).
 
         * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
 
+        Attributes that are only expected to be available while training (and that will
+        be None when serving the model):
+
+        * `training_job_name` - The full job name of the training job (type: str).
+
+        Attributes that are only expected to be available while serving the model (and
+        that will be None when serving the model):
+
         * `model_version` - The full job name of the deployed model, or None
           during training (type: str).
-
-        Note: `project` and `s3` are not currently set in the training environemnt.
     """
+
+    TRAIN = SageMakerEnvType.TRAIN
+    SERVE = SageMakerEnvType.SERVE
 
     def __init__(self, ml_folder):
         self._ml_folder = pathlib.Path(ml_folder)
-        # The attributes below are None except during model training.
-        self.model_version = os.environ.get("ML2P_MODEL_VERSION", None)
-        self.project = os.environ.get("ML2P_PROJECT", None)
+        if "TRAINING_JOB_NAME" in os.environ:
+            # this is a training job instance
+            self.env_type = self.TRAIN
+            environ = self.hyperparameters().get("ML2P_ENV", {})
+        else:
+            # this is a serving instance
+            self.env_type = self.SERVE
+            environ = os.environ
+        self.project = environ.get("ML2P_PROJECT", None)
         self.s3 = None
-        if "ML2P_S3_URL" in os.environ:
-            self.s3 = S3URL(os.environ["ML2P_S3_URL"])
+        if "ML2P_S3_URL" in environ:
+            self.s3 = S3URL(environ["ML2P_S3_URL"])
+        # Attributes that are expected to only be available during training:
+        self.training_job_name = environ.get("TRAINING_JOB_NAME", None)
+        # Attributes that are expected to only be available during serving:
+        self.model_version = environ.get("ML2P_MODEL_VERSION", None)
 
     def hyperparameters(self):
         with (
