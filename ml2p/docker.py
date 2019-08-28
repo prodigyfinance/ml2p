@@ -99,7 +99,7 @@ def train(opt, env):
         raise click.UsageError(
             "The global parameter --model must be given when calling the train command."
         )
-    click.echo("Training model version {}.".format(env.model_version))
+    click.echo("Starting training job {}.".format(env.training_job_name))
     try:
         trainer = opt.model().trainer(env)
         trainer.train()
