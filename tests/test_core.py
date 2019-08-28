@@ -27,29 +27,40 @@ class TestS3URL:
 
 
 class TestSageMakerEnvTrain:
-    def test_env_type(self, sagemaker):
+    def test_basic_env(self, sagemaker):
         env = sagemaker.train()
         assert env.env_type == env.TRAIN
+        assert env.training_job_name == "test-train-1.2.3"
+        assert env.model_version is None
+        assert env.project == "test-project"
+
+    def test_create_env_without_project_name(self, sagemaker):
+        env = sagemaker.train(ML2P_PROJECT=None)
+        assert env.project is None
+
+    def test_create_env_without_s3_url(self, sagemaker):
+        env = sagemaker.train(ML2P_S3_URL=None)
+        assert env.s3 is None
+
+    def test_create_env_with_s3_url(self, sagemaker):
+        assert sagemaker.train().s3.url("baz.txt") == "s3://foo/bar/baz.txt"
 
 
 class TestSageMakerEnvServe:
-    def test_env_type(self, sagemaker):
+    def test_basic_env(self, sagemaker):
         env = sagemaker.serve()
         assert env.env_type == env.SERVE
+        assert env.model_version == "test-model-1.2.3"
+        assert env.training_job_name is None
+        assert env.project == "test-project"
 
     def test_create_env_without_model_version(self, sagemaker):
         env = sagemaker.serve(ML2P_MODEL_VERSION=None)
         assert env.model_version is None
 
-    def test_create_env_with_model_version(self, sagemaker):
-        assert sagemaker.serve().model_version == "test-model-1.2.3"
-
     def test_create_env_without_project_name(self, sagemaker):
         env = sagemaker.serve(ML2P_PROJECT=None)
         assert env.project is None
-
-    def test_create_env_with_project_name(self, sagemaker):
-        assert sagemaker.serve().project == "test-project"
 
     def test_create_env_without_s3_url(self, sagemaker):
         env = sagemaker.serve(ML2P_S3_URL=None)
