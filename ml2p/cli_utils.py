@@ -51,7 +51,9 @@ def mk_training_job(prj, training_job, dataset):
         },
         # training shouldn't make network calls
         "EnableNetworkIsolation": True,
-        "HyperParameters": hyperparameters.encode({}),
+        "HyperParameters": hyperparameters.encode(
+            {"ML2P_ENV": {"ML2P_PROJECT": prj.project, "ML2P_S3_URL": prj.s3.url()}}
+        ),
         "InputDataConfig": [
             {
                 "ChannelName": "training",

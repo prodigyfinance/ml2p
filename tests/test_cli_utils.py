@@ -71,7 +71,12 @@ class TestCliUtils:
                 "TrainingInputMode": "File",
             },
             "EnableNetworkIsolation": True,
-            "HyperParameters": {},
+            "HyperParameters": {
+                "ML2P_ENV.ML2P_PROJECT": '"modelling-project"',
+                "ML2P_ENV.ML2P_S3_URL": (
+                    '"s3://prodigyfinance-modelling-project-sagemaker-production/"'
+                ),
+            },
             "InputDataConfig": [
                 {
                     "ChannelName": "training",
