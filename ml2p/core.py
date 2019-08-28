@@ -63,6 +63,12 @@ class SageMakerEnv:
 
         * `model_version` - The full job name of the deployed model, or None
           during training (type: str).
+
+        In the training environment settings are loaded from hyperparameters stored by
+        ML2P when the training job is created.
+
+        In the serving environment settings are loaded from environment variables stored
+        by ML2P when the model is created.
     """
 
     TRAIN = SageMakerEnvType.TRAIN
