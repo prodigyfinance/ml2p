@@ -121,8 +121,9 @@ class TestML2PDockerTrain:
 
     def test_training_success(self, sagemaker):
         model_folder = sagemaker.ml_folder.join("model").mkdir()
+        sagemaker.train()
         self.check_train(
-            ["Training model version test-model-1.2.3.", "Done."],
+            ["Starting training job test-train-1.2.3.", "Done."],
             sagemaker=sagemaker,
             model=HappyModel,
         )
@@ -130,8 +131,9 @@ class TestML2PDockerTrain:
 
     def test_training_exception(self, sagemaker):
         output_folder = sagemaker.ml_folder.join("output").mkdir()
+        sagemaker.train()
         self.check_train(
-            ["Training model version test-model-1.2.3."],
+            ["Starting training job test-train-1.2.3."],
             exit_code=1,
             exception=ValueError("Much unhappiness"),
             sagemaker=sagemaker,
@@ -172,13 +174,14 @@ class TestML2PDockerServe:
         app = DummyApp(runs)
         monkeypatch.setattr(atexit, "register", teardowns.append)
         monkeypatch.setattr(ml2p.docker, "app", app)
+        env = sagemaker.serve()
         self.check_serve(
             ["Starting server for model version test-model-1.2.3.", "Done."],
             sagemaker=sagemaker,
             model=HappyModel,
         )
         assert isinstance(app.predictor, HappyModelPredictor)
-        assert app.predictor.env.model_folder() == sagemaker.env.model_folder()
+        assert app.predictor.env.model_folder() == env.model_folder()
         assert app.predictor.setup_called
         assert teardowns == [app.predictor.teardown]
         assert runs == [((), {"host": "0.0.0.0", "port": 8080, "debug": False})]
@@ -188,7 +191,7 @@ class TestML2PDockerServe:
 def api_client(sagemaker):
     app = ml2p.docker.app
     app.config["TESTING"] = True
-    app.predictor = HappyModelPredictor(sagemaker.env)
+    app.predictor = HappyModelPredictor(sagemaker.serve())
     app.predictor.setup()
     client = app.test_client()
 
