@@ -83,7 +83,9 @@ def pass_ml2p_docker_options(f):
 def ml2p_docker(ctx, ml_folder, model):
     """ ML2P Sagemaker Docker container helper CLI. """
     ctx.ensure_object(dict)
-    ctx.obj["env"] = SageMakerEnv(ml_folder)
+    ctx.obj["env"] = env = SageMakerEnv(ml_folder)
+    if model is None:
+        model = env.model_cls
     if model is not None:
         model = import_string(model)
     ctx.obj["opt"] = ML2POptions(model=model)
@@ -97,9 +99,10 @@ def train(opt, env):
     """
     if opt.model is None:
         raise click.UsageError(
-            "The global parameter --model must be given when calling the train command."
+            "The global parameter --model must either be given when calling the train"
+            " command or --model-type must be given when creating the training job."
         )
-    click.echo("Training model version {}.".format(env.model_version))
+    click.echo("Starting training job {}.".format(env.training_job_name))
     try:
         trainer = opt.model().trainer(env)
         trainer.train()
@@ -118,7 +121,8 @@ def serve(opt, env, debug):
     """
     if opt.model is None:
         raise click.UsageError(
-            "The global parameter --model must be given when calling the serve command."
+            "The global parameter --model must either be given when calling the serve"
+            " command or --model-type must be given when creating the model."
         )
     click.echo("Starting server for model version {}.".format(env.model_version))
     predictor = opt.model().predictor(env)

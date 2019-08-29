@@ -39,10 +39,13 @@ def endpoint_url_for_arn(endpoint_arn):
     )
 
 
-def mk_training_job(prj, training_job, dataset):
+def mk_training_job(prj, training_job, dataset, model_type=None):
     """ Return training job creation parameters. """
     model_path = prj.s3.url("/models/")
     train_path = prj.s3.url("/datasets/" + dataset)
+    extra_env = {}
+    if model_type is not None:
+        extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
     return {
         "TrainingJobName": prj.full_job_name(training_job),
         "AlgorithmSpecification": {
@@ -51,7 +54,15 @@ def mk_training_job(prj, training_job, dataset):
         },
         # training shouldn't make network calls
         "EnableNetworkIsolation": True,
-        "HyperParameters": hyperparameters.encode({}),
+        "HyperParameters": hyperparameters.encode(
+            {
+                "ML2P_ENV": {
+                    "ML2P_PROJECT": prj.project,
+                    "ML2P_S3_URL": prj.s3.url(),
+                    **extra_env,
+                }
+            }
+        ),
         "InputDataConfig": [
             {
                 "ChannelName": "training",
@@ -74,12 +85,15 @@ def mk_training_job(prj, training_job, dataset):
     }
 
 
-def mk_model(prj, model_name, training_job):
+def mk_model(prj, model_name, training_job, model_type=None):
     """ Return model creation parameters. """
     model_path = prj.s3.url("/models")
     model_tgz_path = (
         model_path + "/" + prj.full_job_name(training_job) + "/output/model.tar.gz"
     )
+    extra_env = {}
+    if model_type is not None:
+        extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
     return {
         "ModelName": prj.full_job_name(model_name),
         "PrimaryContainer": {
@@ -89,6 +103,7 @@ def mk_model(prj, model_name, training_job):
                 "ML2P_MODEL_VERSION": prj.full_job_name(model_name),
                 "ML2P_PROJECT": prj.project,
                 "ML2P_S3_URL": prj.s3.url(),
+                **extra_env,
             },
         },
         "ExecutionRoleArn": prj.deploy.role,

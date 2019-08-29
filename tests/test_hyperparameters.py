@@ -20,6 +20,12 @@ class TestEncode:
     def test_none(self):
         assert encode({"a": None}) == {"a": "null"}
 
+    def test_true(self):
+        assert encode({"a": True}) == {"a": "true"}
+
+    def test_false(self):
+        assert encode({"a": False}) == {"a": "false"}
+
     def test_list(self):
         assert encode({"a": [1, 2, 3]}) == {"a": "[1, 2, 3]"}
 
@@ -84,6 +90,12 @@ class TestDecode:
 
     def test_none(self):
         assert decode({"a": "null"}) == {"a": None}
+
+    def test_true(self):
+        assert decode({"a": "true"}) == {"a": True}
+
+    def test_false(self):
+        assert decode({"a": "false"}) == {"a": False}
 
     def test_list(self):
         assert decode({"a": "[1, 2, 3]"}) == {"a": [1, 2, 3]}

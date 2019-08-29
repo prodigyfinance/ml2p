@@ -25,6 +25,7 @@ class ModellingProject:
         self.train = ModellingSubCfg(self.cfg, "train")
         self.deploy = ModellingSubCfg(self.cfg, "deploy")
         self.notebook = ModellingSubCfg(self.cfg, "notebook")
+        self.models = ModellingSubCfg(self.cfg, "models", defaults="models")
 
     def full_job_name(self, job_name):
         return "{}-{}".format(self.project, job_name)
@@ -37,7 +38,6 @@ class ModellingSubCfg:
     """ Holder for training or deployment config. """
 
     def __init__(self, cfg, section, defaults="defaults"):
-        self._cfg = cfg
         self._defaults = cfg.get(defaults, {})
         self._section = cfg.get(section, {})
 
@@ -45,6 +45,14 @@ class ModellingSubCfg:
         if name in self._section:
             return self._section[name]
         return self._defaults[name]
+
+    def __getitem__(self, name):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults[name]
+
+    def __setitem__(self, name, value):
+        self._section[name] = value
 
     def get(self, name, default=None):
         if name in self._section:
@@ -108,11 +116,14 @@ def training_job_list(prj):
 @training_job.command("create")
 @click.argument("training_job")
 @click.argument("dataset")
+@click.option("--model-type", "-m", default=None, help="The name of the type of model.")
 @pass_prj
-def training_job_create(prj, training_job, dataset):
+def training_job_create(prj, training_job, dataset, model_type):
     """ Create a training job.
     """
-    training_job_params = cli_utils.mk_training_job(prj, training_job, dataset)
+    training_job_params = cli_utils.mk_training_job(
+        prj, training_job, dataset, model_type
+    )
     response = prj.client.create_training_job(**training_job_params)
     click_echo_json(response)
 
@@ -162,11 +173,12 @@ def model_list(prj):
 @model.command("create")
 @click.argument("model-name")
 @click.argument("training-job")
+@click.option("--model-type", "-m", default=None, help="The name of the type of model.")
 @pass_prj
-def model_create(prj, model_name, training_job):
+def model_create(prj, model_name, training_job, model_type):
     """ Create a model.
     """
-    model_params = cli_utils.mk_model(prj, model_name, training_job)
+    model_params = cli_utils.mk_model(prj, model_name, training_job, model_type)
     response = prj.client.create_model(**model_params)
     click_echo_json(response)
 

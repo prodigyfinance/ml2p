@@ -4,6 +4,7 @@
 """
 
 import datetime
+import enum
 import importlib
 import json
 import os
@@ -31,38 +32,84 @@ class S3URL:
         return "s3://{}/{}".format(self._s3url.netloc, self.path(suffix))
 
 
+class SageMakerEnvType(enum.Enum):
+    """ The type of SageMakerEnvironment.
+    """
+
+    TRAIN = "train"
+    SERVE = "serve"
+
+
 class SageMakerEnv:
     """ An interface to the SageMaker docker environment.
 
-        Attributes:
+        Attributes that are expected to be available in both training and serving
+        environments:
+
+        * `env_type` - Whether this is a training or serving environment
+          (type: ml2p.core.SageMakerEnvType).
 
         * `project` - The ML2P project name (type: str).
 
+        * `model_cls` - The fulled dotted Python name of the ml2p.core.Model class to
+          be used for training and prediction (type: str). This may be None if the
+          docker image itself specifies the name with `ml2p-docker --model ...`.
+
         * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
+
+        Attributes that are only expected to be available while training (and that will
+        be None when serving the model):
+
+        * `training_job_name` - The full job name of the training job (type: str).
+
+        Attributes that are only expected to be available while serving the model (and
+        that will be None when serving the model):
 
         * `model_version` - The full job name of the deployed model, or None
           during training (type: str).
 
-        Note: `project` and `s3` are not currently set in the training environemnt.
+        In the training environment settings are loaded from hyperparameters stored by
+        ML2P when the training job is created.
+
+        In the serving environment settings are loaded from environment variables stored
+        by ML2P when the model is created.
     """
+
+    TRAIN = SageMakerEnvType.TRAIN
+    SERVE = SageMakerEnvType.SERVE
 
     def __init__(self, ml_folder):
         self._ml_folder = pathlib.Path(ml_folder)
-        # The attributes below are None except during model training.
-        self.model_version = os.environ.get("ML2P_MODEL_VERSION", None)
-        self.project = os.environ.get("ML2P_PROJECT", None)
+        if "TRAINING_JOB_NAME" in os.environ:
+            # this is a training job instance
+            self.env_type = self.TRAIN
+            environ = self.hyperparameters().get("ML2P_ENV", {})
+            self.training_job_name = os.environ.get("TRAINING_JOB_NAME", None)
+            self.model_version = None
+        else:
+            # this is a serving instance
+            self.env_type = self.SERVE
+            environ = os.environ
+            self.training_job_name = None
+            self.model_version = environ.get("ML2P_MODEL_VERSION", None)
+        self.project = environ.get("ML2P_PROJECT", None)
+        self.model_cls = environ.get("ML2P_MODEL_CLS", None)
         self.s3 = None
-        if "ML2P_S3_URL" in os.environ:
-            self.s3 = S3URL(os.environ["ML2P_S3_URL"])
+        if "ML2P_S3_URL" in environ:
+            self.s3 = S3URL(environ["ML2P_S3_URL"])
 
     def hyperparameters(self):
-        with (
-            self._ml_folder / "input" / "config" / "hyperparameters.json"
-        ).open() as f:
+        hp_path = self._ml_folder / "input" / "config" / "hyperparameters.json"
+        if not hp_path.exists():
+            return {}
+        with hp_path.open() as f:
             return hyperparameters.decode(json.load(f))
 
     def resourceconfig(self):
-        with (self._ml_folder / "input" / "config" / "resourceconfig.json").open() as f:
+        rc_path = self._ml_folder / "input" / "config" / "resourceconfig.json"
+        if not rc_path.exists():
+            return {}
+        with rc_path.open() as f:
             return json.load(f)
 
     def dataset_folder(self, dataset):
