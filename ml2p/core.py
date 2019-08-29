@@ -51,6 +51,10 @@ class SageMakerEnv:
 
         * `project` - The ML2P project name (type: str).
 
+        * `model_cls` - The fulled dotted Python name of the ml2p.core.Model class to
+          be used for training and prediction (type: str). This may be None if the
+          docker image itself specifies the name with `ml2p-docker --model ...`.
+
         * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
 
         Attributes that are only expected to be available while training (and that will
@@ -89,6 +93,7 @@ class SageMakerEnv:
             self.training_job_name = None
             self.model_version = environ.get("ML2P_MODEL_VERSION", None)
         self.project = environ.get("ML2P_PROJECT", None)
+        self.model_cls = environ.get("ML2P_MODEL_CLS", None)
         self.s3 = None
         if "ML2P_S3_URL" in environ:
             self.s3 = S3URL(environ["ML2P_S3_URL"])

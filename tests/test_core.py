@@ -45,6 +45,14 @@ class TestSageMakerEnvTrain:
     def test_create_env_with_s3_url(self, sagemaker):
         assert sagemaker.train().s3.url("baz.txt") == "s3://foo/bar/baz.txt"
 
+    def test_create_env_without_model_cls(self, sagemaker):
+        env = sagemaker.train(ML2P_MODEL_CLS=None)
+        assert env.model_cls is None
+
+    def test_create_env_with_model_cls(self, sagemaker):
+        env = sagemaker.train(ML2P_MODEL_CLS="my.pkg.model")
+        assert env.model_cls == "my.pkg.model"
+
 
 class TestSageMakerEnvServe:
     def test_basic_env(self, sagemaker):
@@ -68,6 +76,14 @@ class TestSageMakerEnvServe:
 
     def test_create_env_with_s3_url(self, sagemaker):
         assert sagemaker.serve().s3.url("baz.txt") == "s3://foo/bar/baz.txt"
+
+    def test_create_env_without_model_cls(self, sagemaker):
+        env = sagemaker.serve(ML2P_MODEL_CLS=None)
+        assert env.model_cls is None
+
+    def test_create_env_with_model_cls(self, sagemaker):
+        env = sagemaker.serve(ML2P_MODEL_CLS="my.pkg.model")
+        assert env.model_cls == "my.pkg.model"
 
 
 class TestSageMakerEnvGeneric:
