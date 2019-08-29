@@ -230,10 +230,10 @@ def validate_name(name, resource):
     }
     message_dict = {
         "training-job": "Training job names should be in the"
-        "format <model-name>-X.Y.Z-[dev]",
+        " format <model-name>-X.Y.Z-[dev]",
         "model": "Model names should be in the format <model-name>-X.Y.Z-[dev]",
         "endpoint": "Endpoint names should be in the"
-        "format <model-name>-X.Y.Z-[dev]-[live|analysis|test]",
+        " format <model-name>-X.Y.Z-[dev]-[live|analysis|test]",
     }
     if re.match(re_dict[resource], name) is None:
         raise NamingError(message_dict[resource])

@@ -11,8 +11,10 @@ from ml2p.core import (
     Model,
     ModelPredictor,
     ModelTrainer,
+    NamingError,
     SageMakerEnv,
     import_string,
+    validate_name,
 )
 
 
@@ -180,3 +182,25 @@ class TestModel:
         predictor = MyModel().predictor(sagemaker.env)
         assert predictor.__class__ is ModelPredictor
         assert predictor.env is sagemaker.env
+
+
+class TestNamingValidation:
+    def test_naming_validation(self):
+        with pytest.raises(NamingError) as exc_info:
+            validate_name("a wrong name", "training-job")
+        assert (
+            str(exc_info.value) == "Training job names should be in the "
+            "format <model-name>-X.Y.Z-[dev]"
+        )
+        with pytest.raises(NamingError) as exc_info:
+            validate_name("a wrong name", "model")
+        assert (
+            str(exc_info.value) == "Model names should be in the"
+            " format <model-name>-X.Y.Z-[dev]"
+        )
+        with pytest.raises(NamingError) as exc_info:
+            validate_name("a wrong name", "endpoint")
+        assert (
+            str(exc_info.value) == "Endpoint names should be in the"
+            " format <model-name>-X.Y.Z-[dev]-[live|analysis|test]"
+        )
