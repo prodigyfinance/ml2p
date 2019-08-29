@@ -103,6 +103,26 @@ class TestCliUtils:
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
         }
 
+    def test_mk_training_job_with_model_type(self, prj):
+        prj.models["model-type-1"] = "my.pkg.model"
+        training_job_cfg = cli_utils.mk_training_job(
+            prj, "training-job-1", "dataset-1", "model-type-1"
+        )
+        assert training_job_cfg["HyperParameters"] == {
+            "ML2P_ENV.ML2P_MODEL_CLS": '"my.pkg.model"',
+            "ML2P_ENV.ML2P_PROJECT": '"modelling-project"',
+            "ML2P_ENV.ML2P_S3_URL": (
+                '"s3://prodigyfinance-modelling-project-sagemaker-production/"'
+            ),
+        }
+
+    def test_mk_training_job_with_missing_model_type(self, prj):
+        with pytest.raises(KeyError) as err:
+            cli_utils.mk_training_job(
+                prj, "training-job-1", "dataset-1", "model-type-1"
+            )
+        assert str(err.value) == "'model-type-1'"
+
     def test_mk_model(self, prj):
         model_cfg = cli_utils.mk_model(prj, "model-1", "training-job-1")
         assert model_cfg == {
@@ -125,6 +145,23 @@ class TestCliUtils:
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
             "EnableNetworkIsolation": False,
         }
+
+    def test_mk_model_with_model_type(self, prj):
+        prj.models["model-type-1"] = "my.pkg.model"
+        model_cfg = cli_utils.mk_model(prj, "model-1", "training-job-1", "model-type-1")
+        assert model_cfg["PrimaryContainer"]["Environment"] == {
+            "ML2P_MODEL_CLS": "my.pkg.model",
+            "ML2P_MODEL_VERSION": "modelling-project-model-1",
+            "ML2P_PROJECT": "modelling-project",
+            "ML2P_S3_URL": (
+                "s3://prodigyfinance-modelling-project-sagemaker-production/"
+            ),
+        }
+
+    def test_mk_model_with_missing_model_type(self, prj):
+        with pytest.raises(KeyError) as err:
+            cli_utils.mk_model(prj, "model-1", "training-job-1", "model-type-1")
+        assert str(err.value) == "'model-type-1'"
 
     def test_mk_endpoint_config(self, prj):
         endpoint_cfg = cli_utils.mk_endpoint_config(prj, "endpoint-1", "model-1")
