@@ -185,7 +185,7 @@ class TestModel:
 
 
 class TestNamingValidation:
-    def test_naming_validation(self):
+    def test_naming_validation_noncompliance(self):
         with pytest.raises(NamingError) as exc_info:
             validate_name("a wrong name", "training-job")
         assert (
@@ -204,3 +204,17 @@ class TestNamingValidation:
             str(exc_info.value) == "Endpoint names should be in the"
             " format <model-name>-X.Y.Z-[dev]-[live|analysis|test]"
         )
+
+    def test_naming_validation_compliance(self):
+        validate_name("test-model-0.0.0-dev", "training-job")
+        validate_name("test-model-0.0.0", "training-job")
+        validate_name("test-model-0.0.0-dev", "model")
+        validate_name("test-model-0.0.0", "model")
+        validate_name("test-model-0.0.0-dev", "endpoint")
+        validate_name("test-model-0.0.0-dev-live", "endpoint")
+        validate_name("test-model-0.0.0-dev-analysis", "endpoint")
+        validate_name("test-model-0.0.0-dev-test", "endpoint")
+        validate_name("test-model-0.0.0", "endpoint")
+        validate_name("test-model-0.0.0-live", "endpoint")
+        validate_name("test-model-0.0.0-analysis", "endpoint")
+        validate_name("test-model-0.0.0-test", "endpoint")

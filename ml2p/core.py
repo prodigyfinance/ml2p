@@ -223,10 +223,10 @@ def validate_name(name, resource):
             "training-job", "model", "endpoint".
     """
     re_dict = {
-        "training-job": r"^[a-zA-Z0-9\-]*-[0-9].[0-9].[0-9](\-\[dev\])?$",
-        "model": r"^[a-zA-Z0-9\-]*-[0-9].[0-9].[0-9](\-\[dev\])?$",
+        "training-job": r"^[a-zA-Z0-9\-]*-[0-9].[0-9].[0-9](\-dev)?$",
+        "model": r"^[a-zA-Z0-9\-]*-[0-9].[0-9].[0-9](\-dev)?$",
         "endpoint": r"^[a-zA-Z0-9\-]*-[0-9].[0-9].[0-9]"
-        r"(\-\[dev\])?(\-\[(live|analysis|test)\])?$",
+        r"(\-dev)?(\-(live|analysis|test))?$",
     }
     message_dict = {
         "training-job": "Training job names should be in the"
