@@ -25,6 +25,7 @@ class ModellingProject:
         self.train = ModellingSubCfg(self.cfg, "train")
         self.deploy = ModellingSubCfg(self.cfg, "deploy")
         self.notebook = ModellingSubCfg(self.cfg, "notebook")
+        self.models = ModellingSubCfg(self.cfg, "models", defaults="models")
 
     def full_job_name(self, job_name):
         return "{}-{}".format(self.project, job_name)
@@ -45,6 +46,14 @@ class ModellingSubCfg:
         if name in self._section:
             return self._section[name]
         return self._defaults[name]
+
+    def __getitem__(self, name):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults[name]
+
+    def __setitem__(self, name, value):
+        self._section[name] = value
 
     def get(self, name, default=None):
         if name in self._section:
@@ -108,8 +117,9 @@ def training_job_list(prj):
 @training_job.command("create")
 @click.argument("training_job")
 @click.argument("dataset")
+@click.option("--model-type", "-m", default=None, help="The name of the type of model.")
 @pass_prj
-def training_job_create(prj, training_job, dataset):
+def training_job_create(prj, training_job, dataset, model_type):
     """ Create a training job.
     """
     validate_name(training_job, "training-job")
@@ -165,8 +175,9 @@ def model_list(prj):
 @model.command("create")
 @click.argument("model-name")
 @click.argument("training-job")
+@click.option("--model-type", "-m", default=None, help="The name of the type of model.")
 @pass_prj
-def model_create(prj, model_name, training_job):
+def model_create(prj, model_name, training_job, model_type):
     """ Create a model.
     """
     validate_name(model_name, "model")
