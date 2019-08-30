@@ -223,17 +223,17 @@ def validate_name(name, resource):
             "training-job", "model", "endpoint".
     """
     re_dict = {
-        "training-job": r"^[a-zA-Z0-9\-]*-[0-9].[0-9].[0-9](\-dev)?$",
-        "model": r"^[a-zA-Z0-9\-]*-[0-9].[0-9].[0-9](\-dev)?$",
-        "endpoint": r"^[a-zA-Z0-9\-]*-[0-9].[0-9].[0-9]"
+        "training-job": r"^[a-zA-Z0-9\-]*-[0-9]-[0-9]-[0-9](\-dev)?$",
+        "model": r"^[a-zA-Z0-9\-]*-[0-9]-[0-9]-[0-9](\-dev)?$",
+        "endpoint": r"^[a-zA-Z0-9\-]*-[0-9]-[0-9]-[0-9]"
         r"(\-dev)?(\-(live|analysis|test))?$",
     }
     message_dict = {
         "training-job": "Training job names should be in the"
-        " format <model-name>-X.Y.Z-[dev]",
-        "model": "Model names should be in the format <model-name>-X.Y.Z-[dev]",
+        " format <model-name>-X-Y-Z-[dev]",
+        "model": "Model names should be in the format <model-name>-X-Y-Z-[dev]",
         "endpoint": "Endpoint names should be in the"
-        " format <model-name>-X.Y.Z-[dev]-[live|analysis|test]",
+        " format <model-name>-X-Y-Z-[dev]-[live|analysis|test]",
     }
     if re.match(re_dict[resource], name) is None:
         raise NamingError(message_dict[resource])
