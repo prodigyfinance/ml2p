@@ -12,7 +12,6 @@ from ml2p.core import (
     ModelPredictor,
     ModelTrainer,
     NamingError,
-    SageMakerEnv,
     import_string,
     validate_name,
 )
