@@ -113,7 +113,9 @@ def training_job_create(prj, training_job, dataset):
     """ Create a training job.
     """
     validate_name(training_job, "training-job")
-    training_job_params = cli_utils.mk_training_job(prj, training_job, dataset)
+    training_job_params = cli_utils.mk_training_job(
+        prj, training_job, dataset, model_type
+    )
     response = prj.client.create_training_job(**training_job_params)
     click_echo_json(response)
 
@@ -168,7 +170,7 @@ def model_create(prj, model_name, training_job):
     """ Create a model.
     """
     validate_name(model_name, "model")
-    model_params = cli_utils.mk_model(prj, model_name, training_job)
+    model_params = cli_utils.mk_model(prj, model_name, training_job, model_type)
     response = prj.client.create_model(**model_params)
     click_echo_json(response)
 

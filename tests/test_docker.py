@@ -3,6 +3,7 @@
 """ Tests for ml2p.docker. """
 
 import atexit
+import collections
 import re
 
 import pytest
@@ -24,6 +25,11 @@ def assert_cli_result(result, output, exit_code=0, exception=None):
         assert result.exception is None
 
 
+def model_cls_path(model):
+    """ Return the dotted path name of a class. """
+    return "{}.{}".format(model.__module__, model.__qualname__)
+
+
 def check_train_or_serve(
     cmd, output, args=None, sagemaker=None, model=None, exit_code=0, exception=None
 ):
@@ -33,7 +39,7 @@ def check_train_or_serve(
     if sagemaker:
         cmd_args += ["--ml-folder", str(sagemaker.ml_folder)]
     if model:
-        cmd_args += ["--model", "{}.{}".format(model.__module__, model.__qualname__)]
+        cmd_args += ["--model", model_cls_path(model)]
     cmd_args += [cmd]
     if args:
         cmd_args += args
@@ -121,17 +127,45 @@ class TestML2PDockerTrain:
 
     def test_training_success(self, sagemaker):
         model_folder = sagemaker.ml_folder.join("model").mkdir()
+        sagemaker.train()
         self.check_train(
-            ["Training model version test-model-1.2.3.", "Done."],
+            ["Starting training job test-train-1.2.3.", "Done."],
             sagemaker=sagemaker,
             model=HappyModel,
         )
         assert model_folder.join("output.txt").read() == "Success!"
 
+    def test_train_success_model_passed_via_hyperparameters(self, sagemaker):
+        model_folder = sagemaker.ml_folder.join("model").mkdir()
+        sagemaker.train(ML2P_MODEL_CLS=model_cls_path(HappyModel))
+        self.check_train(
+            ["Starting training job test-train-1.2.3.", "Done."],
+            sagemaker=sagemaker,
+            model=None,
+        )
+        assert model_folder.join("output.txt").read() == "Success!"
+
+    def test_training_failure_no_model(self, sagemaker):
+        sagemaker.train()
+        self.check_train(
+            [
+                "Usage: ml2p-docker train [OPTIONS]",
+                "",
+                "Error: The global parameter --model must either be given when calling"
+                " the train command or --model-type must be given when creating the"
+                " training job.",
+            ],
+            exit_code=2,
+            exception=SystemExit(2),
+            sagemaker=sagemaker,
+            model=None,
+        )
+
     def test_training_exception(self, sagemaker):
         output_folder = sagemaker.ml_folder.join("output").mkdir()
+        sagemaker.train()
         self.check_train(
-            ["Training model version test-model-1.2.3."],
+            ["Starting training job test-train-1.2.3."],
             exit_code=1,
             exception=ValueError("Much unhappiness"),
             sagemaker=sagemaker,
@@ -152,6 +186,21 @@ class TestML2PDockerTrain:
         )
 
 
+docker_serve_type = collections.namedtuple(
+    "docker_serve_type", ["app", "teardowns", "runs"]
+)
+
+
+@pytest.fixture
+def docker_serve(monkeypatch):
+    teardowns = []
+    runs = []
+    app = DummyApp(runs)
+    monkeypatch.setattr(atexit, "register", teardowns.append)
+    monkeypatch.setattr(ml2p.docker, "app", app)
+    return docker_serve_type(app=app, teardowns=teardowns, runs=runs)
+
+
 class TestML2PDockerServe:
     def check_serve(self, *args, **kw):
         return check_train_or_serve("serve", *args, **kw)
@@ -166,29 +215,52 @@ class TestML2PDockerServe:
             args=["--help"],
         )
 
-    def test_run(self, monkeypatch, sagemaker):
-        teardowns = []
-        runs = []
-        app = DummyApp(runs)
-        monkeypatch.setattr(atexit, "register", teardowns.append)
-        monkeypatch.setattr(ml2p.docker, "app", app)
+    def test_serve(self, docker_serve, sagemaker):
+        env = sagemaker.serve()
         self.check_serve(
             ["Starting server for model version test-model-1.2.3.", "Done."],
             sagemaker=sagemaker,
             model=HappyModel,
         )
-        assert isinstance(app.predictor, HappyModelPredictor)
-        assert app.predictor.env.model_folder() == sagemaker.env.model_folder()
-        assert app.predictor.setup_called
-        assert teardowns == [app.predictor.teardown]
-        assert runs == [((), {"host": "0.0.0.0", "port": 8080, "debug": False})]
+        assert isinstance(docker_serve.app.predictor, HappyModelPredictor)
+        assert docker_serve.app.predictor.env.model_folder() == env.model_folder()
+        assert docker_serve.app.predictor.setup_called
+        assert docker_serve.teardowns == [docker_serve.app.predictor.teardown]
+        assert docker_serve.runs == [
+            ((), {"host": "0.0.0.0", "port": 8080, "debug": False})
+        ]
+
+    def test_serve_model_passed_via_hyperparameters(self, docker_serve, sagemaker):
+        sagemaker.serve(ML2P_MODEL_CLS=model_cls_path(HappyModel))
+        self.check_serve(
+            ["Starting server for model version test-model-1.2.3.", "Done."],
+            sagemaker=sagemaker,
+            model=None,
+        )
+        assert isinstance(docker_serve.app.predictor, HappyModelPredictor)
+
+    def test_serve_failure_no_model(self, docker_serve, sagemaker):
+        sagemaker.serve()
+        self.check_serve(
+            [
+                "Usage: ml2p-docker serve [OPTIONS]",
+                "",
+                "Error: The global parameter --model must either be given when calling"
+                " the serve command or --model-type must be given when creating the"
+                " model.",
+            ],
+            exit_code=2,
+            exception=SystemExit(2),
+            sagemaker=sagemaker,
+            model=None,
+        )
 
 
 @pytest.fixture
 def api_client(sagemaker):
     app = ml2p.docker.app
     app.config["TESTING"] = True
-    app.predictor = HappyModelPredictor(sagemaker.env)
+    app.predictor = HappyModelPredictor(sagemaker.serve())
     app.predictor.setup()
     client = app.test_client()
 
