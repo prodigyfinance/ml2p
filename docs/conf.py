@@ -25,7 +25,7 @@ copyright = "2019, Prodigy Finance"
 author = "Prodigy Finance"
 
 # The full version, including alpha/beta/rc tags
-release = "0.0.7"
+release = "0.0.8"
 # The short X.Y version.
 version = "{ver[0]}.{ver[1]}".format(ver=release.split("."))
 
