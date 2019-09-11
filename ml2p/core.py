@@ -9,9 +9,18 @@ import importlib
 import json
 import os
 import pathlib
+import re
 import urllib.parse
 
 from . import hyperparameters
+
+
+class NamingError(Exception):
+    """ Raised when a training job, model, or endpoint name does not follow
+        convention.
+    """
+
+    pass
 
 
 class S3URL:
@@ -250,3 +259,30 @@ class Model:
         if self.PREDICTOR is None:
             raise ValueError(".PREDICTOR should be an instance of ModelPredictor")
         return self.PREDICTOR(env)
+
+
+def validate_name(name, resource):
+    """ Validate that the name of the SageMaker resource complies with
+        convention.
+
+        :param str name:
+            The name of the SageMaker resource to validate.
+        :param str resource:
+            The type of SageMaker resource to validate. One of "dataset",
+            "training-job", "model", "endpoint".
+    """
+    re_dict = {
+        "training-job": r"^[a-zA-Z0-9\-]*-[0-9]-[0-9]-[0-9](\-dev)?$",
+        "model": r"^[a-zA-Z0-9\-]*-[0-9]-[0-9]-[0-9](\-dev)?$",
+        "endpoint": r"^[a-zA-Z0-9\-]*-[0-9]-[0-9]-[0-9]"
+        r"(\-dev)?(\-(live|analysis|test))?$",
+    }
+    message_dict = {
+        "training-job": "Training job names should be in the"
+        " format <model-name>-X-Y-Z-[dev]",
+        "model": "Model names should be in the format <model-name>-X-Y-Z-[dev]",
+        "endpoint": "Endpoint names should be in the"
+        " format <model-name>-X-Y-Z-[dev]-[live|analysis|test]",
+    }
+    if re.match(re_dict[resource], name) is None:
+        raise NamingError(message_dict[resource])

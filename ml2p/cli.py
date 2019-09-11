@@ -10,7 +10,7 @@ import yaml
 
 from . import cli_utils
 from .cli_utils import click_echo_json
-from .core import S3URL
+from .core import S3URL, validate_name
 
 
 class ModellingProject:
@@ -38,6 +38,7 @@ class ModellingSubCfg:
     """ Holder for training or deployment config. """
 
     def __init__(self, cfg, section, defaults="defaults"):
+        self._cfg = cfg
         self._defaults = cfg.get(defaults, {})
         self._section = cfg.get(section, {})
 
@@ -121,6 +122,7 @@ def training_job_list(prj):
 def training_job_create(prj, training_job, dataset, model_type):
     """ Create a training job.
     """
+    validate_name(training_job, "training-job")
     training_job_params = cli_utils.mk_training_job(
         prj, training_job, dataset, model_type
     )
@@ -178,6 +180,7 @@ def model_list(prj):
 def model_create(prj, model_name, training_job, model_type):
     """ Create a model.
     """
+    validate_name(model_name, "model")
     model_params = cli_utils.mk_model(prj, model_name, training_job, model_type)
     response = prj.client.create_model(**model_params)
     click_echo_json(response)
@@ -228,6 +231,7 @@ def endpoint_list(prj):
 def endpoint_create(prj, endpoint_name, model_name):
     """ Create an endpoint for a model.
     """
+    validate_name(endpoint_name, "endpoint")
     endpoint_config_params = cli_utils.mk_endpoint_config(
         prj, endpoint_name, model_name
     )
