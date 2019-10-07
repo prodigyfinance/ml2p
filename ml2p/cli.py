@@ -8,6 +8,7 @@ import boto3
 import click
 import yaml
 
+from . import __version__ as ml2p_version
 from . import cli_utils
 from .cli_utils import click_echo_json
 from .core import S3URL, validate_name
@@ -71,6 +72,7 @@ pass_prj = click.pass_obj
     default="./ml2p.yml",
     help="Project configuration file. Default: ./ml2p.yml.",
 )
+@click.version_option(version=ml2p_version)
 @click.pass_context
 def ml2p(ctx, cfg):
     """ Minimal Lovable Machine Learning Pipeline.
