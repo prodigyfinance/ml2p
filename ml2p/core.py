@@ -122,7 +122,7 @@ class SageMakerEnv:
         with rc_path.open() as f:
             return json.load(f)
 
-    def dataset_folder(self, dataset):
+    def dataset_folder(self, dataset="training"):
         warnings.warn(
             "The dataset_folder method(...) is deprecated. Please use"
             " data_channel_folder(...) instead, which matches the terminology used by"
