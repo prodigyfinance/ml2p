@@ -97,6 +97,44 @@ def init(prj):
     )
 
 
+@ml2p.group("dataset")
+def dataset():
+    """ Create and list datasets. """
+
+
+@dataset.command("list")
+@pass_prj
+def dataset_list(prj):
+    """ List datasets for this project.
+    """
+    client = boto3.client("s3")
+    prefix = prj.s3.path("/datasets/")
+    len_prefix = len(prefix)
+    response = client.list_objects_v2(
+        Bucket=prj.s3.bucket(), Prefix=prefix, Delimiter="/"
+    )
+    for item in response["CommonPrefixes"]:
+        dataset = item["Prefix"][len_prefix:].rstrip("/")
+        click_echo_json(dataset)
+
+
+@dataset.command("create")
+@click.argument("dataset")
+@pass_prj
+def dataset_create(prj, dataset):
+    """ Create a dataset.
+    """
+    validate_name(dataset, "dataset")
+    client = boto3.client("s3")
+    client.put_object(
+        Bucket=prj.s3.bucket(),
+        Key=prj.s3.path("/datasets/{}/README.rst".format(dataset)),
+        Body="Dataset {} for project {}.".format(dataset, prj.cfg["project"]).encode(
+            "utf-8"
+        ),
+    )
+
+
 @ml2p.group("training-job")
 def training_job():
     """ Create and inspect training jobs. """
