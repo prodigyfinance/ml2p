@@ -238,6 +238,12 @@ class TestModel:
 class TestNamingValidation:
     def test_naming_validation_noncompliance(self):
         with pytest.raises(NamingError) as exc_info:
+            validate_name("a wrong name", "dataset")
+        assert (
+            str(exc_info.value) == "Dataset names should be in the "
+            "format <model-name>-YYYYMMDD"
+        )
+        with pytest.raises(NamingError) as exc_info:
             validate_name("a wrong name", "training-job")
         assert (
             str(exc_info.value) == "Training job names should be in the "
@@ -257,6 +263,7 @@ class TestNamingValidation:
         )
 
     def test_naming_validation_compliance(self):
+        validate_name("test-model-20191011", "dataset")
         validate_name("test-model-0-0-0-dev", "training-job")
         validate_name("test-model-0-0-0", "training-job")
         validate_name("test-model-10-11-12", "training-job")
