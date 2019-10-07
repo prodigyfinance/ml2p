@@ -272,12 +272,14 @@ def validate_name(name, resource):
             "training-job", "model", "endpoint".
     """
     re_dict = {
-        "training-job": r"^[a-zA-Z0-9\-]*-[0-9]+-[0-9]+-[0-9]+(\-dev)?$",
-        "model": r"^[a-zA-Z0-9\-]*-[0-9]+-[0-9]+-[0-9]+(\-dev)?$",
-        "endpoint": r"^[a-zA-Z0-9\-]*-[0-9]+-[0-9]+-[0-9]+"
+        "dataset": r"^[a-zA-Z0-9\-]*-[0-9]{8}$",
+        "training-job": r"^[a-zA-Z0-9\-]+-[0-9]+-[0-9]+-[0-9]+(\-dev)?$",
+        "model": r"^[a-zA-Z0-9\-]+-[0-9]+-[0-9]+-[0-9]+(\-dev)?$",
+        "endpoint": r"^[a-zA-Z0-9\-]+-[0-9]+-[0-9]+-[0-9]+"
         r"(\-dev)?(\-(live|analysis|test))?$",
     }
     message_dict = {
+        "dataset": "Dataset names should be in the format <model-name>-YYYYMMDD",
         "training-job": "Training job names should be in the"
         " format <model-name>-X-Y-Z-[dev]",
         "model": "Model names should be in the format <model-name>-X-Y-Z-[dev]",
