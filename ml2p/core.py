@@ -11,6 +11,7 @@ import os
 import pathlib
 import re
 import urllib.parse
+import warnings
 
 from . import hyperparameters
 
@@ -122,7 +123,16 @@ class SageMakerEnv:
             return json.load(f)
 
     def dataset_folder(self, dataset):
+        warnings.warn(
+            "The dataset_folder method(...) is deprecated. Please use"
+            " data_channel_folder(...) instead, which matches the terminology used by"
+            " AWS SageMaker for folders containing data used in training.",
+            DeprecationWarning,
+        )
         return self._ml_folder / "input" / "data" / dataset
+
+    def data_channel_folder(self, channel):
+        return self._ml_folder / "input" / "data" / channel
 
     def model_folder(self):
         return self._ml_folder / "model"
