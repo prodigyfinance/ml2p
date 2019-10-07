@@ -4,6 +4,7 @@
 
 from click.testing import CliRunner
 
+from ml2p import __version__ as ml2p_version
 from ml2p.cli import ml2p
 
 
@@ -19,3 +20,9 @@ class TestML2P:
             "",
             "  A friendlier interface to AWS SageMaker.",
         ]
+
+    def test_version(self):
+        runner = CliRunner()
+        result = runner.invoke(ml2p, ["--version"])
+        assert result.exit_code == 0
+        assert result.output.splitlines() == ["ml2p, version {}".format(ml2p_version)]

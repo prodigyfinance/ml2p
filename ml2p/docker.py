@@ -13,6 +13,7 @@ import click
 from flask import request
 from flask_api import FlaskAPI
 
+from . import __version__ as ml2p_version
 from .core import SageMakerEnv, import_string
 
 app = FlaskAPI(__name__)
@@ -79,6 +80,7 @@ def pass_ml2p_docker_options(f):
     default=None,
     help="The fully qualified name of the ML2P model interface to use.",
 )
+@click.version_option(version=ml2p_version)
 @click.pass_context
 def ml2p_docker(ctx, ml_folder, model):
     """ ML2P Sagemaker Docker container helper CLI. """

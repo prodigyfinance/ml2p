@@ -10,6 +10,7 @@ import pytest
 from click.testing import CliRunner
 
 import ml2p.docker
+from ml2p import __version__ as ml2p_version
 from ml2p.core import Model, ModelPredictor, ModelTrainer
 from ml2p.docker import ml2p_docker
 
@@ -113,6 +114,14 @@ class TestML2PDocker:
                 "  ML2P Sagemaker Docker container helper CLI.",
             ],
         )
+
+    def test_version(self):
+        runner = CliRunner()
+        result = runner.invoke(ml2p_docker, ["--version"])
+        assert result.exit_code == 0
+        assert result.output.splitlines() == [
+            "ml2p-docker, version {}".format(ml2p_version)
+        ]
 
 
 class TestML2PDockerTrain:
