@@ -125,9 +125,7 @@ class TestSageMakerEnvGeneric:
         assert result == pathlib.Path(str(sagemaker.ml_folder.join("input/data/foo")))
 
     def test_dataset_folder_default(self, sagemaker):
-        with pytest.deprecated_call():
-            result = sagemaker.generic().dataset_folder()
-        assert result == pathlib.Path(
+        assert sagemaker.generic().dataset_folder() == pathlib.Path(
             str(sagemaker.ml_folder.join("input/data/training"))
         )
 

@@ -122,13 +122,18 @@ class SageMakerEnv:
         with rc_path.open() as f:
             return json.load(f)
 
-    def dataset_folder(self, dataset="training"):
-        warnings.warn(
-            "The dataset_folder method(...) is deprecated. Please use"
-            " data_channel_folder(...) instead, which matches the terminology used by"
-            " AWS SageMaker for folders containing data used in training.",
-            DeprecationWarning,
-        )
+    def dataset_folder(self, dataset=None):
+        if dataset is None:
+            dataset = "training"
+        else:
+            warnings.warn(
+                "Passing a dataset name to dataset_folder method(...) is deprecated."
+                " If you wish to access the ML2P training dataset, do not pass any"
+                " parameters. If you wish to access data for a specific channel, please"
+                " use data_channel_folder(...) instead, which matches the terminology"
+                " used by AWS SageMaker more accurately.",
+                DeprecationWarning,
+            )
         return self._ml_folder / "input" / "data" / dataset
 
     def data_channel_folder(self, channel):
