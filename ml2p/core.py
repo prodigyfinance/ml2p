@@ -11,6 +11,7 @@ import os
 import pathlib
 import re
 import urllib.parse
+import warnings
 
 from . import hyperparameters
 
@@ -121,8 +122,22 @@ class SageMakerEnv:
         with rc_path.open() as f:
             return json.load(f)
 
-    def dataset_folder(self, dataset):
+    def dataset_folder(self, dataset=None):
+        if dataset is None:
+            dataset = "training"
+        else:
+            warnings.warn(
+                "Passing a dataset name to dataset_folder method(...) is deprecated."
+                " If you wish to access the ML2P training dataset, do not pass any"
+                " parameters. If you wish to access data for a specific channel, please"
+                " use data_channel_folder(...) instead, which matches the terminology"
+                " used by AWS SageMaker more accurately.",
+                DeprecationWarning,
+            )
         return self._ml_folder / "input" / "data" / dataset
+
+    def data_channel_folder(self, channel):
+        return self._ml_folder / "input" / "data" / channel
 
     def model_folder(self):
         return self._ml_folder / "model"

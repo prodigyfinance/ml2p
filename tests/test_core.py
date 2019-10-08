@@ -120,7 +120,17 @@ class TestSageMakerEnvGeneric:
         assert sagemaker.generic().resourceconfig() == {}
 
     def test_dataset_folder(self, sagemaker):
-        assert sagemaker.generic().dataset_folder("foo") == pathlib.Path(
+        with pytest.deprecated_call():
+            result = sagemaker.generic().dataset_folder("foo")
+        assert result == pathlib.Path(str(sagemaker.ml_folder.join("input/data/foo")))
+
+    def test_dataset_folder_default(self, sagemaker):
+        assert sagemaker.generic().dataset_folder() == pathlib.Path(
+            str(sagemaker.ml_folder.join("input/data/training"))
+        )
+
+    def test_data_channel_folder(self, sagemaker):
+        assert sagemaker.generic().data_channel_folder("foo") == pathlib.Path(
             str(sagemaker.ml_folder.join("input/data/foo"))
         )
 
