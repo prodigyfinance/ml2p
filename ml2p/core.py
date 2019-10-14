@@ -14,14 +14,7 @@ import urllib.parse
 import warnings
 
 from . import hyperparameters
-
-
-class NamingError(Exception):
-    """ Raised when a training job, model, or endpoint name does not follow
-        convention.
-    """
-
-    pass
+from . import errors
 
 
 class S3URL:
@@ -302,4 +295,4 @@ def validate_name(name, resource):
         " format <model-name>-X-Y-Z-[dev]-[live|analysis|test]",
     }
     if re.match(re_dict[resource], name) is None:
-        raise NamingError(message_dict[resource])
+        raise errors.NamingError(message_dict[resource])

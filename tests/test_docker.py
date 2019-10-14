@@ -8,11 +8,13 @@ import re
 
 import pytest
 from click.testing import CliRunner
+from flask_api.exceptions import APIException
 
 import ml2p.docker
 from ml2p import __version__ as ml2p_version
 from ml2p.core import Model, ModelPredictor, ModelTrainer
 from ml2p.docker import ml2p_docker
+from ml2p.errors import ClientError, ServerError
 
 
 def assert_cli_result(result, output, exit_code=0, exception=None):
@@ -79,6 +81,14 @@ class HappyModelPredictor(ModelPredictor):
         self.setup_called = True
 
     def result(self, data):
+        if "client_error" in data:
+            raise ClientError("client", data["client_error"])
+        if "server_error" in data:
+            raise ServerError("server", data["server_error"])
+        if "flask_api_error" in data:
+            raise APIException(data["flask_api_error"])
+        if "generic_error" in data:
+            raise Exception(data["generic_error"])
         return {"probability": 0.5, "input": data["input"]}
 
 
@@ -323,6 +333,32 @@ class TestAPI:
                 },
             ]
         }
+
+    def test_invocation_with_generic_error(self, api_client, fake_utcnow):
+        with pytest.raises(Exception) as err:
+            api_client.post("/invocations", json={"generic_error": "test error"})
+        assert str(err.value) == "test error"
+        assert err.value.__class__ is Exception
+
+    def test_invocation_with_flask_api_error(self, api_client, fake_utcnow):
+        response = api_client.post(
+            "/invocations", json={"flask_api_error": "message eep"}
+        )
+        assert response.status_code == 500
+        assert response.content_type == "application/json"
+        assert response.get_json() == {"message": "message eep"}
+
+    def test_invocation_with_client_error(self, api_client, fake_utcnow):
+        response = api_client.post("/invocations", json={"client_error": "bad param"})
+        assert response.status_code == 400
+        assert response.content_type == "application/json"
+        assert response.get_json() == {"message": "client", "errors": ["bad param"]}
+
+    def test_invocation_with_server_error(self, api_client, fake_utcnow):
+        response = api_client.post("/invocations", json={"server_error": "eep"})
+        assert response.status_code == 500
+        assert response.content_type == "application/json"
+        assert response.get_json() == {"message": "server", "errors": ["eep"]}
 
     def test_execution_parameters(self, api_client, fake_utcnow):
         response = api_client.get("/execution-parameters")
