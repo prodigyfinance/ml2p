@@ -23,11 +23,14 @@ class ML2PAPI(FlaskAPI):
 
     def __init__(self, *args, **kw):
         super(ML2PAPI, self).__init__(*args, **kw)
+        # FlaskAPI requires error_handler_spec to have a key for None (i.e. undefined
+        # error) but does not set it itself, so we do so here:
         self.error_handler_spec.setdefault(None, {})
 
     def handle_api_exception(self, exc):
         if not isinstance(exc, APIError):
             return super(ML2PAPI, self).handle_api_exception(exc)
+        # Enhanced error support for errors raised by the ML2P API:
         content = {"message": exc.message, "errors": exc.errors}
         return self.response_class(content, status=exc.status_code)
 
