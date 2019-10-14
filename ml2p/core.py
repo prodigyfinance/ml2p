@@ -13,8 +13,7 @@ import re
 import urllib.parse
 import warnings
 
-from . import hyperparameters
-from . import errors
+from . import errors, hyperparameters
 
 
 class S3URL:
