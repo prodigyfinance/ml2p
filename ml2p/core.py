@@ -13,8 +13,8 @@ import re
 import urllib.parse
 import warnings
 
-from . import errors, hyperparameters
 from . import __version__ as ml2p_version
+from . import errors, hyperparameters
 
 
 class S3URL:

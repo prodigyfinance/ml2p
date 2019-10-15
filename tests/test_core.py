@@ -6,6 +6,7 @@ import pathlib
 
 import pytest
 
+from ml2p import __version__ as ml2p_version
 from ml2p.core import (
     S3URL,
     Model,
@@ -15,7 +16,6 @@ from ml2p.core import (
     validate_name,
 )
 from ml2p.errors import NamingError
-from ml2p import __version__ as ml2p_version
 
 
 class TestS3URL:

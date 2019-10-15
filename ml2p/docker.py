@@ -62,7 +62,10 @@ def execution_parameters():
 
 @app.route("/ping", methods=["GET"])
 def ping():
-    return {"model_version": app.predictor.env.model_version}
+    return {
+        "model_version": app.predictor.env.model_version,
+        "ml2p_version": ml2p_version,
+    }
 
 
 def pass_sagemaker_env(f):
