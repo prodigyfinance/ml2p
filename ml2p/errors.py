@@ -17,21 +17,21 @@ class APIError(APIException):
 
         :param str message:
             An error message.
-        :type errors:
+        :type details:
             None, str or list of str
-        :param errors:
+        :param details:
             Details of the errors that occurred.
     """
 
     status_code = 500
 
-    def __init__(self, message, errors=None):
-        if errors is None:
-            errors = message
-        if isinstance(errors, str):
-            errors = [errors]
+    def __init__(self, message, details=None):
+        if details is None:
+            details = []
+        elif isinstance(details, str):
+            details = [details]
         self.message = message
-        self.errors = errors
+        self.details = details
 
 
 class ServerError(APIError):

@@ -352,13 +352,13 @@ class TestAPI:
         response = api_client.post("/invocations", json={"client_error": "bad param"})
         assert response.status_code == 400
         assert response.content_type == "application/json"
-        assert response.get_json() == {"message": "client", "errors": ["bad param"]}
+        assert response.get_json() == {"message": "client", "details": ["bad param"]}
 
     def test_invocation_with_server_error(self, api_client, fake_utcnow):
         response = api_client.post("/invocations", json={"server_error": "eep"})
         assert response.status_code == 500
         assert response.content_type == "application/json"
-        assert response.get_json() == {"message": "server", "errors": ["eep"]}
+        assert response.get_json() == {"message": "server", "details": ["eep"]}
 
     def test_execution_parameters(self, api_client, fake_utcnow):
         response = api_client.get("/execution-parameters")

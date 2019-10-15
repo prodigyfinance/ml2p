@@ -31,7 +31,7 @@ class ML2PAPI(FlaskAPI):
         if not isinstance(exc, APIError):
             return super(ML2PAPI, self).handle_api_exception(exc)
         # Enhanced error support for errors raised by the ML2P API:
-        content = {"message": exc.message, "errors": exc.errors}
+        content = {"message": exc.message, "details": exc.details}
         return self.response_class(content, status=exc.status_code)
 
 
