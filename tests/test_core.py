@@ -11,10 +11,10 @@ from ml2p.core import (
     Model,
     ModelPredictor,
     ModelTrainer,
-    NamingError,
     import_string,
     validate_name,
 )
+from ml2p.errors import NamingError
 
 
 class TestS3URL:

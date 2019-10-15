@@ -15,8 +15,27 @@ from flask_api import FlaskAPI
 
 from . import __version__ as ml2p_version
 from .core import SageMakerEnv, import_string
+from .errors import APIError
 
-app = FlaskAPI(__name__)
+
+class ML2PAPI(FlaskAPI):
+    """ Improved error handling for ML2P API. """
+
+    def __init__(self, *args, **kw):
+        super(ML2PAPI, self).__init__(*args, **kw)
+        # FlaskAPI requires error_handler_spec to have a key for None (i.e. undefined
+        # error) but does not set it itself, so we do so here:
+        self.error_handler_spec.setdefault(None, {})
+
+    def handle_api_exception(self, exc):
+        if not isinstance(exc, APIError):
+            return super(ML2PAPI, self).handle_api_exception(exc)
+        # Enhanced error support for errors raised by the ML2P API:
+        content = {"message": exc.message, "details": exc.details}
+        return self.response_class(content, status=exc.status_code)
+
+
+app = ML2PAPI(__name__)
 
 
 @app.route("/invocations", methods=["POST"])
