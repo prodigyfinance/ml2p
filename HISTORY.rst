@@ -1,6 +1,16 @@
 History
 =======
 
+0.0.9 (2019-10-15)
+------------------
+
+* Add support for client and server error exception handling.
+* Deprecate passing a channel name to dataset_folder and add a new data_channel_folder
+  method to allow data in other channels to be accessed.
+* Add dataset create and list commands to ml2p CLI.
+* Add --version to ml2p and ml2p-docker CLIs.
+* Allow model and endpoint version numbers to be multiple digits.
+
 0.0.8 (2019-09-11)
 ------------------
 
