@@ -304,6 +304,7 @@ class TestAPI:
         assert response.get_json() == {
             "metadata": {
                 "model_version": "test-model-1.2.3",
+                "ml2p_version": str(ml2p_version),
                 "timestamp": fake_utcnow.timestamp(),
             },
             "result": {"probability": 0.5, "input": 12345},
@@ -320,6 +321,7 @@ class TestAPI:
                 {
                     "metadata": {
                         "model_version": "test-model-1.2.3",
+                        "ml2p_version": str(ml2p_version),
                         "timestamp": fake_utcnow.timestamp(),
                     },
                     "result": {"probability": 0.5, "input": 12345},
@@ -327,6 +329,7 @@ class TestAPI:
                 {
                     "metadata": {
                         "model_version": "test-model-1.2.3",
+                        "ml2p_version": str(ml2p_version),
                         "timestamp": fake_utcnow.timestamp(),
                     },
                     "result": {"probability": 0.5, "input": 12346},

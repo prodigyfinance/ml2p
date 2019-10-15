@@ -15,6 +15,7 @@ from ml2p.core import (
     validate_name,
 )
 from ml2p.errors import NamingError
+from ml2p import __version__ as ml2p_version
 
 
 class TestS3URL:
@@ -194,6 +195,7 @@ class TestModelPredictor:
         assert predictor.invoke({"input": 1}) == {
             "metadata": {
                 "model_version": "test-model-1.2.3",
+                "ml2p_version": str(ml2p_version),
                 "timestamp": 1548936002.0,
             },
             "result": {"probability": 0.5, "input": 1},
@@ -203,6 +205,7 @@ class TestModelPredictor:
         predictor = ModelPredictor(sagemaker.serve())
         assert predictor.metadata({}) == {
             "model_version": "test-model-1.2.3",
+            "ml2p_version": str(ml2p_version),
             "timestamp": 1548936002.0,
         }
 
