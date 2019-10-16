@@ -13,6 +13,7 @@ import re
 import urllib.parse
 import warnings
 
+from . import __version__ as ml2p_version
 from . import errors, hyperparameters
 
 
@@ -230,6 +231,7 @@ class ModelPredictor:
         """
         return {
             "model_version": self.env.model_version,
+            "ml2p_version": ml2p_version,
             "timestamp": datetime.datetime.utcnow().timestamp(),
         }
 
