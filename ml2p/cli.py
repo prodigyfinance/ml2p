@@ -10,8 +10,8 @@ import yaml
 
 from . import __version__ as ml2p_version
 from . import cli_utils
-from .cli_utils import click_echo_json
-from .core import S3URL, validate_name
+from .cli_utils import click_echo_json, validate_name
+from .core import S3URL
 
 
 class ModellingProject:
@@ -56,10 +56,32 @@ class ModellingSubCfg:
     def __setitem__(self, name, value):
         self._section[name] = value
 
+    def keys(self):
+        keys = set(self._section.keys())
+        keys.update(self._defaults.keys())
+        return sorted(keys)
+
     def get(self, name, default=None):
         if name in self._section:
             return self._section[name]
         return self._defaults.get(name, default)
+
+
+def validate_model_type(ctx, param, value):
+    """ Custom validator for --model-type. """
+    model_types = ctx.obj.models.keys()
+    if value is not None:
+        if model_types and value not in model_types:
+            raise click.BadParameter("Uknown model type.")
+        return value
+    if len(model_types) == 0:
+        return None
+    if len(model_types) == 1:
+        return model_types[0]
+    raise click.BadParameter(
+        "Model type may only be omitted if zero or one models are listed in the ML2P"
+        " config YAML file."
+    )
 
 
 # alias pass_obj for readability
@@ -157,7 +179,13 @@ def training_job_list(prj):
 @training_job.command("create")
 @click.argument("training_job")
 @click.argument("dataset")
-@click.option("--model-type", "-m", default=None, help="The name of the type of model.")
+@click.option(
+    "--model-type",
+    "-m",
+    default=None,
+    callback=validate_model_type,
+    help="The name of the type of model.",
+)
 @pass_prj
 def training_job_create(prj, training_job, dataset, model_type):
     """ Create a training job.
@@ -214,13 +242,29 @@ def model_list(prj):
 
 @model.command("create")
 @click.argument("model-name")
-@click.argument("training-job")
-@click.option("--model-type", "-m", default=None, help="The name of the type of model.")
+@click.option(
+    "--training-job",
+    "-t",
+    default=None,
+    help=(
+        "The name of the training job to base the model on. Defaults to the model name"
+        " without the patch version number."
+    ),
+)
+@click.option(
+    "--model-type",
+    "-m",
+    default=None,
+    callback=validate_model_type,
+    help="The name of the type of model.",
+)
 @pass_prj
 def model_create(prj, model_name, training_job, model_type):
     """ Create a model.
     """
     validate_name(model_name, "model")
+    if training_job is None:
+        training_job = cli_utils.training_job_name_for_model(model_name)
     model_params = cli_utils.mk_model(prj, model_name, training_job, model_type)
     response = prj.client.create_model(**model_params)
     click_echo_json(response)
@@ -266,12 +310,22 @@ def endpoint_list(prj):
 
 @endpoint.command("create")
 @click.argument("endpoint-name")
-@click.argument("model-name")
+@click.option(
+    "--model-name",
+    "-m",
+    default=None,
+    help=(
+        "The name of the model to base the endpoint on. Defaults to the endpoint name"
+        " without the live/analysis/test suffix."
+    ),
+)
 @pass_prj
 def endpoint_create(prj, endpoint_name, model_name):
     """ Create an endpoint for a model.
     """
     validate_name(endpoint_name, "endpoint")
+    if model_name is None:
+        model_name = cli_utils.model_name_for_endpoint(endpoint_name)
     endpoint_config_params = cli_utils.mk_endpoint_config(
         prj, endpoint_name, model_name
     )
