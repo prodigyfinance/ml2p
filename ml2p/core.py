@@ -262,7 +262,11 @@ class ModelPredictor:
         """
         metadata = self.metadata(data)
         results = self.batch_result(data)
-        return [{"metadata": metadata, "result": result} for result in results]
+        return {
+            "predictions": [
+                {"metadata": metadata, "result": result} for result in results
+            ]
+        }
 
     def batch_result(self, data):
         """ Make a batch prediction given a batch of input data.
@@ -273,7 +277,7 @@ class ModelPredictor:
             :returns:
                 The list of predictions made for instance of the input data.
         """
-        raise NotImplementedError("Sub-classes should implement .batch_result(...)")
+        return [self.result(datum) for datum in data]
 
 
 class Model:
