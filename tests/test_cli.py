@@ -5,7 +5,41 @@
 from click.testing import CliRunner
 
 from ml2p import __version__ as ml2p_version
-from ml2p.cli import ml2p
+from ml2p.cli import ml2p, ModellingSubCfg
+
+
+def mk_subcfg(defaults="defaults"):
+    return ModellingSubCfg(
+        {"sub": {"a": 1, "b": "boo"}, "defaults": {"c": 3}}, "sub", defaults=defaults
+    )
+
+
+class TestModellingSubCfg:
+    def test_getattr(self):
+        subcfg = mk_subcfg()
+        assert subcfg.a == 1
+        assert subcfg.c == 3
+
+    def test_getitem(self):
+        subcfg = mk_subcfg()
+        assert subcfg["a"] == 1
+        assert subcfg["c"] == 3
+
+    def test_setitem(self):
+        subcfg = mk_subcfg()
+        subcfg["d"] = 5
+        assert subcfg.d == 5
+        assert subcfg["d"] == 5
+
+    def test_keys(self):
+        subcfg = mk_subcfg()
+        assert subcfg.keys() == ["a", "b", "c"]
+
+    def test_get(self):
+        subcfg = mk_subcfg()
+        assert subcfg.get("a") == 1
+        assert subcfg.get("d") is None
+        assert subcfg.get("d", 3) == 3
 
 
 class TestML2P:
