@@ -209,19 +209,13 @@ class ModelPredictor:
 
             By default this method results a dictionary containing:
 
-              * metadata: The result of calling .metadata(data).
+              * metadata: The result of calling .metadata().
               * result: The result of calling .result(data).
         """
-        return {"metadata": self.metadata(data), "result": self.result(data)}
+        return {"metadata": self.metadata(), "result": self.result(data)}
 
-    def metadata(self, data):
+    def metadata(self):
         """ Return metadata for a prediction that is about to be made.
-
-            :param dict data:
-                The input data the prediction is going to be made from.
-            :rtype: dict
-            :returns:
-                The metadata as a dictionary.
 
             By default this method returns a dictionary containing:
 
@@ -257,10 +251,10 @@ class ModelPredictor:
 
             By default this method results a list of dictionaries containing:
 
-              * metadata: The result of calling .metadata(data).
+              * metadata: The result of calling .metadata().
               * result: The result of calling .batch_result(data).
         """
-        metadata = self.metadata(data)
+        metadata = self.metadata()
         results = self.batch_result(data)
         return {
             "predictions": [
