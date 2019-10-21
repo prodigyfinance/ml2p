@@ -41,11 +41,7 @@ app = ML2PAPI(__name__)
 @app.route("/invocations", methods=["POST"])
 def invocations():
     if "instances" in request.data:
-        response = {
-            "predictions": [
-                app.predictor.invoke(datum) for datum in request.data["instances"]
-            ]
-        }
+        response = app.predictor.batch_invoke(request.data["instances"])
     else:
         response = app.predictor.invoke(request.data)
     return response
