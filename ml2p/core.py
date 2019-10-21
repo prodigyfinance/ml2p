@@ -282,7 +282,7 @@ def validate_name(name, resource):
     """
     re_dict = {
         "dataset": r"^[a-zA-Z0-9\-]*-[0-9]{8}$",
-        "training-job": r"^[a-zA-Z0-9\-]+-[0-9]+-[0-9]+-[0-9]+(\-dev)?$",
+        "training-job": r"^[a-zA-Z0-9\-]+-[0-9]+-[0-9]+(\-dev)?$",
         "model": r"^[a-zA-Z0-9\-]+-[0-9]+-[0-9]+-[0-9]+(\-dev)?$",
         "endpoint": r"^[a-zA-Z0-9\-]+-[0-9]+-[0-9]+-[0-9]+"
         r"(\-dev)?(\-(live|analysis|test))?$",

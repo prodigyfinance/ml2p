@@ -277,8 +277,8 @@ class TestNamingValidation:
 
     def test_naming_validation_compliance(self):
         validate_name("test-model-20191011", "dataset")
-        validate_name("test-model-0-0-0-dev", "training-job")
-        validate_name("test-model-0-0-0", "training-job")
+        validate_name("test-model-0-0-dev", "training-job")
+        validate_name("test-model-0-0", "training-job")
         validate_name("test-model-10-11-12", "training-job")
         validate_name("test-model-0-0-0-dev", "model")
         validate_name("test-model-0-0-0", "model")
