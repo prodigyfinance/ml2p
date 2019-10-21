@@ -12,9 +12,9 @@ from pkg_resources import resource_filename
 from ml2p import cli_utils
 from ml2p.cli import ModellingProject
 from ml2p.cli_utils import (
-    validate_name,
-    training_job_name_for_model,
     model_name_for_endpoint,
+    training_job_name_for_model,
+    validate_name,
 )
 from ml2p.errors import NamingError
 

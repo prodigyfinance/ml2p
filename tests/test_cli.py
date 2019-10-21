@@ -5,7 +5,7 @@
 from click.testing import CliRunner
 
 from ml2p import __version__ as ml2p_version
-from ml2p.cli import ml2p, ModellingSubCfg
+from ml2p.cli import ModellingSubCfg, ml2p
 
 
 def mk_subcfg(defaults="defaults"):
