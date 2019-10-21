@@ -245,6 +245,36 @@ class ModelPredictor:
         """
         raise NotImplementedError("Sub-classes should implement .result(...)")
 
+    def batch_invoke(self, data):
+        """ Invokes the model on a batch of input data and returns the full result for
+            each instance.
+
+            :param dict data:
+                The batch of input data the model is being invoked with.
+            :rtype: list
+            :returns:
+                The result as a list of dictionaries.
+
+            By default this method results a list of dictionaries containing:
+
+              * metadata: The result of calling .metadata(data).
+              * result: The result of calling .batch_result(data).
+        """
+        metadata = self.metadata(data)
+        results = self.batch_result(data)
+        return [{"metadata": metadata, "result": result} for result in results]
+
+    def batch_result(self, data):
+        """ Make a batch prediction given a batch of input data.
+
+            :param dict data:
+                The batch of input data to make a prediction from.
+            :rtype: list
+            :returns:
+                The list of predictions made for instance of the input data.
+        """
+        raise NotImplementedError("Sub-classes should implement .batch_result(...)")
+
 
 class Model:
     """ A holder for a trainer and predictor.
