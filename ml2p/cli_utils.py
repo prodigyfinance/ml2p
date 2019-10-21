@@ -9,14 +9,14 @@ import re
 
 import click
 
-from . import hyperparameters
+from . import errors, hyperparameters
 
 
 def date_to_string_serializer(value):
     """ JSON serializer for datetime objects. """
     if isinstance(value, datetime.datetime):
         return str(value)
-    raise TypeError()
+    raise TypeError("Serializing {!r} to JSON not supported.".format(value))
 
 
 def click_echo_json(response):
@@ -175,3 +175,60 @@ def mk_repo(prj, repo_name):
             "SecretArn": prj.notebook.repo_secret_arn,
         },
     }
+
+
+VALIDATION_REGEXES = {
+    "dataset": r"^(?P<model>[a-zA-Z0-9\-]+)-(?P<date>[0-9]{8})$",
+    "training-job": (
+        r"^(?P<model>[a-zA-Z0-9\-]+)-(?P<major>[0-9]+)-(?P<minor>[0-9]+)"
+        r"(?P<training_suffix>\-dev)?$"
+    ),
+    "model": (
+        r"^(?P<model>[a-zA-Z0-9\-]+)-(?P<major>[0-9]+)-(?P<minor>[0-9]+)"
+        r"-(?P<patch>[0-9]+)(?P<model_suffix>\-dev)?$"
+    ),
+    "endpoint": (
+        r"^(?P<model>[a-zA-Z0-9\-]+)-(?P<major>[0-9]+)-(?P<minor>[0-9]+)"
+        r"-(?P<patch>[0-9]+)"
+        r"(?P<model_suffix>\-dev)?(?P<endpoint_suffix>\-(live|analysis|test))?$"
+    ),
+}
+
+
+def validate_name(name, resource):
+    """ Validate that the name of the SageMaker resource complies with
+        convention.
+
+        :param str name:
+            The name of the SageMaker resource to validate.
+        :param str resource:
+            The type of SageMaker resource to validate. One of "dataset",
+            "training-job", "model", "endpoint".
+    """
+    message_dict = {
+        "dataset": "Dataset names should be in the format <model-name>-YYYYMMDD",
+        "training-job": "Training job names should be in the"
+        " format <model-name>-X-Y-Z-[dev]",
+        "model": "Model names should be in the format <model-name>-X-Y-Z-[dev]",
+        "endpoint": "Endpoint names should be in the"
+        " format <model-name>-X-Y-Z-[dev]-[live|analysis|test]",
+    }
+    if re.match(VALIDATION_REGEXES[resource], name) is None:
+        raise errors.NamingError(message_dict[resource])
+
+
+def training_job_name_for_model(model_name):
+    """ Return a default training job name for the given model. """
+    grps = re.match(VALIDATION_REGEXES["model"], model_name).groupdict()
+    if grps is None:
+        raise ValueError("Invalid model name {!r}".format(model_name))
+    return "{model}-{major}-{minor}".format(**grps)
+
+
+def model_name_for_endpoint(endpoint_name):
+    """ Return a default model name for the given endpoint. """
+    grps = re.match(VALIDATION_REGEXES["endpoint"], endpoint_name).groupdict()
+    if grps is None:
+        raise ValueError("Invalid endpoint name {!r}".format(endpoint_name))
+    grps["model_suffix"] = grps["model_suffix"] or ""
+    return "{model}-{major}-{minor}-{patch}{model_suffix}".format(**grps)

@@ -11,6 +11,12 @@ from pkg_resources import resource_filename
 
 from ml2p import cli_utils
 from ml2p.cli import ModellingProject
+from ml2p.cli_utils import (
+    validate_name,
+    training_job_name_for_model,
+    model_name_for_endpoint,
+)
+from ml2p.errors import NamingError
 
 
 @pytest.fixture
@@ -39,8 +45,8 @@ class TestCliUtils:
         value = datetime.datetime(1, 1, 1)
         assert cli_utils.date_to_string_serializer(value) == "0001-01-01 00:00:00"
         with pytest.raises(TypeError) as exc_info:
-            cli_utils.date_to_string_serializer("")
-        assert str(exc_info.value) == ""
+            cli_utils.date_to_string_serializer("test")
+        assert str(exc_info.value) == "Serializing 'test' to JSON not supported."
 
     def test_click_echo_json(self, capsys):
         response = {"NotebookInstanceName": "notebook-1"}
@@ -263,3 +269,61 @@ class TestCliUtils:
                 "secret:sagemaker-github-authentication-fLJGfa",
             },
         }
+
+
+class TestNamingValidation:
+    def test_naming_validation_noncompliance(self):
+        with pytest.raises(NamingError) as exc_info:
+            validate_name("a wrong name", "dataset")
+        assert (
+            str(exc_info.value) == "Dataset names should be in the "
+            "format <model-name>-YYYYMMDD"
+        )
+        with pytest.raises(NamingError) as exc_info:
+            validate_name("a wrong name", "training-job")
+        assert (
+            str(exc_info.value) == "Training job names should be in the "
+            "format <model-name>-X-Y-Z-[dev]"
+        )
+        with pytest.raises(NamingError) as exc_info:
+            validate_name("a wrong name", "model")
+        assert (
+            str(exc_info.value) == "Model names should be in the"
+            " format <model-name>-X-Y-Z-[dev]"
+        )
+        with pytest.raises(NamingError) as exc_info:
+            validate_name("a wrong name", "endpoint")
+        assert (
+            str(exc_info.value) == "Endpoint names should be in the"
+            " format <model-name>-X-Y-Z-[dev]-[live|analysis|test]"
+        )
+
+    def test_naming_validation_compliance(self):
+        validate_name("test-model-20191011", "dataset")
+        validate_name("test-model-0-0-dev", "training-job")
+        validate_name("test-model-0-0", "training-job")
+        validate_name("test-model-10-11-12", "training-job")
+        validate_name("test-model-0-0-0-dev", "model")
+        validate_name("test-model-0-0-0", "model")
+        validate_name("test-model-10-11-12", "model")
+        validate_name("test-model-0-0-0-dev", "endpoint")
+        validate_name("test-model-0-0-0-dev-live", "endpoint")
+        validate_name("test-model-0-0-0-dev-analysis", "endpoint")
+        validate_name("test-model-0-0-0-dev-test", "endpoint")
+        validate_name("test-model-0-0-0", "endpoint")
+        validate_name("test-model-10-11-12", "endpoint")
+        validate_name("test-model-0-0-0-live", "endpoint")
+        validate_name("test-model-0-0-0-analysis", "endpoint")
+        validate_name("test-model-0-0-0-test", "endpoint")
+
+
+class TestTrainingJobNameForModel:
+    def test_training_job_name_for_model(test):
+        assert training_job_name_for_model("model-1-0-2") == "model-1-0"
+        assert training_job_name_for_model("model-1-0-2-dev") == "model-1-0"
+
+
+class TestModelNameForEndpoint:
+    def test_model_name_for_endpoint(self):
+        assert model_name_for_endpoint("model-1-0-2-live") == "model-1-0-2"
+        assert model_name_for_endpoint("model-1-0-2-dev-live") == "model-1-0-2-dev"
