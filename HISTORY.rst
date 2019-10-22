@@ -1,6 +1,25 @@
 History
 =======
 
+0.1.0 (2019-10-22)
+------------------
+
+* Improve batch prediction support to allow models to separately implement batch
+  prediction (e.g. a model might want to implement batch prediction separately to
+  improve performance).
+* Tweak training job version format to only include major and minor versions numbers.
+  Patch version numbers are now reserved for models and intended for use in the case
+  where the code used to make predictions changes but the underlying model is the same.
+* Model creation now defaults to using the training job with the same version as the model
+  but with the patch number removed.
+* Endpoint creation now defaults to using the model with the same version as the endpoint.
+* When creating training jobs or models, specifying the model type is now required if
+  the ml2p configuration file contains more than one model. If there is exactly one model
+  type listed, that is the default. If there are no model types, the docker file
+  must specify the model on the command line.
+* Metadata returned by predictions now includes the ML2P version number.
+* Version bumped to 0.1.0 now that versioning support is complete(-ish).
+
 0.0.9 (2019-10-15)
 ------------------
 
