@@ -209,16 +209,14 @@ class ModelPredictor:
 
             By default this method results a dictionary containing:
 
-              * metadata: The result of calling .metadata(data).
+              * metadata: The result of calling .metadata().
               * result: The result of calling .result(data).
         """
-        return {"metadata": self.metadata(data), "result": self.result(data)}
+        return {"metadata": self.metadata(), "result": self.result(data)}
 
-    def metadata(self, data):
+    def metadata(self):
         """ Return metadata for a prediction that is about to be made.
 
-            :param dict data:
-                The input data the prediction is going to be made from.
             :rtype: dict
             :returns:
                 The metadata as a dictionary.
@@ -244,6 +242,43 @@ class ModelPredictor:
                 The prediction result as a dictionary.
         """
         raise NotImplementedError("Sub-classes should implement .result(...)")
+
+    def batch_invoke(self, data):
+        """ Invokes the model on a batch of input data and returns the full result for
+            each instance.
+
+            :param dict data:
+                The batch of input data the model is being invoked with.
+            :rtype: list
+            :returns:
+                The result as a list of dictionaries.
+
+            By default this method results a list of dictionaries containing:
+
+              * metadata: The result of calling .metadata().
+              * result: The result of calling .batch_result(data).
+        """
+        metadata = self.metadata()
+        results = self.batch_result(data)
+        return {
+            "predictions": [
+                {"metadata": metadata, "result": result} for result in results
+            ]
+        }
+
+    def batch_result(self, data):
+        """ Make a batch prediction given a batch of input data.
+
+            :param dict data:
+                The batch of input data to make a prediction from.
+            :rtype: list
+            :returns:
+                The list of predictions made for instance of the input data.
+
+            This method can be overrided for sub-classes in order to improve
+            performance of batch predictions.
+        """
+        return [self.result(datum) for datum in data]
 
 
 class Model:

@@ -195,7 +195,7 @@ class TestModelPredictor:
 
     def test_metadata(self, sagemaker, fake_utcnow):
         predictor = ModelPredictor(sagemaker.serve())
-        assert predictor.metadata({}) == {
+        assert predictor.metadata() == {
             "model_version": "test-model-1.2.3",
             "ml2p_version": str(ml2p_version),
             "timestamp": 1548936002.0,
