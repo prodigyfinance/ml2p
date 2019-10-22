@@ -217,6 +217,10 @@ class ModelPredictor:
     def metadata(self):
         """ Return metadata for a prediction that is about to be made.
 
+            :rtype: dict
+            :returns:
+                The metadata as a dictionary.
+
             By default this method returns a dictionary containing:
 
               * model_version: The ML2P_MODEL_VERSION (str).
@@ -270,6 +274,9 @@ class ModelPredictor:
             :rtype: list
             :returns:
                 The list of predictions made for instance of the input data.
+
+            This method can be overrided for sub-classes in order to improve
+            performance of batch predictions.
         """
         return [self.result(datum) for datum in data]
 
