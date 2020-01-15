@@ -12,6 +12,8 @@ import pathlib
 import urllib.parse
 import warnings
 
+import boto3
+
 from . import __version__ as ml2p_version
 from . import hyperparameters
 
@@ -212,7 +214,9 @@ class ModelPredictor:
               * metadata: The result of calling .metadata().
               * result: The result of calling .result(data).
         """
-        return {"metadata": self.metadata(), "result": self.result(data)}
+        prediction = {"metadata": self.metadata(), "result": self.result(data)}
+        self.record_prediction(prediction)
+        return prediction
 
     def metadata(self):
         """ Return metadata for a prediction that is about to be made.
@@ -260,11 +264,10 @@ class ModelPredictor:
         """
         metadata = self.metadata()
         results = self.batch_result(data)
-        return {
-            "predictions": [
-                {"metadata": metadata, "result": result} for result in results
-            ]
-        }
+        predictions = [{"metadata": metadata, "result": result} for result in results]
+        for prediction in predictions:
+            self.record_prediction(prediction)
+        return {"predictions": predictions}
 
     def batch_result(self, data):
         """ Make a batch prediction given a batch of input data.
@@ -279,6 +282,22 @@ class ModelPredictor:
             performance of batch predictions.
         """
         return [self.result(datum) for datum in data]
+
+    def record_prediction(self, prediction):
+        """ Store the prediction in S3.
+
+            :param dict result:
+                The prediction
+        """
+        if self.env.s3.bucket() is not None:
+            timestamp = datetime.datetime.utcnow().isoformat()
+            model = prediction["metadata"]["model_version"]
+            prediction_json = json.dumps(prediction)
+            json_filename = "-".join([model, timestamp]) + ".json"
+            s3_key = "/".join(["predictions", self.env.model_version, json_filename])
+            boto_session = boto3.Session()
+            s3 = boto_session.client("s3")
+            s3.put_object(Bucket=self.env.s3.bucket(), Key=s3_key, Body=prediction_json)
 
 
 class Model:
