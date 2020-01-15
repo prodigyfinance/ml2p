@@ -25,6 +25,7 @@ setup(
             "pytest-cov",
             "radon",
             "tox",
+            "moto",
         ]
     },
     entry_points={
