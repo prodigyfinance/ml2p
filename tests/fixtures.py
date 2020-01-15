@@ -8,8 +8,8 @@ import os
 
 import boto3
 import moto
-
 import pytest
+
 from ml2p import hyperparameters
 from ml2p.core import SageMakerEnv
 

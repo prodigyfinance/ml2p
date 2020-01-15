@@ -6,11 +6,11 @@ import atexit
 import collections
 import re
 
+import pytest
 from click.testing import CliRunner
 from flask_api.exceptions import APIException
 
 import ml2p.docker
-import pytest
 from ml2p import __version__ as ml2p_version
 from ml2p.core import Model, ModelPredictor, ModelTrainer
 from ml2p.docker import ml2p_docker
