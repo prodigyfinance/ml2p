@@ -2,10 +2,10 @@
 
 """ Tests for ml2p.core. """
 
+import json
 import pathlib
 
 import pytest
-
 from ml2p import __version__ as ml2p_version
 from ml2p.core import S3URL, Model, ModelPredictor, ModelTrainer, import_string
 
@@ -178,12 +178,14 @@ class TestModelPredictor:
             predictor.invoke({})
         assert str(exc_info.value) == "Sub-classes should implement .result(...)"
 
-    def test_invoke_with_result_implemented(self, sagemaker, fake_utcnow):
+    def test_invoke_with_result_implemented(self, sagemaker, moto_session, fake_utcnow):
         class MyPredictor(ModelPredictor):
             def result(self, data):
                 return {"probability": 0.5, "input": data["input"]}
 
         predictor = MyPredictor(sagemaker.serve())
+        s3 = moto_session.client("s3")
+        s3.create_bucket(Bucket="foo")
         assert predictor.invoke({"input": 1}) == {
             "metadata": {
                 "model_version": "test-model-1.2.3",
@@ -206,6 +208,23 @@ class TestModelPredictor:
         with pytest.raises(NotImplementedError) as exc_info:
             predictor.result({})
         assert str(exc_info.value) == "Sub-classes should implement .result(...)"
+
+    def test_record_prediction(self, sagemaker, moto_session, fake_utcnow):
+        predictor = ModelPredictor(sagemaker.serve())
+        prediction = {
+            "metadata": predictor.metadata(),
+            "result": {"probability": 0.5, "input": 1},
+        }
+        s3 = moto_session.client("s3")
+        s3.create_bucket(Bucket="foo")
+        predictor.record_prediction(prediction)
+        s3_key = (
+            "predictions/test-model-1.2.3/"
+            "test-model-1.2.3-2019-01-31T12:00:02+00:00.json"
+        )
+        response = s3.get_object(Bucket="foo", Key=s3_key)
+        data = json.loads(response["Body"].read())
+        assert prediction == data
 
 
 class TestModel:

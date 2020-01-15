@@ -6,11 +6,11 @@ import atexit
 import collections
 import re
 
-import pytest
 from click.testing import CliRunner
 from flask_api.exceptions import APIException
 
 import ml2p.docker
+import pytest
 from ml2p import __version__ as ml2p_version
 from ml2p.core import Model, ModelPredictor, ModelTrainer
 from ml2p.docker import ml2p_docker
@@ -300,7 +300,9 @@ class TestAPI:
             "ml2p_version": str(ml2p_version),
         }
 
-    def test_invocations(self, api_client, fake_utcnow):
+    def test_invocations(self, api_client, moto_session, fake_utcnow):
+        s3 = moto_session.client("s3")
+        s3.create_bucket(Bucket="foo")
         response = api_client.post("/invocations", json={"input": 12345})
         assert response.status_code == 200
         assert response.content_type == "application/json"
@@ -313,7 +315,9 @@ class TestAPI:
             "result": {"probability": 0.5, "input": 12345},
         }
 
-    def test_batch_invocations(self, api_client, fake_utcnow):
+    def test_batch_invocations(self, api_client, moto_session, fake_utcnow):
+        s3 = moto_session.client("s3")
+        s3.create_bucket(Bucket="foo")
         response = api_client.post(
             "/invocations", json={"instances": [{"input": 12345}, {"input": 12346}]}
         )
