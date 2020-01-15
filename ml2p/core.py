@@ -284,10 +284,10 @@ class ModelPredictor:
         return [self.result(datum) for datum in data]
 
     def record_prediction(self, prediction):
-        """ Store the prediction in S3.
+        """ Store the prediction in the S3 specified in the ModelPredictor environment.
 
             :param dict result:
-                The prediction
+                The prediction dictionary to store in S3 in json format.
         """
         if self.env.s3.bucket() is not None:
             timestamp = datetime.datetime.utcnow().isoformat()
