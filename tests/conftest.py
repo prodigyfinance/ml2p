@@ -4,5 +4,6 @@
 
 from .fixtures import (  # noqa: imported so that pytest can find the fixtures
     fake_utcnow,
+    moto_session,
     sagemaker,
 )

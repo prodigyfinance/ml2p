@@ -4,11 +4,16 @@
 
 import datetime
 import json
+import os
+
+import boto3
+import moto
 
 import pytest
-
 from ml2p import hyperparameters
 from ml2p.core import SageMakerEnv
+
+MOTO_TEST_REGION = "us-east-1"
 
 
 @pytest.fixture
@@ -63,3 +68,20 @@ class SageMakerFixture:
 @pytest.fixture
 def sagemaker(tmpdir, monkeypatch):
     return SageMakerFixture(ml_folder=tmpdir, monkeypatch=monkeypatch)
+
+
+@pytest.fixture
+def moto_session(monkeypatch):
+    with moto.mock_s3(), moto.mock_ssm():
+        for k in list(os.environ):
+            if k.startswith("AWS_"):
+                monkeypatch.delitem(os.environ, k)
+        # The environment variables duplicate what happens when an AWS Lambda
+        # is executed. See
+        # https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
+        monkeypatch.setitem(os.environ, "AWS_ACCESS_KEY_ID", "dummy-access-key")
+        monkeypatch.setitem(
+            os.environ, "AWS_SECRET_ACCESS_KEY", "dummy-access-key-secret"
+        )
+        monkeypatch.setitem(os.environ, "AWS_REGION", MOTO_TEST_REGION)
+        yield boto3.Session(region_name=MOTO_TEST_REGION)
