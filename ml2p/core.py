@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import urllib.parse
+import uuid
 import warnings
 
 import boto3
@@ -72,6 +73,9 @@ class SageMakerEnv:
         * `model_version` - The full job name of the deployed model, or None
           during training (type: str).
 
+        * `record_invokes` - Whether to store a record of each invocation of the
+          endpoint in S3 (type: bool).
+
         In the training environment settings are loaded from hyperparameters stored by
         ML2P when the training job is created.
 
@@ -90,12 +94,14 @@ class SageMakerEnv:
             environ = self.hyperparameters().get("ML2P_ENV", {})
             self.training_job_name = os.environ.get("TRAINING_JOB_NAME", None)
             self.model_version = None
+            self.record_invokes = None
         else:
             # this is a serving instance
             self.env_type = self.SERVE
             environ = os.environ
             self.training_job_name = None
             self.model_version = environ.get("ML2P_MODEL_VERSION", None)
+            self.record_invokes = environ.get("ML2P_RECORD_INVOKES", False)
         self.project = environ.get("ML2P_PROJECT", None)
         self.model_cls = environ.get("ML2P_MODEL_CLS", None)
         self.s3 = None
@@ -180,6 +186,7 @@ class ModelPredictor:
 
     def __init__(self, env):
         self.env = env
+        self.s3_client = boto3.client("s3")
 
     def setup(self):
         """ Called once before any calls to .predict(...) are made.
@@ -215,7 +222,8 @@ class ModelPredictor:
               * result: The result of calling .result(data).
         """
         prediction = {"metadata": self.metadata(), "result": self.result(data)}
-        self.record_prediction(prediction)
+        if self.env.record_invokes:
+            self.record_invoke(data, prediction)
         return prediction
 
     def metadata(self):
@@ -265,8 +273,9 @@ class ModelPredictor:
         metadata = self.metadata()
         results = self.batch_result(data)
         predictions = [{"metadata": metadata, "result": result} for result in results]
-        for prediction in predictions:
-            self.record_prediction(prediction)
+        if self.env.record_invokes:
+            for datum, prediction in zip(data, predictions):
+                self.record_invoke(datum, prediction)
         return {"predictions": predictions}
 
     def batch_result(self, data):
@@ -283,21 +292,54 @@ class ModelPredictor:
         """
         return [self.result(datum) for datum in data]
 
-    def record_prediction(self, prediction):
-        """ Store the prediction in the S3 specified in the ModelPredictor environment.
+    def record_invoke_id(self, datum, prediction):
+        """ Return an id for an invocation record.
+
+            :param dict datum:
+                The dictionary of input values passed when invoking the endpoint.
 
             :param dict result:
-                The prediction dictionary to store in S3 in json format.
+                The prediction returned for datum by this predictor.
+
+            :returns dict:
+                Returns an *ordered* dictionary of key-value pairs that make up
+                the unique identifier for the invocation request.
+
+            By default this method returns a dictionary containing the following:
+
+                * "ts": an ISO8601 formatted UTC timestamp.
+                * "uuid": a UUID4 unique identifier.
+
+            Sub-classes may override this method to return their own identifiers,
+            but including these default identifiers is recommended.
+
+            The name of the record in S3 is determined by combining the key value pairs
+            with a dash ("-") and then separating each pair with a double dash ("--").
         """
-        if self.env.s3.bucket() is not None:
-            timestamp = datetime.datetime.utcnow().isoformat()
-            model = prediction["metadata"]["model_version"]
-            prediction_json = json.dumps(prediction)
-            json_filename = "-".join([model, timestamp]) + ".json"
-            s3_key = "/".join(["predictions", self.env.model_version, json_filename])
-            boto_session = boto3.Session()
-            s3 = boto_session.client("s3")
-            s3.put_object(Bucket=self.env.s3.bucket(), Key=s3_key, Body=prediction_json)
+        return {"ts": datetime.datetime.utcnow().isoformat(), "uuid": str(uuid.uuid4())}
+
+    def record_invoke(self, datum, prediction):
+        """ Store an invocation of the endpoint in the ML2P project S3 bucket.
+
+            :param dict datum:
+                The dictionary of input values passed when invoking the endpoint.
+
+            :param dict result:
+                The prediction returned for datum by this predictor.
+        """
+        invoke_id = self.record_invoke_id(datum, prediction)
+        record_filename = (
+            "--".join(["{}-{}".format(k, v) for k, v in invoke_id.items()]) + ".json"
+        )
+        record = {"invoke_datum": datum, **prediction}
+        record_bytes = json.dumps(record).encode("utf-8")
+        s3_key = self.env.s3.path(
+            "/predictions/{}/{}".format(self.env.model_version, record_filename)
+        )
+        print(self.env.s3.bucket(), s3_key)
+        self.s3_client.put_object(
+            Bucket=self.env.s3.bucket(), Key=s3_key, Body=record_bytes
+        )
 
 
 class Model:

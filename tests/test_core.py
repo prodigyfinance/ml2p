@@ -34,6 +34,7 @@ class TestSageMakerEnvTrain:
         assert env.env_type == env.TRAIN
         assert env.training_job_name == "test-train-1.2.3"
         assert env.model_version is None
+        assert env.record_invokes is None
         assert env.project == "test-project"
 
     def test_create_env_without_project_name(self, sagemaker):
@@ -61,6 +62,7 @@ class TestSageMakerEnvServe:
         env = sagemaker.serve()
         assert env.env_type == env.SERVE
         assert env.model_version == "test-model-1.2.3"
+        assert env.record_invokes is False
         assert env.training_job_name is None
         assert env.project == "test-project"
 
@@ -210,22 +212,24 @@ class TestModelPredictor:
             predictor.result({})
         assert str(exc_info.value) == "Sub-classes should implement .result(...)"
 
-    def test_record_prediction(self, sagemaker, moto_session, fake_utcnow):
+    def test_record_invoke(self, sagemaker, moto_session, fake_utcnow, fake_uuid4):
         predictor = ModelPredictor(sagemaker.serve())
+        datum = {"feature_a": 1, "feature_b": "b"}
         prediction = {
             "metadata": predictor.metadata(),
             "result": {"probability": 0.5, "input": 1},
         }
         s3 = moto_session.client("s3")
         s3.create_bucket(Bucket="foo")
-        predictor.record_prediction(prediction)
+        predictor.record_invoke(datum, prediction)
         s3_key = (
-            "predictions/test-model-1.2.3/"
-            "test-model-1.2.3-2019-01-31T12:00:02+00:00.json"
+            "bar/predictions/test-model-1.2.3/"
+            "ts-2019-01-31T12:00:02+00:00--"
+            "uuid-20f803c4-f155-469e-ba96-14caa30af9e1.json"
         )
         response = s3.get_object(Bucket="foo", Key=s3_key)
         data = json.loads(response["Body"].read())
-        assert prediction == data
+        assert data == {"invoke_datum": datum, **prediction}
 
 
 class TestModel:
