@@ -145,6 +145,7 @@ class TestCliUtils:
                     "ML2P_S3_URL": (
                         "s3://prodigyfinance-modelling-project-sagemaker-production/"
                     ),
+                    "ML2P_RECORD_INVOKES": False,
                 },
             },
             "ExecutionRoleArn": "arn:aws:iam::111111111111:role/modelling-project",
@@ -162,6 +163,7 @@ class TestCliUtils:
             "ML2P_S3_URL": (
                 "s3://prodigyfinance-modelling-project-sagemaker-production/"
             ),
+            "ML2P_RECORD_INVOKES": False,
         }
 
     def test_mk_model_with_missing_model_type(self, prj):
