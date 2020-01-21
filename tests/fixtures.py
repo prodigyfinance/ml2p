@@ -5,6 +5,7 @@
 import datetime
 import json
 import os
+import uuid
 
 import boto3
 import moto
@@ -27,6 +28,19 @@ def fake_utcnow(monkeypatch):
 
     monkeypatch.setattr(datetime, "datetime", fake_datetime)
     return utcnow
+
+
+@pytest.fixture
+def fake_uuid4(monkeypatch):
+    uuid4_constant = uuid.UUID(
+        bytes=b" \xf8\x03\xc4\xf1UF\x9e\xba\x96\x14\xca\xa3\n\xf9\xe1"
+    )
+
+    def fake_uuid4():
+        return uuid4_constant
+
+    monkeypatch.setattr(uuid, "uuid4", fake_uuid4)
+    return uuid4_constant
 
 
 class SageMakerFixture:
