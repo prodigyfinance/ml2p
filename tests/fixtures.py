@@ -4,11 +4,17 @@
 
 import datetime
 import json
+import os
+import uuid
 
+import boto3
+import moto
 import pytest
 
 from ml2p import hyperparameters
 from ml2p.core import SageMakerEnv
+
+MOTO_TEST_REGION = "us-east-1"
 
 
 @pytest.fixture
@@ -24,10 +30,32 @@ def fake_utcnow(monkeypatch):
     return utcnow
 
 
+@pytest.fixture
+def fake_uuid4(monkeypatch):
+    uuid4_constant = uuid.UUID(
+        bytes=b" \xf8\x03\xc4\xf1UF\x9e\xba\x96\x14\xca\xa3\n\xf9\xe1"
+    )
+
+    def fake_uuid4():
+        return uuid4_constant
+
+    monkeypatch.setattr(uuid, "uuid4", fake_uuid4)
+    return uuid4_constant
+
+
 class SageMakerFixture:
-    def __init__(self, ml_folder, monkeypatch):
+    def __init__(self, ml_folder, monkeypatch, moto_session):
         self.ml_folder = ml_folder
         self.monkeypatch = monkeypatch
+        self.s3 = moto_session.client("s3")
+
+    def s3_create_bucket(self, bucket):
+        self.s3.create_bucket(Bucket=bucket)
+
+    def s3_get_object(self, bucket, s3_key):
+        response = self.s3.get_object(Bucket=bucket, Key=s3_key)
+        data = json.loads(response["Body"].read())
+        return data
 
     def generic(self):
         return SageMakerEnv(str(self.ml_folder))
@@ -45,6 +73,7 @@ class SageMakerFixture:
         return SageMakerEnv(str(self.ml_folder))
 
     def serve(self, **kw):
+        self.s3_create_bucket("foo")
         self.monkeypatch.delenv("TRAINING_JOB_NAME", raising=False)
         envvars = {
             "ML2P_MODEL_VERSION": "test-model-1.2.3",
@@ -61,5 +90,24 @@ class SageMakerFixture:
 
 
 @pytest.fixture
-def sagemaker(tmpdir, monkeypatch):
-    return SageMakerFixture(ml_folder=tmpdir, monkeypatch=monkeypatch)
+def sagemaker(tmpdir, monkeypatch, moto_session):
+    return SageMakerFixture(
+        ml_folder=tmpdir, monkeypatch=monkeypatch, moto_session=moto_session
+    )
+
+
+@pytest.fixture
+def moto_session(monkeypatch):
+    with moto.mock_s3(), moto.mock_ssm():
+        for k in list(os.environ):
+            if k.startswith("AWS_"):
+                monkeypatch.delitem(os.environ, k)
+        # The environment variables duplicate what happens when an AWS Lambda
+        # is executed. See
+        # https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
+        monkeypatch.setitem(os.environ, "AWS_ACCESS_KEY_ID", "dummy-access-key")
+        monkeypatch.setitem(
+            os.environ, "AWS_SECRET_ACCESS_KEY", "dummy-access-key-secret"
+        )
+        monkeypatch.setitem(os.environ, "AWS_REGION", MOTO_TEST_REGION)
+        yield boto3.Session(region_name=MOTO_TEST_REGION)
