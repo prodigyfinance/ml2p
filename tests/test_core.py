@@ -229,6 +229,13 @@ class TestModelPredictor:
         data = json.loads(response["Body"].read())
         assert data == {"input": datum, "result": prediction}
 
+    def test_record_invoke_id(self, sagemaker, fake_utcnow, fake_uuid4):
+        predictor = ModelPredictor(sagemaker.serve())
+        assert predictor.record_invoke_id({"a": "inputs"}, {"b": "outputs"}) == {
+            "ts": "2019-01-31T12:00:02+00:00",
+            "uuid": "20f803c4-f155-469e-ba96-14caa30af9e1",
+        }
+
 
 class TestModel:
     def test_trainer_not_set(self, sagemaker):
