@@ -181,14 +181,12 @@ class TestModelPredictor:
             predictor.invoke({})
         assert str(exc_info.value) == "Sub-classes should implement .result(...)"
 
-    def test_invoke_with_result_implemented(self, sagemaker, moto_session, fake_utcnow):
+    def test_invoke_with_result_implemented(self, sagemaker, fake_utcnow):
         class MyPredictor(ModelPredictor):
             def result(self, data):
                 return {"probability": 0.5, "input": data["input"]}
 
         predictor = MyPredictor(sagemaker.serve())
-        s3 = moto_session.client("s3")
-        s3.create_bucket(Bucket="foo")
         assert predictor.invoke({"input": 1}) == {
             "metadata": {
                 "model_version": "test-model-1.2.3",

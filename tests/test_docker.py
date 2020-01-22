@@ -300,9 +300,7 @@ class TestAPI:
             "ml2p_version": str(ml2p_version),
         }
 
-    def test_invocations(self, api_client, moto_session, fake_utcnow):
-        s3 = moto_session.client("s3")
-        s3.create_bucket(Bucket="foo")
+    def test_invocations(self, api_client, fake_utcnow):
         response = api_client.post("/invocations", json={"input": 12345})
         assert response.status_code == 200
         assert response.content_type == "application/json"
@@ -315,9 +313,7 @@ class TestAPI:
             "result": {"probability": 0.5, "input": 12345},
         }
 
-    def test_batch_invocations(self, api_client, moto_session, fake_utcnow):
-        s3 = moto_session.client("s3")
-        s3.create_bucket(Bucket="foo")
+    def test_batch_invocations(self, api_client, fake_utcnow):
         response = api_client.post(
             "/invocations", json={"instances": [{"input": 12345}, {"input": 12346}]}
         )
