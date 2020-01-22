@@ -44,9 +44,18 @@ def fake_uuid4(monkeypatch):
 
 
 class SageMakerFixture:
-    def __init__(self, ml_folder, monkeypatch):
+    def __init__(self, ml_folder, monkeypatch, moto_session):
         self.ml_folder = ml_folder
         self.monkeypatch = monkeypatch
+        self.s3 = moto_session.client("s3")
+
+    def s3_create_bucket(self, bucket):
+        self.s3.create_bucket(Bucket=bucket)
+
+    def s3_get_object(self, bucket, s3_key):
+        response = self.s3.get_object(Bucket=bucket, Key=s3_key)
+        data = json.loads(response["Body"].read())
+        return data
 
     def generic(self):
         return SageMakerEnv(str(self.ml_folder))
@@ -64,6 +73,7 @@ class SageMakerFixture:
         return SageMakerEnv(str(self.ml_folder))
 
     def serve(self, **kw):
+        self.s3_create_bucket("foo")
         self.monkeypatch.delenv("TRAINING_JOB_NAME", raising=False)
         envvars = {
             "ML2P_MODEL_VERSION": "test-model-1.2.3",
@@ -80,8 +90,10 @@ class SageMakerFixture:
 
 
 @pytest.fixture
-def sagemaker(tmpdir, monkeypatch):
-    return SageMakerFixture(ml_folder=tmpdir, monkeypatch=monkeypatch)
+def sagemaker(tmpdir, monkeypatch, moto_session):
+    return SageMakerFixture(
+        ml_folder=tmpdir, monkeypatch=monkeypatch, moto_session=moto_session
+    )
 
 
 @pytest.fixture
