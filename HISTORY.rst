@@ -1,6 +1,11 @@
 History
 =======
 
+0.1.1 (2020-01-22)
+------------------
+
+* Add support for recording predictions in S3.
+
 0.1.0 (2019-10-22)
 ------------------
 
