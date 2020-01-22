@@ -161,6 +161,11 @@ class TestModelTrainer:
         assert str(exc_info.value) == "Sub-classes should implement .train()"
 
 
+class DummyPredictor(ModelPredictor):
+    def result(self, data):
+        return {"probability": 0.5, "input": data["input"]}
+
+
 class TestModelPredictor:
     def test_create(self, sagemaker):
         env = sagemaker.serve()
@@ -182,11 +187,7 @@ class TestModelPredictor:
         assert str(exc_info.value) == "Sub-classes should implement .result(...)"
 
     def test_invoke_with_result_implemented(self, sagemaker, fake_utcnow):
-        class MyPredictor(ModelPredictor):
-            def result(self, data):
-                return {"probability": 0.5, "input": data["input"]}
-
-        predictor = MyPredictor(sagemaker.serve())
+        predictor = DummyPredictor(sagemaker.serve())
         assert predictor.invoke({"input": 1}) == {
             "metadata": {
                 "model_version": "test-model-1.2.3",
@@ -195,6 +196,51 @@ class TestModelPredictor:
             },
             "result": {"probability": 0.5, "input": 1},
         }
+
+    def test_invoke_with_recording(self, sagemaker, fake_utcnow, fake_uuid4):
+        predictor = DummyPredictor(sagemaker.serve(ML2P_RECORD_INVOKES=True))
+        data = {"input": 1}
+        prediction = predictor.invoke(data)
+        record = sagemaker.s3_get_object(
+            "foo",
+            "bar/predictions/test-model-1.2.3/"
+            "ts-2019-01-31T12:00:02+00:00--"
+            "uuid-20f803c4-f155-469e-ba96-14caa30af9e1.json",
+        )
+        assert record == {"input": data, "result": prediction}
+
+    def test_invoke_batch_with_result_not_implemented(self, sagemaker):
+        predictor = ModelPredictor(sagemaker.serve())
+        with pytest.raises(NotImplementedError) as exc_info:
+            predictor.batch_invoke([{}])
+        assert str(exc_info.value) == "Sub-classes should implement .result(...)"
+
+    def test_invoke_batch_with_result_implemented(self, sagemaker, fake_utcnow):
+        predictor = DummyPredictor(sagemaker.serve())
+        assert predictor.batch_invoke([{"input": 1}]) == {
+            "predictions": [
+                {
+                    "metadata": {
+                        "model_version": "test-model-1.2.3",
+                        "ml2p_version": str(ml2p_version),
+                        "timestamp": 1548936002.0,
+                    },
+                    "result": {"probability": 0.5, "input": 1},
+                }
+            ]
+        }
+
+    def test_invoke_batch_with_recording(self, sagemaker, fake_utcnow, fake_uuid4):
+        predictor = DummyPredictor(sagemaker.serve(ML2P_RECORD_INVOKES=True))
+        data = {"input": 1}
+        prediction = predictor.batch_invoke([data])
+        record = sagemaker.s3_get_object(
+            "foo",
+            "bar/predictions/test-model-1.2.3/"
+            "ts-2019-01-31T12:00:02+00:00--"
+            "uuid-20f803c4-f155-469e-ba96-14caa30af9e1.json",
+        )
+        assert record == {"input": data, "result": prediction["predictions"][0]}
 
     def test_metadata(self, sagemaker, fake_utcnow):
         predictor = ModelPredictor(sagemaker.serve())
@@ -210,24 +256,21 @@ class TestModelPredictor:
             predictor.result({})
         assert str(exc_info.value) == "Sub-classes should implement .result(...)"
 
-    def test_record_invoke(self, sagemaker, moto_session, fake_utcnow, fake_uuid4):
+    def test_record_invoke(self, sagemaker, fake_utcnow, fake_uuid4):
         predictor = ModelPredictor(sagemaker.serve())
         datum = {"feature_a": 1, "feature_b": "b"}
         prediction = {
             "metadata": predictor.metadata(),
             "result": {"probability": 0.5, "input": 1},
         }
-        s3 = moto_session.client("s3")
-        s3.create_bucket(Bucket="foo")
         predictor.record_invoke(datum, prediction)
-        s3_key = (
+        record = sagemaker.s3_get_object(
+            "foo",
             "bar/predictions/test-model-1.2.3/"
             "ts-2019-01-31T12:00:02+00:00--"
-            "uuid-20f803c4-f155-469e-ba96-14caa30af9e1.json"
+            "uuid-20f803c4-f155-469e-ba96-14caa30af9e1.json",
         )
-        response = s3.get_object(Bucket="foo", Key=s3_key)
-        data = json.loads(response["Body"].read())
-        assert data == {"input": datum, "result": prediction}
+        assert record == {"input": datum, "result": prediction}
 
     def test_record_invoke_id(self, sagemaker, fake_utcnow, fake_uuid4):
         predictor = ModelPredictor(sagemaker.serve())
