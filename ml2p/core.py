@@ -336,7 +336,6 @@ class ModelPredictor:
         s3_key = self.env.s3.path(
             "/predictions/{}/{}".format(self.env.model_version, record_filename)
         )
-        print(self.env.s3.bucket(), s3_key)
         self.s3_client.put_object(
             Bucket=self.env.s3.bucket(), Key=s3_key, Body=record_bytes
         )
