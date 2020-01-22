@@ -331,7 +331,7 @@ class ModelPredictor:
         record_filename = (
             "--".join(["{}-{}".format(k, v) for k, v in invoke_id.items()]) + ".json"
         )
-        record = {"invoke_datum": datum, **prediction}
+        record = {"input": datum, "result": prediction}
         record_bytes = json.dumps(record).encode("utf-8")
         s3_key = self.env.s3.path(
             "/predictions/{}/{}".format(self.env.model_version, record_filename)

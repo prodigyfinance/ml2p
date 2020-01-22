@@ -227,7 +227,7 @@ class TestModelPredictor:
         )
         response = s3.get_object(Bucket="foo", Key=s3_key)
         data = json.loads(response["Body"].read())
-        assert data == {"invoke_datum": datum, **prediction}
+        assert data == {"input": datum, "result": prediction}
 
 
 class TestModel:
