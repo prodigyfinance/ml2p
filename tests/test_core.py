@@ -2,7 +2,6 @@
 
 """ Tests for ml2p.core. """
 
-import json
 import pathlib
 
 import pytest
