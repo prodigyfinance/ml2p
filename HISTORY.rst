@@ -1,6 +1,12 @@
 History
 =======
 
+0.1.2 (2020-01-23)
+------------------
+
+* Fix support for recording predictions in S3 (in first release of this feature, the code
+  attempted to pass a boolean value as an environment variable, which failed as expected).
+
 0.1.1 (2020-01-22)
 ------------------
 
