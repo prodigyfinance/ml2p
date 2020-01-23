@@ -88,6 +88,10 @@ class TestSageMakerEnvServe:
         env = sagemaker.serve(ML2P_MODEL_CLS="my.pkg.model")
         assert env.model_cls == "my.pkg.model"
 
+    def test_create_env_with_record_invokes(self, sagemaker):
+        env = sagemaker.serve(ML2P_RECORD_INVOKES="true")
+        assert env.record_invokes is True
+
 
 class TestSageMakerEnvGeneric:
     def test_hyperparameters(self, sagemaker):
@@ -197,7 +201,7 @@ class TestModelPredictor:
         }
 
     def test_invoke_with_recording(self, sagemaker, fake_utcnow, fake_uuid4):
-        predictor = DummyPredictor(sagemaker.serve(ML2P_RECORD_INVOKES=True))
+        predictor = DummyPredictor(sagemaker.serve(ML2P_RECORD_INVOKES="true"))
         data = {"input": 1}
         prediction = predictor.invoke(data)
         record = sagemaker.s3_get_object(
@@ -230,7 +234,7 @@ class TestModelPredictor:
         }
 
     def test_invoke_batch_with_recording(self, sagemaker, fake_utcnow, fake_uuid4):
-        predictor = DummyPredictor(sagemaker.serve(ML2P_RECORD_INVOKES=True))
+        predictor = DummyPredictor(sagemaker.serve(ML2P_RECORD_INVOKES="true"))
         data = {"input": 1}
         prediction = predictor.batch_invoke([data])
         record = sagemaker.s3_get_object(
