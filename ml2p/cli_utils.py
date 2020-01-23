@@ -94,7 +94,8 @@ def mk_model(prj, model_name, training_job, model_type=None):
     extra_env = {}
     if model_type is not None:
         extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
-    extra_env["ML2P_RECORD_INVOKES"] = prj.deploy.get("record_invokes", False)
+    if prj.deploy.get("record_invokes", False):
+        extra_env["ML2P_RECORD_INVOKES"] = "true"
     return {
         "ModelName": prj.full_job_name(model_name),
         "PrimaryContainer": {
