@@ -101,7 +101,7 @@ class SageMakerEnv:
             environ = os.environ
             self.training_job_name = None
             self.model_version = environ.get("ML2P_MODEL_VERSION", None)
-            self.record_invokes = environ.get("ML2P_RECORD_INVOKES", False)
+            self.record_invokes = environ.get("ML2P_RECORD_INVOKES", "false") == "true"
         self.project = environ.get("ML2P_PROJECT", None)
         self.model_cls = environ.get("ML2P_MODEL_CLS", None)
         self.s3 = None
