@@ -9,6 +9,7 @@ import importlib
 import json
 import os
 import pathlib
+import tarfile
 import urllib.parse
 import uuid
 import yaml
@@ -257,6 +258,49 @@ class LocalEnv(SageMakerEnv):
             "model_cls": None,
             "s3_url": prj.s3.url(),
         }
+
+    def download_dataset(self, dataset):
+        """ Download the given dataset from S3 into the local environment.
+
+            :param str dataset:
+                The name of the dataset in S3 to download.
+        """
+        client = self.session.resource("s3")
+        bucket = client.Bucket(self.s3.bucket())
+
+        local_dataset = self.dataset_folder()
+        local_dataset.mkdir(parents=True, exist_ok=True)
+        s3_dataset = self.s3.path("datasets") + "/" + dataset
+        len_prefix = len(s3_dataset)
+
+        for s3_object in bucket.objects.filter(Prefix=s3_dataset):
+            local_object = local_dataset / (s3_object.key[len_prefix:].lstrip("/"))
+            with local_object.open("wb") as f:
+                bucket.download_fileobj(s3_object.key, f)
+
+    def download_model(self, training_job):
+        """ Download the given trained model from S3 and unpack it into the local environment.
+
+            :param str training_job:
+                The name of the training job whose model should be downloaded.
+        """
+        client = self.session.resource("s3")
+        bucket = client.Bucket(self.s3.bucket())
+
+        local_model_tgz = self.model_folder() / "model.tar.gz"
+        local_model_tgz.parent.mkdir(parents=True, exist_ok=True)
+        s3_model_tgz = (
+            self.s3.path("/models")
+            + "/"
+            + self.prj.full_job_name(training_job)
+            + "/output/model.tar.gz"
+        )
+
+        with local_model_tgz.open("wb") as f:
+            bucket.download_fileobj(s3_model_tgz, f)
+
+        tf = tarfile.open(local_model_tgz)
+        tf.extractall(self.model_folder())
 
 
 def import_string(name):
