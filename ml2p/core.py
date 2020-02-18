@@ -43,6 +43,7 @@ class SageMakerEnvType(enum.Enum):
 
     TRAIN = "train"
     SERVE = "serve"
+    LOCAL = "local"
 
 
 class SageMakerEnv:
@@ -85,28 +86,50 @@ class SageMakerEnv:
 
     TRAIN = SageMakerEnvType.TRAIN
     SERVE = SageMakerEnvType.SERVE
+    LOCAL = SageMakerEnvType.LOCAL
 
-    def __init__(self, ml_folder):
+    def __init__(self, ml_folder, environ=None):
         self._ml_folder = pathlib.Path(ml_folder)
-        if "TRAINING_JOB_NAME" in os.environ:
-            # this is a training job instance
-            self.env_type = self.TRAIN
-            environ = self.hyperparameters().get("ML2P_ENV", {})
-            self.training_job_name = os.environ.get("TRAINING_JOB_NAME", None)
-            self.model_version = None
-            self.record_invokes = None
-        else:
-            # this is a serving instance
-            self.env_type = self.SERVE
-            environ = os.environ
-            self.training_job_name = None
-            self.model_version = environ.get("ML2P_MODEL_VERSION", None)
-            self.record_invokes = environ.get("ML2P_RECORD_INVOKES", "false") == "true"
-        self.project = environ.get("ML2P_PROJECT", None)
-        self.model_cls = environ.get("ML2P_MODEL_CLS", None)
+        if environ is None:
+            if "TRAINING_JOB_NAME" in os.environ:
+                # this is a training job instance
+                environ = self._train_environ()
+            else:
+                # this is a serving instance
+                environ = self._serve_environ()
+        self.env_type = environ["env_type"]
+        self.training_job_name = environ["training_job_name"]
+        self.model_version = environ["model_version"]
+        self.record_invokes = environ["record_invokes"]
+        self.project = environ["project"]
+        self.model_cls = environ["model_cls"]
         self.s3 = None
-        if "ML2P_S3_URL" in environ:
-            self.s3 = S3URL(environ["ML2P_S3_URL"])
+        if environ["s3_url"]:
+            self.s3 = S3URL(environ["s3_url"])
+
+    def _train_environ(self):
+        environ = self.hyperparameters().get("ML2P_ENV", {})
+        return {
+            "env_type": self.TRAIN,
+            "training_job_name": os.environ.get("TRAINING_JOB_NAME", None),
+            "model_version": None,
+            "record_invokes": None,
+            "project": environ.get("ML2P_PROJECT", None),
+            "model_cls": environ.get("ML2P_MODEL_CLS", None),
+            "s3_url": environ.get("ML2P_S3_URL", None),
+        }
+
+    def _serve_environ(self):
+        environ = os.environ
+        return {
+            "env_type": self.SERVE,
+            "training_job_name": None,
+            "model_version": environ.get("ML2P_MODEL_VERSION", None),
+            "record_invokes": environ.get("ML2P_RECORD_INVOKES", "false") == "true",
+            "project": environ.get("ML2P_PROJECT", None),
+            "model_cls": environ.get("ML2P_MODEL_CLS", None),
+            "s3_url": environ.get("ML2P_S3_URL", None),
+        }
 
     def hyperparameters(self):
         hp_path = self._ml_folder / "input" / "config" / "hyperparameters.json"
