@@ -7,7 +7,48 @@ import pathlib
 import pytest
 
 from ml2p import __version__ as ml2p_version
-from ml2p.core import S3URL, Model, ModelPredictor, ModelTrainer, import_string
+from ml2p.core import (
+    S3URL,
+    Model,
+    ModellingSubCfg,
+    ModelPredictor,
+    ModelTrainer,
+    import_string,
+)
+
+
+def mk_subcfg(defaults="defaults"):
+    return ModellingSubCfg(
+        {"sub": {"a": 1, "b": "boo"}, "defaults": {"c": 3}}, "sub", defaults=defaults
+    )
+
+
+class TestModellingSubCfg:
+    def test_getattr(self):
+        subcfg = mk_subcfg()
+        assert subcfg.a == 1
+        assert subcfg.c == 3
+
+    def test_getitem(self):
+        subcfg = mk_subcfg()
+        assert subcfg["a"] == 1
+        assert subcfg["c"] == 3
+
+    def test_setitem(self):
+        subcfg = mk_subcfg()
+        subcfg["d"] = 5
+        assert subcfg.d == 5
+        assert subcfg["d"] == 5
+
+    def test_keys(self):
+        subcfg = mk_subcfg()
+        assert subcfg.keys() == ["a", "b", "c"]
+
+    def test_get(self):
+        subcfg = mk_subcfg()
+        assert subcfg.get("a") == 1
+        assert subcfg.get("d") is None
+        assert subcfg.get("d", 3) == 3
 
 
 class TestS3URL:
@@ -91,6 +132,18 @@ class TestSageMakerEnvServe:
     def test_create_env_with_record_invokes(self, sagemaker):
         env = sagemaker.serve(ML2P_RECORD_INVOKES="true")
         assert env.record_invokes is True
+
+
+class TestSageMakerEnvLocal:
+    def test_basic_env(self, sagemaker):
+        env = sagemaker.local()
+        assert env.env_type == env.LOCAL
+        assert env.model_version == "local"
+        assert env.record_invokes is False
+        assert env.training_job_name is None
+        assert env.project == "test-project"
+        assert env.model_cls is None
+        assert env.s3.url() == "s3://foo/bar/"
 
 
 class TestSageMakerEnvGeneric:

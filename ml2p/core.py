@@ -11,12 +11,66 @@ import os
 import pathlib
 import urllib.parse
 import uuid
+import yaml
 import warnings
 
 import boto3
 
 from . import __version__ as ml2p_version
 from . import hyperparameters
+
+
+class ModellingProject:
+    """ Object for holding CLI context. """
+
+    def __init__(self, cfg):
+        with open(cfg) as f:
+            self.cfg = yaml.safe_load(f)
+        self.project = self.cfg["project"]
+        self.s3 = S3URL(self.cfg["s3folder"])
+        self.client = boto3.client("sagemaker")
+        self.train = ModellingSubCfg(self.cfg, "train")
+        self.deploy = ModellingSubCfg(self.cfg, "deploy")
+        self.notebook = ModellingSubCfg(self.cfg, "notebook")
+        self.models = ModellingSubCfg(self.cfg, "models", defaults="models")
+
+    def full_job_name(self, job_name):
+        return "{}-{}".format(self.project, job_name)
+
+    def tags(self):
+        return [{"Key": "ml2p-project", "Value": self.cfg["project"]}]
+
+
+class ModellingSubCfg:
+    """ Holder for training or deployment config. """
+
+    def __init__(self, cfg, section, defaults="defaults"):
+        self._cfg = cfg
+        self._defaults = cfg.get(defaults, {})
+        self._section = cfg.get(section, {})
+
+    def __getattr__(self, name):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults[name]
+
+    def __getitem__(self, name):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults[name]
+
+    def __setitem__(self, name, value):
+        self._section[name] = value
+
+    def keys(self):
+        keys = set(self._section.keys())
+        keys.update(self._defaults.keys())
+        return sorted(keys)
+
+    def get(self, name, default=None):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults.get(name, default)
 
 
 class S3URL:
@@ -52,7 +106,7 @@ class SageMakerEnv:
         Attributes that are expected to be available in both training and serving
         environments:
 
-        * `env_type` - Whether this is a training or serving environment
+        * `env_type` - Whether this is a training, serving or local environment
           (type: ml2p.core.SageMakerEnvType).
 
         * `project` - The ML2P project name (type: str).
@@ -168,6 +222,41 @@ class SageMakerEnv:
     def write_failure(self, text):
         with open(self._ml_folder / "output" / "failure", "w") as f:
             f.write(text)
+
+
+class LocalEnv(SageMakerEnv):
+    """ An interface to a local dummy of the SageMaker environment.
+
+        Attributes that are expected to be available in the local environment:
+
+        * `env_type` - Whether this is a training, serving or local environment
+          (type: ml2p.core.SageMakerEnvType).
+
+        * `project` - The ML2P project name (type: str).
+
+        * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
+
+        * `model_version` - The fixed value "local" (type: str).
+
+        In the local environment settings are loaded directly from the ML2P
+        configuration file.
+    """
+
+    def __init__(self, ml_folder, cfg, session):
+        self.session = session
+        super().__init__(ml_folder, environ=self._local_environ(cfg))
+
+    def _local_environ(self, cfg):
+        prj = ModellingProject(cfg)
+        return {
+            "env_type": self.LOCAL,
+            "training_job_name": None,
+            "model_version": "local",
+            "record_invokes": False,
+            "project": prj.project,
+            "model_cls": None,
+            "s3_url": prj.s3.url(),
+        }
 
 
 def import_string(name):
