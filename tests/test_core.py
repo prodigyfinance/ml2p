@@ -145,6 +145,25 @@ class TestSageMakerEnvLocal:
         assert env.model_cls is None
         assert env.s3.url() == "s3://foo/bar/"
 
+    def test_download_dataset(self, sagemaker):
+        env = sagemaker.local()
+        sagemaker.s3_put_object(
+            "foo", "bar/datasets/bubbles-2012/params.json", {"a": 1}
+        )
+        sagemaker.s3_put_object(
+            "foo", "bar/datasets/bubbles-2012/subdir/data.json", {"b": 2}
+        )
+        env.download_dataset("bubbles-2012")
+        training_folder = sagemaker.ml_folder / "input" / "data" / "training"
+        training_root = sorted(p.basename for p in training_folder.listdir())
+        assert training_root == ["params.json", "subdir"]
+        training_subdir = sorted(
+            p.basename for p in (training_folder / "subdir").listdir()
+        )
+        assert training_subdir == ["data.json"]
+        assert (training_folder / "params.json").read() == '{"a": 1}'
+        assert (training_folder / "subdir" / "data.json").read() == '{"b": 2}'
+
 
 class TestSageMakerEnvGeneric:
     def test_hyperparameters(self, sagemaker):

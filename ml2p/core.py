@@ -275,6 +275,7 @@ class LocalEnv(SageMakerEnv):
 
         for s3_object in bucket.objects.filter(Prefix=s3_dataset):
             local_object = local_dataset / (s3_object.key[len_prefix:].lstrip("/"))
+            local_object.parent.mkdir(parents=True, exist_ok=True)
             with local_object.open("wb") as f:
                 bucket.download_fileobj(s3_object.key, f)
 
