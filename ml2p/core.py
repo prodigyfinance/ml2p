@@ -243,19 +243,19 @@ class LocalEnv(SageMakerEnv):
     """
 
     def __init__(self, ml_folder, cfg, session):
-        self.session = session
-        super().__init__(ml_folder, environ=self._local_environ(cfg))
+        self._session = session
+        self._prj = ModellingProject(cfg)
+        super().__init__(ml_folder, environ=self._local_environ())
 
-    def _local_environ(self, cfg):
-        prj = ModellingProject(cfg)
+    def _local_environ(self):
         return {
             "env_type": self.LOCAL,
             "training_job_name": None,
             "model_version": "local",
             "record_invokes": False,
-            "project": prj.project,
+            "project": self._prj.project,
             "model_cls": None,
-            "s3_url": prj.s3.url(),
+            "s3_url": self._prj.s3.url(),
         }
 
     def download_dataset(self, dataset):
@@ -264,7 +264,7 @@ class LocalEnv(SageMakerEnv):
             :param str dataset:
                 The name of the dataset in S3 to download.
         """
-        client = self.session.resource("s3")
+        client = self._session.resource("s3")
         bucket = client.Bucket(self.s3.bucket())
 
         local_dataset = self.dataset_folder()
@@ -284,7 +284,7 @@ class LocalEnv(SageMakerEnv):
             :param str training_job:
                 The name of the training job whose model should be downloaded.
         """
-        client = self.session.resource("s3")
+        client = self._session.resource("s3")
         bucket = client.Bucket(self.s3.bucket())
 
         local_model_tgz = self.model_folder() / "model.tar.gz"
@@ -292,7 +292,7 @@ class LocalEnv(SageMakerEnv):
         s3_model_tgz = (
             self.s3.path("/models")
             + "/"
-            + self.prj.full_job_name(training_job)
+            + self._prj.full_job_name(training_job)
             + "/output/model.tar.gz"
         )
 
