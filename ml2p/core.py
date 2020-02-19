@@ -255,6 +255,9 @@ class LocalEnv(SageMakerEnv):
         self._session = session
         self._prj = ModellingProject(cfg)
         super().__init__(ml_folder, environ=self._local_environ())
+        if not self._ml_folder.is_dir():
+            raise LocalEnvError(f"Local environment folder {ml_folder} does not exist.")
+        self.model_folder().mkdir(exist_ok=True)
 
     def _local_environ(self):
         return {

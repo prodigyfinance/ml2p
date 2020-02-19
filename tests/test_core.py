@@ -147,6 +147,13 @@ class TestSageMakerEnvLocal:
         assert env.project == "test-project"
         assert env.model_cls is None
         assert env.s3.url() == "s3://foo/bar/"
+        assert env.model_folder().is_dir() is True
+
+    def test_fails_when_local_folder_does_not_exist(self, sagemaker):
+        ml_folder = sagemaker.ml_folder / "does-not-exist"
+        with pytest.raises(LocalEnvError) as e:
+            sagemaker.local(ml_folder=ml_folder)
+        assert str(e.value) == f"Local environment folder {ml_folder} does not exist."
 
     def test_no_session(self, sagemaker):
         env = sagemaker.local(session=None)

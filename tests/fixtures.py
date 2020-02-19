@@ -102,8 +102,9 @@ class SageMakerFixture:
         with cfg_file.open("w") as f:
             cfg = {"project": "test-project", "s3folder": "s3://foo/bar"}
             yaml.safe_dump(cfg, f)
+        ml_folder = kw.pop("ml_folder", self.ml_folder)
         session = kw.pop("session", boto3.session.Session())
-        return LocalEnv(str(self.ml_folder), str(cfg_file), session)
+        return LocalEnv(str(ml_folder), str(cfg_file), session)
 
 
 @pytest.fixture
