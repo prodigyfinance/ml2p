@@ -147,6 +147,22 @@ class TestSageMakerEnvLocal:
         assert env.model_cls is None
         assert env.s3.url() == "s3://foo/bar/"
 
+    def test_no_session(self, sagemaker):
+        env = sagemaker.local(session=None)
+        assert env.env_type == env.LOCAL
+        assert env.model_version == "local"
+        assert env.record_invokes is False
+        assert env.training_job_name is None
+        assert env.project == "test-project"
+        assert env.model_cls is None
+        assert env.s3.url() == "s3://foo/bar/"
+        with pytest.raises(AssertionError) as e:
+            env.download_dataset("my-dataset")
+        assert str(e.value) == "Downloading datasets requires a boto session."
+        with pytest.raises(AssertionError) as e:
+            env.download_model("my-training-job")
+        assert str(e.value) == "Downloading models requires a boto session."
+
     def test_download_dataset(self, sagemaker):
         env = sagemaker.local()
         sagemaker.s3_put_object(
