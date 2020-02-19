@@ -19,6 +19,7 @@ import yaml
 
 from . import __version__ as ml2p_version
 from . import hyperparameters
+from .errors import LocalEnvError
 
 
 class ModellingProject:
@@ -272,9 +273,8 @@ class LocalEnv(SageMakerEnv):
             :param str dataset:
                 The name of the dataset in S3 to download.
         """
-        assert (
-            self._session is not None
-        ), "Downloading datasets requires a boto session."
+        if self._session is None:
+            raise LocalEnvError("Downloading datasets requires a boto session.")
         client = self._session.resource("s3")
         bucket = client.Bucket(self.s3.bucket())
 
@@ -295,7 +295,8 @@ class LocalEnv(SageMakerEnv):
             :param str training_job:
                 The name of the training job whose model should be downloaded.
         """
-        assert self._session is not None, "Downloading models requires a boto session."
+        if self._session is None:
+            raise LocalEnvError("Downloading models requires a boto session.")
         client = self._session.resource("s3")
         bucket = client.Bucket(self.s3.bucket())
 

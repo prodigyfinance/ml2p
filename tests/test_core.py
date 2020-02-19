@@ -17,6 +17,7 @@ from ml2p.core import (
     ModelTrainer,
     import_string,
 )
+from ml2p.errors import LocalEnvError
 
 
 def mk_subcfg(defaults="defaults"):
@@ -156,10 +157,10 @@ class TestSageMakerEnvLocal:
         assert env.project == "test-project"
         assert env.model_cls is None
         assert env.s3.url() == "s3://foo/bar/"
-        with pytest.raises(AssertionError) as e:
+        with pytest.raises(LocalEnvError) as e:
             env.download_dataset("my-dataset")
         assert str(e.value) == "Downloading datasets requires a boto session."
-        with pytest.raises(AssertionError) as e:
+        with pytest.raises(LocalEnvError) as e:
             env.download_model("my-training-job")
         assert str(e.value) == "Downloading models requires a boto session."
 
