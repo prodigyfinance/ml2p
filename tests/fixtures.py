@@ -10,9 +10,10 @@ import uuid
 import boto3
 import moto
 import pytest
+import yaml
 
 from ml2p import hyperparameters
-from ml2p.core import SageMakerEnv
+from ml2p.core import LocalEnv, SageMakerEnv
 
 MOTO_TEST_REGION = "us-east-1"
 
@@ -57,6 +58,13 @@ class SageMakerFixture:
         data = json.loads(response["Body"].read())
         return data
 
+    def s3_put_object(self, bucket, s3_key, data):
+        body = json.dumps(data)
+        self.s3.put_object(Bucket=bucket, Key=s3_key, Body=body)
+
+    def s3_put_bytes(self, bucket, s3_key, data):
+        self.s3.put_object(Bucket=bucket, Key=s3_key, Body=data)
+
     def generic(self):
         return SageMakerEnv(str(self.ml_folder))
 
@@ -87,6 +95,16 @@ class SageMakerFixture:
             else:
                 self.monkeypatch.setenv(k, v)
         return SageMakerEnv(str(self.ml_folder))
+
+    def local(self, **kw):
+        self.s3_create_bucket("foo")
+        cfg_file = self.ml_folder / "ml2p.yaml"
+        with cfg_file.open("w") as f:
+            cfg = {"project": "test-project", "s3folder": "s3://foo/bar"}
+            yaml.safe_dump(cfg, f)
+        ml_folder = kw.pop("ml_folder", self.ml_folder)
+        session = kw.pop("session", boto3.session.Session())
+        return LocalEnv(str(ml_folder), str(cfg_file), session)
 
 
 @pytest.fixture

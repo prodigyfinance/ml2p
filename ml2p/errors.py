@@ -12,6 +12,11 @@ class NamingError(Exception):
     """
 
 
+class LocalEnvError(Exception):
+    """ Raised when an error specific to working with a local environment occurs.
+    """
+
+
 class APIError(APIException):
     """ Raised when an error occurs in the ML2P prediction API.
 

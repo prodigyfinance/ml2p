@@ -6,65 +6,11 @@ import json
 
 import boto3
 import click
-import yaml
 
 from . import __version__ as ml2p_version
 from . import cli_utils
 from .cli_utils import click_echo_json, validate_name
-from .core import S3URL
-
-
-class ModellingProject:
-    """ Object for holding CLI context. """
-
-    def __init__(self, cfg):
-        with open(cfg) as f:
-            self.cfg = yaml.safe_load(f)
-        self.project = self.cfg["project"]
-        self.s3 = S3URL(self.cfg["s3folder"])
-        self.client = boto3.client("sagemaker")
-        self.train = ModellingSubCfg(self.cfg, "train")
-        self.deploy = ModellingSubCfg(self.cfg, "deploy")
-        self.notebook = ModellingSubCfg(self.cfg, "notebook")
-        self.models = ModellingSubCfg(self.cfg, "models", defaults="models")
-
-    def full_job_name(self, job_name):
-        return "{}-{}".format(self.project, job_name)
-
-    def tags(self):
-        return [{"Key": "ml2p-project", "Value": self.cfg["project"]}]
-
-
-class ModellingSubCfg:
-    """ Holder for training or deployment config. """
-
-    def __init__(self, cfg, section, defaults="defaults"):
-        self._cfg = cfg
-        self._defaults = cfg.get(defaults, {})
-        self._section = cfg.get(section, {})
-
-    def __getattr__(self, name):
-        if name in self._section:
-            return self._section[name]
-        return self._defaults[name]
-
-    def __getitem__(self, name):
-        if name in self._section:
-            return self._section[name]
-        return self._defaults[name]
-
-    def __setitem__(self, name, value):
-        self._section[name] = value
-
-    def keys(self):
-        keys = set(self._section.keys())
-        keys.update(self._defaults.keys())
-        return sorted(keys)
-
-    def get(self, name, default=None):
-        if name in self._section:
-            return self._section[name]
-        return self._defaults.get(name, default)
+from .core import ModellingProject
 
 
 def validate_model_type(ctx, param, value):
@@ -84,6 +30,12 @@ def validate_model_type(ctx, param, value):
     )
 
 
+class ModellingProjectWithSagemakerClient(ModellingProject):
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.client = boto3.client("sagemaker")
+
+
 # alias pass_obj for readability
 pass_prj = click.pass_obj
 
@@ -101,7 +53,7 @@ def ml2p(ctx, cfg):
 
         A friendlier interface to AWS SageMaker.
     """
-    ctx.obj = ModellingProject(cfg=cfg)
+    ctx.obj = ModellingProjectWithSagemakerClient(cfg=cfg)
 
 
 @ml2p.command("init")

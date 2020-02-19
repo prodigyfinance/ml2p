@@ -2,12 +2,56 @@
 
 """ Tests for ml2p.core. """
 
+import io
 import pathlib
+import tarfile
 
 import pytest
 
 from ml2p import __version__ as ml2p_version
-from ml2p.core import S3URL, Model, ModelPredictor, ModelTrainer, import_string
+from ml2p.core import (
+    S3URL,
+    Model,
+    ModellingSubCfg,
+    ModelPredictor,
+    ModelTrainer,
+    import_string,
+)
+from ml2p.errors import LocalEnvError
+
+
+def mk_subcfg(defaults="defaults"):
+    return ModellingSubCfg(
+        {"sub": {"a": 1, "b": "boo"}, "defaults": {"c": 3}}, "sub", defaults=defaults
+    )
+
+
+class TestModellingSubCfg:
+    def test_getattr(self):
+        subcfg = mk_subcfg()
+        assert subcfg.a == 1
+        assert subcfg.c == 3
+
+    def test_getitem(self):
+        subcfg = mk_subcfg()
+        assert subcfg["a"] == 1
+        assert subcfg["c"] == 3
+
+    def test_setitem(self):
+        subcfg = mk_subcfg()
+        subcfg["d"] = 5
+        assert subcfg.d == 5
+        assert subcfg["d"] == 5
+
+    def test_keys(self):
+        subcfg = mk_subcfg()
+        assert subcfg.keys() == ["a", "b", "c"]
+
+    def test_get(self):
+        subcfg = mk_subcfg()
+        assert subcfg.get("a") == 1
+        assert subcfg.get("d") is None
+        assert subcfg.get("d", 3) == 3
 
 
 class TestS3URL:
@@ -91,6 +135,87 @@ class TestSageMakerEnvServe:
     def test_create_env_with_record_invokes(self, sagemaker):
         env = sagemaker.serve(ML2P_RECORD_INVOKES="true")
         assert env.record_invokes is True
+
+
+class TestSageMakerEnvLocal:
+    def test_basic_env(self, sagemaker):
+        env = sagemaker.local()
+        assert env.env_type == env.LOCAL
+        assert env.model_version == "local"
+        assert env.record_invokes is False
+        assert env.training_job_name is None
+        assert env.project == "test-project"
+        assert env.model_cls is None
+        assert env.s3.url() == "s3://foo/bar/"
+        assert env.model_folder().is_dir() is True
+
+    def test_fails_when_local_folder_does_not_exist(self, sagemaker):
+        ml_folder = sagemaker.ml_folder / "does-not-exist"
+        with pytest.raises(LocalEnvError) as e:
+            sagemaker.local(ml_folder=ml_folder)
+        assert str(e.value) == f"Local environment folder {ml_folder} does not exist."
+
+    def test_no_session(self, sagemaker):
+        env = sagemaker.local(session=None)
+        assert env.env_type == env.LOCAL
+        assert env.model_version == "local"
+        assert env.record_invokes is False
+        assert env.training_job_name is None
+        assert env.project == "test-project"
+        assert env.model_cls is None
+        assert env.s3.url() == "s3://foo/bar/"
+        with pytest.raises(LocalEnvError) as e:
+            env.download_dataset("my-dataset")
+        assert str(e.value) == "Downloading datasets requires a boto session."
+        with pytest.raises(LocalEnvError) as e:
+            env.download_model("my-training-job")
+        assert str(e.value) == "Downloading models requires a boto session."
+
+    def test_download_dataset(self, sagemaker):
+        env = sagemaker.local()
+        sagemaker.s3_put_object(
+            "foo", "bar/datasets/bubbles-2012/params.json", {"a": 1}
+        )
+        sagemaker.s3_put_object(
+            "foo", "bar/datasets/bubbles-2012/subdir/data.json", {"b": 2}
+        )
+        env.download_dataset("bubbles-2012")
+        training_folder = sagemaker.ml_folder / "input" / "data" / "training"
+        training_root = sorted(p.basename for p in training_folder.listdir())
+        assert training_root == ["params.json", "subdir"]
+        training_subdir = sorted(
+            p.basename for p in (training_folder / "subdir").listdir()
+        )
+        assert training_subdir == ["data.json"]
+        assert (training_folder / "params.json").read() == '{"a": 1}'
+        assert (training_folder / "subdir" / "data.json").read() == '{"b": 2}'
+
+    def make_tarfile(self, tmpdir, name, files):
+        raw = io.BytesIO()
+        with tarfile.open(name=name, fileobj=raw, mode="w:gz") as tar:
+            for arcname, data in files.items():
+                f = tmpdir.join(arcname)
+                f.write(data)
+                tarinfo = tar.gettarinfo(f, arcname=arcname)
+                with f.open("rb") as fh:
+                    tar.addfile(tarinfo, fileobj=fh)
+        return raw.getvalue()
+
+    def test_download_model(self, sagemaker, tmpdir):
+        env = sagemaker.local()
+        model_tar_gz_data = self.make_tarfile(
+            tmpdir, "model.tar.gz", {"pipeline.json": b'{"a": 1}'}
+        )
+        sagemaker.s3_put_bytes(
+            "foo",
+            "bar/models/test-project-train-2012/output/model.tar.gz",
+            model_tar_gz_data,
+        )
+        env.download_model("train-2012")
+        model_folder = sagemaker.ml_folder / "model"
+        model_root = sorted(p.basename for p in model_folder.listdir())
+        assert model_root == ["model.tar.gz", "pipeline.json"]
+        assert (model_folder / "pipeline.json").read() == '{"a": 1}'
 
 
 class TestSageMakerEnvGeneric:

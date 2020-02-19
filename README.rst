@@ -132,3 +132,40 @@ You can make a test prediction using::
   $ ml2p endpoint invoke zcf-endpoint-6 '{"your": "data"}'
 
 And you're done!
+
+
+Working with models locally
+===========================
+
+At times it may be convenient to work with ML2P models on a local machine, rather than
+within SageMaker. ML2P supports both training models locally and loading models trained
+in SageMaker for local analysis.
+
+In either case, first create a local environment::
+
+  # set up a connection to AWS, specifying an appropriate AWS profile name:
+  import boto3
+  session = boto3.session.Session(profile_name="aws-profile")
+
+  # create a local environment, the arguments are the local folder to store the
+  # environment in, the path the ml2p.yml config file, and an optional boto3
+  # session to use for retrieving files from S3.
+  from ml2p.core import LocalEnv
+  env = LocalEnv("./local", "./sagemaker/ml2p.yml", session)
+
+  # import your ml2p model class:
+  from my_package import MyModel
+
+Then to train a model locally::
+
+  env.download_dataset("dataset-name")
+  trainer = MyModel().trainer(env)
+  trainer.train()
+
+And to load an already trained model::
+
+  env.download_model("training-job-name")
+  predictor = MyModel().predictor(env)
+  predictor.setup()
+
+Happy local analyzing and debugging!

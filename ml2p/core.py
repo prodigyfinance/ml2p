@@ -9,14 +9,69 @@ import importlib
 import json
 import os
 import pathlib
+import tarfile
 import urllib.parse
 import uuid
 import warnings
 
 import boto3
+import yaml
 
 from . import __version__ as ml2p_version
 from . import hyperparameters
+from .errors import LocalEnvError
+
+
+class ModellingProject:
+    """ Object for holding CLI context. """
+
+    def __init__(self, cfg):
+        with open(cfg) as f:
+            self.cfg = yaml.safe_load(f)
+        self.project = self.cfg["project"]
+        self.s3 = S3URL(self.cfg["s3folder"])
+        self.train = ModellingSubCfg(self.cfg, "train")
+        self.deploy = ModellingSubCfg(self.cfg, "deploy")
+        self.notebook = ModellingSubCfg(self.cfg, "notebook")
+        self.models = ModellingSubCfg(self.cfg, "models", defaults="models")
+
+    def full_job_name(self, job_name):
+        return "{}-{}".format(self.project, job_name)
+
+    def tags(self):
+        return [{"Key": "ml2p-project", "Value": self.cfg["project"]}]
+
+
+class ModellingSubCfg:
+    """ Holder for training or deployment config. """
+
+    def __init__(self, cfg, section, defaults="defaults"):
+        self._cfg = cfg
+        self._defaults = cfg.get(defaults, {})
+        self._section = cfg.get(section, {})
+
+    def __getattr__(self, name):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults[name]
+
+    def __getitem__(self, name):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults[name]
+
+    def __setitem__(self, name, value):
+        self._section[name] = value
+
+    def keys(self):
+        keys = set(self._section.keys())
+        keys.update(self._defaults.keys())
+        return sorted(keys)
+
+    def get(self, name, default=None):
+        if name in self._section:
+            return self._section[name]
+        return self._defaults.get(name, default)
 
 
 class S3URL:
@@ -43,6 +98,7 @@ class SageMakerEnvType(enum.Enum):
 
     TRAIN = "train"
     SERVE = "serve"
+    LOCAL = "local"
 
 
 class SageMakerEnv:
@@ -51,7 +107,7 @@ class SageMakerEnv:
         Attributes that are expected to be available in both training and serving
         environments:
 
-        * `env_type` - Whether this is a training or serving environment
+        * `env_type` - Whether this is a training, serving or local environment
           (type: ml2p.core.SageMakerEnvType).
 
         * `project` - The ML2P project name (type: str).
@@ -85,28 +141,50 @@ class SageMakerEnv:
 
     TRAIN = SageMakerEnvType.TRAIN
     SERVE = SageMakerEnvType.SERVE
+    LOCAL = SageMakerEnvType.LOCAL
 
-    def __init__(self, ml_folder):
+    def __init__(self, ml_folder, environ=None):
         self._ml_folder = pathlib.Path(ml_folder)
-        if "TRAINING_JOB_NAME" in os.environ:
-            # this is a training job instance
-            self.env_type = self.TRAIN
-            environ = self.hyperparameters().get("ML2P_ENV", {})
-            self.training_job_name = os.environ.get("TRAINING_JOB_NAME", None)
-            self.model_version = None
-            self.record_invokes = None
-        else:
-            # this is a serving instance
-            self.env_type = self.SERVE
-            environ = os.environ
-            self.training_job_name = None
-            self.model_version = environ.get("ML2P_MODEL_VERSION", None)
-            self.record_invokes = environ.get("ML2P_RECORD_INVOKES", "false") == "true"
-        self.project = environ.get("ML2P_PROJECT", None)
-        self.model_cls = environ.get("ML2P_MODEL_CLS", None)
+        if environ is None:
+            if "TRAINING_JOB_NAME" in os.environ:
+                # this is a training job instance
+                environ = self._train_environ()
+            else:
+                # this is a serving instance
+                environ = self._serve_environ()
+        self.env_type = environ["env_type"]
+        self.training_job_name = environ["training_job_name"]
+        self.model_version = environ["model_version"]
+        self.record_invokes = environ["record_invokes"]
+        self.project = environ["project"]
+        self.model_cls = environ["model_cls"]
         self.s3 = None
-        if "ML2P_S3_URL" in environ:
-            self.s3 = S3URL(environ["ML2P_S3_URL"])
+        if environ["s3_url"]:
+            self.s3 = S3URL(environ["s3_url"])
+
+    def _train_environ(self):
+        environ = self.hyperparameters().get("ML2P_ENV", {})
+        return {
+            "env_type": self.TRAIN,
+            "training_job_name": os.environ.get("TRAINING_JOB_NAME", None),
+            "model_version": None,
+            "record_invokes": None,
+            "project": environ.get("ML2P_PROJECT", None),
+            "model_cls": environ.get("ML2P_MODEL_CLS", None),
+            "s3_url": environ.get("ML2P_S3_URL", None),
+        }
+
+    def _serve_environ(self):
+        environ = os.environ
+        return {
+            "env_type": self.SERVE,
+            "training_job_name": None,
+            "model_version": environ.get("ML2P_MODEL_VERSION", None),
+            "record_invokes": environ.get("ML2P_RECORD_INVOKES", "false") == "true",
+            "project": environ.get("ML2P_PROJECT", None),
+            "model_cls": environ.get("ML2P_MODEL_CLS", None),
+            "s3_url": environ.get("ML2P_S3_URL", None),
+        }
 
     def hyperparameters(self):
         hp_path = self._ml_folder / "input" / "config" / "hyperparameters.json"
@@ -145,6 +223,102 @@ class SageMakerEnv:
     def write_failure(self, text):
         with open(self._ml_folder / "output" / "failure", "w") as f:
             f.write(text)
+
+
+class LocalEnv(SageMakerEnv):
+    """ An interface to a local dummy of the SageMaker environment.
+
+        :param str ml_folder:
+            The directory the environments files are stored in. An
+            error is raised if this directory does not exist. Files
+            and folders are created within this directory as needed.
+        :param str cfg:
+            The path to an ml2p.yml configuration file.
+        :param boto3.session.Session session:
+            A boto3 session object. Maybe be None if downloading files from
+            S3 is not required.
+
+        Attributes that are expected to be available in the local environment:
+
+        * `env_type` - Whether this is a training, serving or local environment
+          (type: ml2p.core.SageMakerEnvType).
+
+        * `project` - The ML2P project name (type: str).
+
+        * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
+
+        * `model_version` - The fixed value "local" (type: str).
+
+        In the local environment settings are loaded directly from the ML2P
+        configuration file.
+    """
+
+    def __init__(self, ml_folder, cfg, session=None):
+        self._session = session
+        self._prj = ModellingProject(cfg)
+        super().__init__(ml_folder, environ=self._local_environ())
+        if not self._ml_folder.is_dir():
+            raise LocalEnvError(f"Local environment folder {ml_folder} does not exist.")
+        self.model_folder().mkdir(exist_ok=True)
+
+    def _local_environ(self):
+        return {
+            "env_type": self.LOCAL,
+            "training_job_name": None,
+            "model_version": "local",
+            "record_invokes": False,
+            "project": self._prj.project,
+            "model_cls": None,
+            "s3_url": self._prj.s3.url(),
+        }
+
+    def download_dataset(self, dataset):
+        """ Download the given dataset from S3 into the local environment.
+
+            :param str dataset:
+                The name of the dataset in S3 to download.
+        """
+        if self._session is None:
+            raise LocalEnvError("Downloading datasets requires a boto session.")
+        client = self._session.resource("s3")
+        bucket = client.Bucket(self.s3.bucket())
+
+        local_dataset = self.dataset_folder()
+        local_dataset.mkdir(parents=True, exist_ok=True)
+        s3_dataset = self.s3.path("datasets") + "/" + dataset
+        len_prefix = len(s3_dataset)
+
+        for s3_object in bucket.objects.filter(Prefix=s3_dataset):
+            local_object = local_dataset / (s3_object.key[len_prefix:].lstrip("/"))
+            local_object.parent.mkdir(parents=True, exist_ok=True)
+            with local_object.open("wb") as f:
+                bucket.download_fileobj(s3_object.key, f)
+
+    def download_model(self, training_job):
+        """ Download the given trained model from S3 and unpack it into the local environment.
+
+            :param str training_job:
+                The name of the training job whose model should be downloaded.
+        """
+        if self._session is None:
+            raise LocalEnvError("Downloading models requires a boto session.")
+        client = self._session.resource("s3")
+        bucket = client.Bucket(self.s3.bucket())
+
+        local_model_tgz = self.model_folder() / "model.tar.gz"
+        local_model_tgz.parent.mkdir(parents=True, exist_ok=True)
+        s3_model_tgz = (
+            self.s3.path("/models")
+            + "/"
+            + self._prj.full_job_name(training_job)
+            + "/output/model.tar.gz"
+        )
+
+        with local_model_tgz.open("wb") as f:
+            bucket.download_fileobj(s3_model_tgz, f)
+
+        tf = tarfile.open(local_model_tgz)
+        tf.extractall(self.model_folder())
 
 
 def import_string(name):
