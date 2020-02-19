@@ -62,6 +62,9 @@ class SageMakerFixture:
         body = json.dumps(data)
         self.s3.put_object(Bucket=bucket, Key=s3_key, Body=body)
 
+    def s3_put_bytes(self, bucket, s3_key, data):
+        self.s3.put_object(Bucket=bucket, Key=s3_key, Body=data)
+
     def generic(self):
         return SageMakerEnv(str(self.ml_folder))
 
