@@ -229,7 +229,9 @@ class LocalEnv(SageMakerEnv):
     """ An interface to a local dummy of the SageMaker environment.
 
         :param str ml_folder:
-            The directory the environments files are stored in.
+            The directory the environments files are stored in. An
+            error is raised if this directory does not exist. Files
+            and folders are created within this directory as needed.
         :param str cfg:
             The path to an ml2p.yml configuration file.
         :param boto3.session.Session session:
