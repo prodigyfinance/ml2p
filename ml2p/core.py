@@ -227,6 +227,14 @@ class SageMakerEnv:
 class LocalEnv(SageMakerEnv):
     """ An interface to a local dummy of the SageMaker environment.
 
+        :param str ml_folder:
+            The directory the environments files are stored in.
+        :param str cfg:
+            The path to an ml2p.yml configuration file.
+        :param boto3.session.Session session:
+            A boto3 session object. Maybe be None if downloading files from
+            S3 is not required.
+
         Attributes that are expected to be available in the local environment:
 
         * `env_type` - Whether this is a training, serving or local environment
@@ -242,7 +250,7 @@ class LocalEnv(SageMakerEnv):
         configuration file.
     """
 
-    def __init__(self, ml_folder, cfg, session):
+    def __init__(self, ml_folder, cfg, session=None):
         self._session = session
         self._prj = ModellingProject(cfg)
         super().__init__(ml_folder, environ=self._local_environ())
@@ -264,6 +272,9 @@ class LocalEnv(SageMakerEnv):
             :param str dataset:
                 The name of the dataset in S3 to download.
         """
+        assert (
+            self._session is not None
+        ), "Downloading datasets requires a boto session."
         client = self._session.resource("s3")
         bucket = client.Bucket(self.s3.bucket())
 
@@ -284,6 +295,7 @@ class LocalEnv(SageMakerEnv):
             :param str training_job:
                 The name of the training job whose model should be downloaded.
         """
+        assert self._session is not None, "Downloading models requires a boto session."
         client = self._session.resource("s3")
         bucket = client.Bucket(self.s3.bucket())
 
