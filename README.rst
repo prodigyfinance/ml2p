@@ -159,6 +159,7 @@ In either case, first create a local environment::
 Then to train a model locally::
 
   env.download_dataset("dataset-name")
+  env.clean_model_folder()
   trainer = MyModel().trainer(env)
   trainer.train()
 
