@@ -2,7 +2,9 @@
 
 """ Tests for ml2p.core. """
 
+import io
 import pathlib
+import tarfile
 
 import pytest
 
@@ -163,6 +165,33 @@ class TestSageMakerEnvLocal:
         assert training_subdir == ["data.json"]
         assert (training_folder / "params.json").read() == '{"a": 1}'
         assert (training_folder / "subdir" / "data.json").read() == '{"b": 2}'
+
+    def make_tarfile(self, tmpdir, name, files):
+        raw = io.BytesIO()
+        with tarfile.open(name=name, fileobj=raw, mode="w:gz") as tar:
+            for arcname, data in files.items():
+                f = tmpdir.join(arcname)
+                f.write(data)
+                tarinfo = tar.gettarinfo(f, arcname=arcname)
+                with f.open("rb") as fh:
+                    tar.addfile(tarinfo, fileobj=fh)
+        return raw.getvalue()
+
+    def test_download_model(self, sagemaker, tmpdir):
+        env = sagemaker.local()
+        model_tar_gz_data = self.make_tarfile(
+            tmpdir, "model.tar.gz", {"pipeline.json": b'{"a": 1}'}
+        )
+        sagemaker.s3_put_bytes(
+            "foo",
+            "bar/models/test-project-train-2012/output/model.tar.gz",
+            model_tar_gz_data,
+        )
+        env.download_model("train-2012")
+        model_folder = sagemaker.ml_folder / "model"
+        model_root = sorted(p.basename for p in model_folder.listdir())
+        assert model_root == ["model.tar.gz", "pipeline.json"]
+        assert (model_folder / "pipeline.json").read() == '{"a": 1}'
 
 
 class TestSageMakerEnvGeneric:
