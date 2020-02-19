@@ -30,6 +30,12 @@ def validate_model_type(ctx, param, value):
     )
 
 
+class ModellingProjectWithSagemakerClient(ModellingProject):
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.client = boto3.client("sagemaker")
+
+
 # alias pass_obj for readability
 pass_prj = click.pass_obj
 
@@ -47,7 +53,7 @@ def ml2p(ctx, cfg):
 
         A friendlier interface to AWS SageMaker.
     """
-    ctx.obj = ModellingProject(cfg=cfg)
+    ctx.obj = ModellingProjectWithSagemakerClient(cfg=cfg)
 
 
 @ml2p.command("init")

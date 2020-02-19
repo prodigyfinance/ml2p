@@ -29,7 +29,6 @@ class ModellingProject:
             self.cfg = yaml.safe_load(f)
         self.project = self.cfg["project"]
         self.s3 = S3URL(self.cfg["s3folder"])
-        self.client = boto3.client("sagemaker")
         self.train = ModellingSubCfg(self.cfg, "train")
         self.deploy = ModellingSubCfg(self.cfg, "deploy")
         self.notebook = ModellingSubCfg(self.cfg, "notebook")
