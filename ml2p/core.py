@@ -300,6 +300,9 @@ class LocalEnv(SageMakerEnv):
         len_prefix = len(s3_dataset)
 
         for s3_object in bucket.objects.filter(Prefix=s3_dataset):
+            if s3_object.key.endswith("/"):
+                # keys that end in a / are probably folders, so skip downloading them
+                continue
             local_object = local_dataset / (s3_object.key[len_prefix:].lstrip("/"))
             local_object.parent.mkdir(parents=True, exist_ok=True)
             with local_object.open("wb") as f:
