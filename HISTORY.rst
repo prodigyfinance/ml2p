@@ -1,6 +1,13 @@
 History
 =======
 
+0.1.3 (2020-02-20)
+------------------
+
+* Added support for local environments. These allow ML2P models to be trained and used
+  to make predictions locally, as though they were being loaded in SageMaker.
+* Added support for downloading datasets and models from S3 into local environments.
+
 0.1.2 (2020-01-23)
 ------------------
 
