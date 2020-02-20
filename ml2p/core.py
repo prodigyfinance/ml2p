@@ -9,6 +9,7 @@ import importlib
 import json
 import os
 import pathlib
+import shutil
 import tarfile
 import urllib.parse
 import uuid
@@ -271,6 +272,16 @@ class LocalEnv(SageMakerEnv):
             "model_cls": None,
             "s3_url": self._prj.s3.url(),
         }
+
+    def clean_model_folder(self):
+        """ Remove and recreate the model folder.
+
+            This is useful to run before training a model if one wants to ensure
+            that the model folder is empty beforehand.
+        """
+        model_folder = self.model_folder()
+        shutil.rmtree(model_folder)
+        model_folder.mkdir()
 
     def download_dataset(self, dataset):
         """ Download the given dataset from S3 into the local environment.

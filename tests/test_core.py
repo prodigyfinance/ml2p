@@ -171,6 +171,14 @@ class TestSageMakerEnvLocal:
             env.download_model("my-training-job")
         assert str(e.value) == "Downloading models requires a boto session."
 
+    def test_clean_model_folder(self, sagemaker):
+        env = sagemaker.local()
+        model_folder = sagemaker.ml_folder / "model"
+        (model_folder / "old.txt").write("some-data")
+        assert sorted(p.basename for p in model_folder.listdir()) == ["old.txt"]
+        env.clean_model_folder()
+        assert sorted(p.basename for p in model_folder.listdir()) == []
+
     def test_download_dataset(self, sagemaker):
         env = sagemaker.local()
         sagemaker.s3_put_object(
