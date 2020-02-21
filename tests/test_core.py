@@ -184,6 +184,8 @@ class TestSageMakerEnvLocal:
         sagemaker.s3_put_object(
             "foo", "bar/datasets/bubbles-2012/params.json", {"a": 1}
         )
+        # create a dummy folder in S3 to check folder skipping
+        sagemaker.s3_put_bytes("foo", "bar/datasets/bubbles-2012/subdir/", b"")
         sagemaker.s3_put_object(
             "foo", "bar/datasets/bubbles-2012/subdir/data.json", {"b": 2}
         )
