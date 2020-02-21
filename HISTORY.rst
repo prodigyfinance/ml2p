@@ -1,6 +1,12 @@
 History
 =======
 
+0.1.4 (2020-02-21)
+------------------
+
+* Correctly handle folder keys when downloading datasets from S3. Previously folder
+  keys created files, now they created folders.
+
 0.1.3 (2020-02-20)
 ------------------
 
