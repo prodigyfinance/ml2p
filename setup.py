@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="ml2p",
-    version="0.1.4",
+    version="0.1.5",
     url="http://github.com/prodigyfinance/ml2p",
     license="Unknown",
     description=(
