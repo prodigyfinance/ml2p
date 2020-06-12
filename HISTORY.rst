@@ -1,6 +1,15 @@
 History
 =======
 
+0.1.5 (2020-06-12)
+------------------
+
+* Added `ml2p dataset delete` which deletes an entire dataset.
+* Added `ml2p dataset ls` which lists the contents of a dataset.
+* Added `ml2p dataset up` which uploads a local file to a dataset.
+* Added `ml2p dataset dn` which downloads a file from a dataset.
+* Added `ml2p dataset rm` which deletes a file from a dataset.
+
 0.1.4 (2020-02-21)
 ------------------
 
