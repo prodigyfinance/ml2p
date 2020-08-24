@@ -190,3 +190,15 @@ class TestDataset:
         result = runner.invoke(cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "list"])
         assert result.exit_code == 0
         assert result.output == '"ds-20201012"\n"ds-20201013"\n'
+
+    def test_delete(self, cfg_maker):
+        cfg_maker.s3_create_bucket()
+        runner = CliRunner()
+        runner.invoke(
+            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "create", "ds-20201012"]
+        )
+        result = runner.invoke(
+            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "delete", "ds-20201012"]
+        )
+        assert result.exit_code == 0
+        assert cfg_maker.s3_list_objects() is None
