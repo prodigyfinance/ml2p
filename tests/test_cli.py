@@ -18,9 +18,10 @@ class DummyCtx:
 
 
 class ConfigMaker:
-    def __init__(self, moto_session, tmp_path, **base_cfg):
+    def __init__(self, moto_session, tmp_path, bucket, **base_cfg):
         self._moto_session = moto_session
         self._tmp_path = tmp_path
+        self.bucket = bucket
         self._base_cfg = base_cfg
 
     def _apply_base_cfg(self, **kw):
@@ -42,14 +43,14 @@ class ConfigMaker:
     def s3(self):
         return self._moto_session.client("s3")
 
-    def s3_list_objects(self, bucket):
-        list_objects = self.s3().list_objects(Bucket=bucket)
+    def s3_list_objects(self):
+        list_objects = self.s3().list_objects(Bucket=self.bucket)
         if "Contents" not in list_objects:
             return None
         return [item["Key"] for item in list_objects["Contents"]]
 
-    def s3_get_object(self, bucket, key):
-        return self.s3().get_object(Bucket=bucket, Key=key)["Body"].read()
+    def s3_get_object(self, key):
+        return self.s3().get_object(Bucket=self.bucket, Key=key)["Body"].read()
 
 
 @pytest.fixture
@@ -58,6 +59,7 @@ def cfg_maker(moto_session, tmp_path):
         moto_session,
         tmp_path,
         project="my-models",
+        bucket="my-bucket",
         s3folder="s3://my-bucket/my-models/",
     )
 
@@ -129,22 +131,18 @@ class TestInit:
         runner = CliRunner()
         result = runner.invoke(cli.ml2p, ["--cfg", cfg_maker.cfg(), "init"])
         assert result.exit_code == 0
-        keys = [item["Key"] for item in s3.list_objects(Bucket="my-bucket")["Contents"]]
-        assert keys == ["my-models/datasets/README.rst", "my-models/models/README.rst"]
-        dataset_readme = (
-            s3.get_object(Bucket="my-bucket", Key="my-models/datasets/README.rst")[
-                "Body"
-            ]
-            .read()
-            .decode("utf-8")
+        assert cfg_maker.s3_list_objects() == [
+            "my-models/datasets/README.rst",
+            "my-models/models/README.rst",
+        ]
+        assert (
+            cfg_maker.s3_get_object("my-models/datasets/README.rst").decode("utf-8")
+            == "Datasets for my-models."
         )
-        assert dataset_readme == "Datasets for my-models."
-        model_readme = (
-            s3.get_object(Bucket="my-bucket", Key="my-models/models/README.rst")["Body"]
-            .read()
-            .decode("utf-8")
+        assert (
+            cfg_maker.s3_get_object("my-models/models/README.rst").decode("utf-8")
+            == "Models for my-models."
         )
-        assert model_readme == "Models for my-models."
 
 
 class TestDataset:
@@ -169,13 +167,12 @@ class TestDataset:
         )
         assert result.exit_code == 0
         assert result.output.splitlines() == []
-        keys = [item["Key"] for item in s3.list_objects(Bucket="my-bucket")["Contents"]]
-        assert keys == ["my-models/datasets/ds-20201012/README.rst"]
-        readme = (
-            s3.get_object(
-                Bucket="my-bucket", Key="my-models/datasets/ds-20201012/README.rst"
-            )["Body"]
-            .read()
-            .decode("utf-8")
+        assert cfg_maker.s3_list_objects() == [
+            "my-models/datasets/ds-20201012/README.rst"
+        ]
+        assert (
+            cfg_maker.s3_get_object("my-models/datasets/ds-20201012/README.rst").decode(
+                "utf-8"
+            )
+            == "Dataset ds-20201012 for project my-models."
         )
-        assert readme == "Dataset ds-20201012 for project my-models."
