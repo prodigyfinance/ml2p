@@ -221,16 +221,18 @@ def validate_name(name, resource):
 
 def training_job_name_for_model(model_name):
     """ Return a default training job name for the given model. """
-    grps = re.match(VALIDATION_REGEXES["model"], model_name).groupdict()
-    if grps is None:
-        raise ValueError("Invalid model name {!r}".format(model_name))
+    match = re.match(VALIDATION_REGEXES["model"], model_name)
+    if match is None:
+        raise errors.NamingError("Invalid model name {!r}".format(model_name))
+    grps = match.groupdict()
     return "{model}-{major}-{minor}".format(**grps)
 
 
 def model_name_for_endpoint(endpoint_name):
     """ Return a default model name for the given endpoint. """
-    grps = re.match(VALIDATION_REGEXES["endpoint"], endpoint_name).groupdict()
-    if grps is None:
-        raise ValueError("Invalid endpoint name {!r}".format(endpoint_name))
+    match = re.match(VALIDATION_REGEXES["endpoint"], endpoint_name)
+    if match is None:
+        raise errors.NamingError("Invalid endpoint name {!r}".format(endpoint_name))
+    grps = match.groupdict()
     grps["model_suffix"] = grps["model_suffix"] or ""
     return "{model}-{major}-{minor}-{patch}{model_suffix}".format(**grps)
