@@ -2,8 +2,31 @@
 ML2P
 ====
 
-ML2P -- or (ML)^2P -- is the minimal lovable machine-learning pipeline and a friendlier
-interface to AWS SageMaker.
+ML2P -- or (ML)^2P -- is the minimal lovable machine-learning pipeline and a
+friendlier interface to AWS SageMaker.
+
+Design goals:
+
+* specialises in supporting custom feature engineering
+* provide reproducible training and deployment of models
+* offer complete control of the Docker image and code used for training and
+  serving models
+
+Concretely it provides a command line interface and a Python library to assist
+with:
+
+* S3:
+    * Managing training data
+* SageMaker:
+    * Launching training jobs
+    * Deploying trained models
+    * Create notebook instances
+* On your local machine or in a SageMaker notebook:
+    * Train models
+    * Load trained models from SageMaker / S3
+
+Installing
+==========
 
 Install ML2P with::
 
