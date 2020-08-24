@@ -3,7 +3,7 @@ ML2P
 ====
 
 ML2P -- or (ML)^2P -- is the minimal lovable machine-learning pipeline and a
-friendlier interface to AWS SageMaker.
+friendlier interface to `AWS SageMaker <https://aws.amazon.com/sagemaker/>`_.
 
 Design goals:
 
