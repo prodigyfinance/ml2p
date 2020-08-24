@@ -7,10 +7,11 @@ friendlier interface to `AWS SageMaker <https://aws.amazon.com/sagemaker/>`_.
 
 Design goals:
 
-* specialises in supporting custom feature engineering
+* support the full machine learning lifecyle
+* support custom feature engineering
+* support building custom models in Python
 * provide reproducible training and deployment of models
-* offer complete control of the Docker image and code used for training and
-  serving models
+* support the use of customised base Docker images for training and deployment
 
 Concretely it provides a command line interface and a Python library to assist
 with:
@@ -20,10 +21,11 @@ with:
 * SageMaker:
     * Launching training jobs
     * Deploying trained models
-    * Create notebook instances
+    * Creating notebook instances
 * On your local machine or in a SageMaker notebook:
-    * Train models
-    * Load trained models from SageMaker / S3
+    * Downloading training datasets from S3
+    * Training models
+    * Loading trained models from SageMaker / S3
 
 
 Installing
