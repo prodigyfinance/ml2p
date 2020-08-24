@@ -42,6 +42,15 @@ class ConfigMaker:
     def s3(self):
         return self._moto_session.client("s3")
 
+    def s3_list_objects(self, bucket):
+        list_objects = self.s3().list_objects(Bucket=bucket)
+        if "Contents" not in list_objects:
+            return None
+        return [item["Key"] for item in list_objects["Contents"]]
+
+    def s3_get_object(self, bucket, key):
+        return self.s3().get_object(Bucket=bucket, Key=key)["Body"].read()
+
 
 @pytest.fixture
 def cfg_maker(moto_session, tmp_path):
