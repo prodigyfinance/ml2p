@@ -2,8 +2,34 @@
 ML2P
 ====
 
-ML2P -- or (ML)^2P -- is the minimal lovable machine-learning pipeline and a friendlier
-interface to AWS SageMaker.
+ML2P -- or (ML)^2P -- is the minimal lovable machine-learning pipeline and a
+friendlier interface to `AWS SageMaker <https://aws.amazon.com/sagemaker/>`_.
+
+Design goals:
+
+* support the full machine learning lifecyle
+* support custom feature engineering
+* support building custom models in Python
+* provide reproducible training and deployment of models
+* support the use of customised base Docker images for training and deployment
+
+Concretely it provides a command line interface and a Python library to assist
+with:
+
+* S3:
+    * Managing training data
+* SageMaker:
+    * Launching training jobs
+    * Deploying trained models
+    * Creating notebook instances
+* On your local machine or in a SageMaker notebook:
+    * Downloading training datasets from S3
+    * Training models
+    * Loading trained models from SageMaker / S3
+
+
+Installing
+==========
 
 Install ML2P with::
 
@@ -88,6 +114,16 @@ If you haven't initialized your project before, run::
 
 which will create the S3 model and dataset folder for you.
 
+Now create a training dataset and upload data to it::
+
+  $ ml2p dataset create zcf-20190412
+  $ ml2p dataset up zcf-20190412 training-data.csv
+
+And check that the contents of the training dataset is as expected by
+listing the files in it::
+
+  $ ml2p dataset ls zcf-20190412
+
 Next start a training job to train your model::
 
   $ ml2p training-job create zcf-train-6 zcf-20190412 --model-type zcf
@@ -110,15 +146,15 @@ The first argument is the name of the model to create, the second is the trainin
 the model should be created from.  The `--model-type` argument is optional -- the
 model type to use may also be specified directly in the docker image.
 
-The model is just an object in S3 -- it doesn't run any instances -- so it will be
+The model is just an object in SageMaker -- it doesn't run any instances -- so it will be
 created immediately.
 
 Now its time to deploy your model by creating an endpoint for it::
 
-  $ ml2p endpoint create zcf-endpoint-6 zcf-model-6
+  $ ml2p endpoint create zcf-endpoint-6 --model-name zcf-model-6
 
 The first argument is the name of the endpoint to create, the second is the name of
-the model to create the endpoint form.
+the model to create the endpoint from.
 
 Setting up the endpoint takes awhile. To check up on it you can run::
 
