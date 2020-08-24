@@ -76,7 +76,7 @@ def init(prj):
 
 @ml2p.group("dataset")
 def dataset():
-    """ Create and list datasets. """
+    """ Create and manage datasets. """
 
 
 @dataset.command("list")
