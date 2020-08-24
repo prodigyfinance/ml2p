@@ -4,9 +4,9 @@
 
 import json
 
-from click.testing import CliRunner
 import click
 import pytest
+from click.testing import CliRunner
 
 from ml2p import __version__ as ml2p_version
 from ml2p import cli
@@ -111,6 +111,31 @@ class TestML2P:
         result = runner.invoke(cli.ml2p, ["--version"])
         assert result.exit_code == 0
         assert result.output.splitlines() == ["ml2p, version {}".format(ml2p_version)]
+
+
+class TestInit:
+    def test_init(self, cfg_maker):
+        s3 = cfg_maker.s3()
+        s3.create_bucket(Bucket="my-bucket")
+        runner = CliRunner()
+        result = runner.invoke(cli.ml2p, ["--cfg", cfg_maker.cfg(), "init"])
+        assert result.exit_code == 0
+        keys = [item["Key"] for item in s3.list_objects(Bucket="my-bucket")["Contents"]]
+        assert keys == ["my-models/datasets/README.rst", "my-models/models/README.rst"]
+        dataset_readme = (
+            s3.get_object(Bucket="my-bucket", Key="my-models/datasets/README.rst")[
+                "Body"
+            ]
+            .read()
+            .decode("utf-8")
+        )
+        assert dataset_readme == "Datasets for my-models."
+        model_readme = (
+            s3.get_object(Bucket="my-bucket", Key="my-models/models/README.rst")["Body"]
+            .read()
+            .decode("utf-8")
+        )
+        assert model_readme == "Models for my-models."
 
 
 class TestDataset:
