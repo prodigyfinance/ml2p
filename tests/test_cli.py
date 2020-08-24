@@ -43,6 +43,9 @@ class ConfigMaker:
     def s3(self):
         return self._moto_session.client("s3")
 
+    def s3_create_bucket(self):
+        self.s3().create_bucket(Bucket="my-bucket")
+
     def s3_list_objects(self):
         list_objects = self.s3().list_objects(Bucket=self.bucket)
         if "Contents" not in list_objects:
@@ -126,8 +129,7 @@ class TestML2P:
 
 class TestInit:
     def test_init(self, cfg_maker):
-        s3 = cfg_maker.s3()
-        s3.create_bucket(Bucket="my-bucket")
+        cfg_maker.s3_create_bucket()
         runner = CliRunner()
         result = runner.invoke(cli.ml2p, ["--cfg", cfg_maker.cfg(), "init"])
         assert result.exit_code == 0
@@ -159,8 +161,7 @@ class TestDataset:
         ]
 
     def test_create(self, cfg_maker):
-        s3 = cfg_maker.s3()
-        s3.create_bucket(Bucket="my-bucket")
+        cfg_maker.s3_create_bucket()
         runner = CliRunner()
         result = runner.invoke(
             cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "create", "ds-20201012"]
@@ -176,3 +177,16 @@ class TestDataset:
             )
             == "Dataset ds-20201012 for project my-models."
         )
+
+    def test_list(self, cfg_maker):
+        cfg_maker.s3_create_bucket()
+        runner = CliRunner()
+        runner.invoke(
+            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "create", "ds-20201012"]
+        )
+        runner.invoke(
+            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "create", "ds-20201013"]
+        )
+        result = runner.invoke(cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "list"])
+        assert result.exit_code == 0
+        assert result.output == '"ds-20201012"\n"ds-20201013"\n'
