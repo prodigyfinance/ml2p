@@ -68,9 +68,9 @@ class CLIHelper:
         if cfg is None:
             cfg = {}
         runner = CliRunner()
-        result = runner.invoke(cli.ml2p, ["--cfg", self.cfg(**cfg)] + args)
-        if result.exception:
-            raise result.exception.with_traceback(result.exc_info[2])
+        result = runner.invoke(
+            cli.ml2p, ["--cfg", self.cfg(**cfg)] + args, catch_exceptions=False,
+        )
         assert result.exit_code == exit_code
         if output is not None:
             assert result.output.splitlines() == output
@@ -130,9 +130,9 @@ class TestValidateModelType:
 
 
 class TestModellingProjectWithSagemakerClient:
-    def test_create(self, moto_session, cli_helper):
+    def test_create(self, cli_helper):
         prj = cli.ModellingProjectWithSagemakerClient(cli_helper.cfg())
-        assert type(prj.client).__name__ == "SageMaker"
+        assert type(prj.client).__name__ == "MockSageMakerClient"
 
 
 class TestML2P:
