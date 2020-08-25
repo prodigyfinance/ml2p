@@ -139,6 +139,16 @@ class TestML2P:
 
 
 class TestInit:
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["init", "--help"],
+            output_startswith=[
+                "Usage: ml2p init [OPTIONS]",
+                "",
+                "  Initialize the project S3 bucket.",
+            ],
+        )
+
     def test_init(self, cli_helper):
         cli_helper.s3_create_bucket()
         cli_helper.invoke(["init"], output=[])
