@@ -16,12 +16,13 @@ class DummyCtx:
     pass
 
 
-class ConfigMaker:
-    def __init__(self, moto_session, tmp_path, bucket, **base_cfg):
+class CLIHelper:
+    def __init__(self, moto_session, tmp_path, bucket, base_cfg):
         self._moto_session = moto_session
         self._tmp_path = tmp_path
-        self.bucket = bucket
+        self._bucket = bucket
         self._base_cfg = base_cfg
+        self.s3 = self._moto_session.client("s3")
 
     def _apply_base_cfg(self, **kw):
         d = {}
@@ -39,54 +40,60 @@ class ConfigMaker:
         ctx.obj = ModellingProject(self.cfg(**kw))
         return ctx
 
-    def s3(self):
-        return self._moto_session.client("s3")
-
     def s3_create_bucket(self):
-        self.s3().create_bucket(Bucket="my-bucket")
+        self.s3.create_bucket(Bucket=self._bucket)
 
     def s3_list_objects(self):
-        list_objects = self.s3().list_objects(Bucket=self.bucket)
+        list_objects = self.s3.list_objects(Bucket=self._bucket)
         if "Contents" not in list_objects:
             return None
         return [item["Key"] for item in list_objects["Contents"]]
 
     def s3_get_object(self, key):
-        return self.s3().get_object(Bucket=self.bucket, Key=key)["Body"].read()
+        return self.s3.get_object(Bucket=self._bucket, Key=key)["Body"].read()
+
+    def invoke(self, args, output, exit_code=0, cfg=None):
+        if cfg is None:
+            cfg = {}
+        runner = CliRunner()
+        result = runner.invoke(cli.ml2p, ["--cfg", self.cfg(**cfg)] + args)
+        if result.exception:
+            raise result.exception.with_traceback(result.exc_info[2])
+        assert result.exit_code == exit_code
+        assert result.output.splitlines()[: len(output)] == output
 
 
 @pytest.fixture
-def cfg_maker(moto_session, tmp_path):
-    return ConfigMaker(
+def cli_helper(moto_session, tmp_path):
+    return CLIHelper(
         moto_session,
         tmp_path,
-        project="my-models",
         bucket="my-bucket",
-        s3folder="s3://my-bucket/my-models/",
+        base_cfg={"project": "my-models", "s3folder": "s3://my-bucket/my-models/"},
     )
 
 
 class TestValidateModelType:
-    def test_value_in_model_types(self, cfg_maker):
-        ctx = cfg_maker.ctx(models={"model-1": "my_models.ml2p.Model1"})
+    def test_value_in_model_types(self, cli_helper):
+        ctx = cli_helper.ctx(models={"model-1": "my_models.ml2p.Model1"})
         assert cli.validate_model_type(ctx, "model_type", "model-1") == "model-1"
 
-    def test_value_not_in_model_types(self, cfg_maker):
-        ctx = cfg_maker.ctx(models={"model-1": "my_models.ml2p.Model1"})
+    def test_value_not_in_model_types(self, cli_helper):
+        ctx = cli_helper.ctx(models={"model-1": "my_models.ml2p.Model1"})
         with pytest.raises(click.BadParameter) as err:
             cli.validate_model_type(ctx, "model_type", "model-2")
         assert str(err.value) == "Unknown model type."
 
-    def test_value_is_none_no_model_types(self, cfg_maker):
-        ctx = cfg_maker.ctx(models={})
+    def test_value_is_none_no_model_types(self, cli_helper):
+        ctx = cli_helper.ctx(models={})
         assert cli.validate_model_type(ctx, "model_type", None) is None
 
-    def test_value_is_none_single_model_type(self, cfg_maker):
-        ctx = cfg_maker.ctx(models={"model-1": "my_models.ml2p.Model1"})
+    def test_value_is_none_single_model_type(self, cli_helper):
+        ctx = cli_helper.ctx(models={"model-1": "my_models.ml2p.Model1"})
         assert cli.validate_model_type(ctx, "model_type", None) == "model-1"
 
-    def test_value_is_none_multiple_model_types(self, cfg_maker):
-        ctx = cfg_maker.ctx(
+    def test_value_is_none_multiple_model_types(self, cli_helper):
+        ctx = cli_helper.ctx(
             models={
                 "model-1": "my_models.ml2p.Model1",
                 "model-2": "my_models.ml2p.Model2",
@@ -101,56 +108,53 @@ class TestValidateModelType:
 
 
 class TestModellingProjectWithSagemakerClient:
-    def test_create(self, moto_session, cfg_maker):
-        prj = cli.ModellingProjectWithSagemakerClient(cfg_maker.cfg())
+    def test_create(self, moto_session, cli_helper):
+        prj = cli.ModellingProjectWithSagemakerClient(cli_helper.cfg())
         assert type(prj.client).__name__ == "SageMaker"
 
 
 class TestML2P:
-    def test_help(self):
-        runner = CliRunner()
-        result = runner.invoke(cli.ml2p, ["--help"])
-        assert result.exit_code == 0
-        assert result.output.splitlines()[:5] == [
-            "Usage: ml2p [OPTIONS] COMMAND [ARGS]...",
-            "",
-            "  Minimal Lovable Machine Learning Pipeline.",
-            "",
-            "  A friendlier interface to AWS SageMaker.",
-        ]
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["--help"],
+            [
+                "Usage: ml2p [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Minimal Lovable Machine Learning Pipeline.",
+                "",
+                "  A friendlier interface to AWS SageMaker.",
+            ],
+        )
 
-    def test_version(self):
-        runner = CliRunner()
-        result = runner.invoke(cli.ml2p, ["--version"])
-        assert result.exit_code == 0
-        assert result.output.splitlines() == ["ml2p, version {}".format(ml2p_version)]
+    def test_version(self, cli_helper):
+        cli_helper.invoke(["--version"], ["ml2p, version {}".format(ml2p_version)])
 
 
 class TestInit:
-    def test_init(self, cfg_maker):
-        cfg_maker.s3_create_bucket()
+    def test_init(self, cli_helper):
+        cli_helper.s3_create_bucket()
         runner = CliRunner()
-        result = runner.invoke(cli.ml2p, ["--cfg", cfg_maker.cfg(), "init"])
+        result = runner.invoke(cli.ml2p, ["--cfg", cli_helper.cfg(), "init"])
         assert result.exit_code == 0
-        assert cfg_maker.s3_list_objects() == [
+        assert cli_helper.s3_list_objects() == [
             "my-models/datasets/README.rst",
             "my-models/models/README.rst",
         ]
         assert (
-            cfg_maker.s3_get_object("my-models/datasets/README.rst").decode("utf-8")
+            cli_helper.s3_get_object("my-models/datasets/README.rst").decode("utf-8")
             == "Datasets for my-models."
         )
         assert (
-            cfg_maker.s3_get_object("my-models/models/README.rst").decode("utf-8")
+            cli_helper.s3_get_object("my-models/models/README.rst").decode("utf-8")
             == "Models for my-models."
         )
 
 
 class TestDataset:
-    def test_help(self, cfg_maker):
+    def test_help(self, cli_helper):
         runner = CliRunner()
         result = runner.invoke(
-            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "--help"]
+            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "--help"]
         )
         assert result.exit_code == 0
         assert result.output.splitlines()[:3] == [
@@ -159,63 +163,63 @@ class TestDataset:
             "  Create and manage datasets.",
         ]
 
-    def test_create(self, cfg_maker):
-        cfg_maker.s3_create_bucket()
+    def test_create(self, cli_helper):
+        cli_helper.s3_create_bucket()
         runner = CliRunner()
         result = runner.invoke(
-            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "create", "ds-20201012"]
+            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "create", "ds-20201012"]
         )
         assert result.exit_code == 0
         assert result.output.splitlines() == []
-        assert cfg_maker.s3_list_objects() == [
+        assert cli_helper.s3_list_objects() == [
             "my-models/datasets/ds-20201012/README.rst"
         ]
         assert (
-            cfg_maker.s3_get_object("my-models/datasets/ds-20201012/README.rst").decode(
-                "utf-8"
-            )
+            cli_helper.s3_get_object(
+                "my-models/datasets/ds-20201012/README.rst"
+            ).decode("utf-8")
             == "Dataset ds-20201012 for project my-models."
         )
 
-    def test_list(self, cfg_maker):
-        cfg_maker.s3_create_bucket()
+    def test_list(self, cli_helper):
+        cli_helper.s3_create_bucket()
         runner = CliRunner()
         runner.invoke(
-            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "create", "ds-20201012"]
+            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "create", "ds-20201012"]
         )
         runner.invoke(
-            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "create", "ds-20201013"]
+            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "create", "ds-20201013"]
         )
-        result = runner.invoke(cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "list"])
+        result = runner.invoke(cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "list"])
         assert result.exit_code == 0
         assert result.output == '"ds-20201012"\n"ds-20201013"\n'
 
-    def test_delete(self, cfg_maker):
-        cfg_maker.s3_create_bucket()
+    def test_delete(self, cli_helper):
+        cli_helper.s3_create_bucket()
         runner = CliRunner()
         runner.invoke(
-            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "create", "ds-20201012"]
+            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "create", "ds-20201012"]
         )
         result = runner.invoke(
-            cli.ml2p, ["--cfg", cfg_maker.cfg(), "dataset", "delete", "ds-20201012"]
+            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "delete", "ds-20201012"]
         )
         assert result.exit_code == 0
-        assert cfg_maker.s3_list_objects() is None
+        assert cli_helper.s3_list_objects() is None
 
-    def test_upload(self, cfg_maker, data_fixtures):
-        cfg_maker.s3_create_bucket()
+    def test_upload(self, cli_helper, data_fixtures):
+        cli_helper.s3_create_bucket()
         runner = CliRunner()
         training_set = str(data_fixtures / "training_set.csv")
         result = runner.invoke(
             cli.ml2p,
-            ["--cfg", cfg_maker.cfg(), "dataset", "up", "ds-20201012", training_set],
+            ["--cfg", cli_helper.cfg(), "dataset", "up", "ds-20201012", training_set],
         )
         assert result.exit_code == 0
-        assert cfg_maker.s3_list_objects() == [
+        assert cli_helper.s3_list_objects() == [
             "my-models/datasets/ds-20201012/training_set.csv"
         ]
         assert (
-            cfg_maker.s3_get_object(
+            cli_helper.s3_get_object(
                 "my-models/datasets/ds-20201012/training_set.csv"
             ).decode("utf-8")
             == 'X1,X2,X3,y\n"A",1,10.5,1\n"B",2,7.4,0\n'
