@@ -7,7 +7,6 @@ import json
 import click
 import pytest
 from click.testing import CliRunner
-
 from ml2p import __version__ as ml2p_version
 from ml2p import cli
 from ml2p.core import ModellingProject
@@ -202,3 +201,22 @@ class TestDataset:
         )
         assert result.exit_code == 0
         assert cfg_maker.s3_list_objects() is None
+
+    def test_upload(self, cfg_maker, data_fixtures):
+        cfg_maker.s3_create_bucket()
+        runner = CliRunner()
+        training_set = str(data_fixtures / "training_set.csv")
+        result = runner.invoke(
+            cli.ml2p,
+            ["--cfg", cfg_maker.cfg(), "dataset", "up", "ds-20201012", training_set],
+        )
+        assert result.exit_code == 0
+        assert cfg_maker.s3_list_objects() == [
+            "my-models/datasets/ds-20201012/training_set.csv"
+        ]
+        assert (
+            cfg_maker.s3_get_object(
+                "my-models/datasets/ds-20201012/training_set.csv"
+            ).decode("utf-8")
+            == 'X1,X2,X3,y\n"A",1,10.5,1\n"B",2,7.4,0\n'
+        )
