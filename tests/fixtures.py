@@ -2,9 +2,11 @@
 
 """ Pytest fixtures for tests. """
 
+import contextlib
 import datetime
 import json
 import os
+import pathlib
 import uuid
 
 import boto3
@@ -114,18 +116,50 @@ def sagemaker(tmpdir, monkeypatch, moto_session):
     )
 
 
+class MockSageMakerClient:
+    pass
+
+
+class MotoSageMakerFixture:
+    def __init__(self, monkeypatch):
+        self._monkeypatch = monkeypatch
+        self._orig_boto_client = boto3.client
+
+    def mocked_client(self, service):
+        if service == "sagemaker":
+            return MockSageMakerClient()
+        return self._orig_boto_client(service)
+
+    @contextlib.contextmanager
+    def mock_sagemaker(self):
+        with self._monkeypatch.context() as mp:
+            mp.setattr(boto3, "client", self.mocked_client)
+            yield
+
+
 @pytest.fixture
-def moto_session(monkeypatch):
-    with moto.mock_s3(), moto.mock_ssm():
-        for k in list(os.environ):
-            if k.startswith("AWS_"):
-                monkeypatch.delitem(os.environ, k)
-        # The environment variables duplicate what happens when an AWS Lambda
-        # is executed. See
-        # https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
-        monkeypatch.setitem(os.environ, "AWS_ACCESS_KEY_ID", "dummy-access-key")
-        monkeypatch.setitem(
-            os.environ, "AWS_SECRET_ACCESS_KEY", "dummy-access-key-secret"
-        )
-        monkeypatch.setitem(os.environ, "AWS_REGION", MOTO_TEST_REGION)
+def moto_sagemaker(monkeypatch):
+    return MotoSageMakerFixture(monkeypatch)
+
+
+@pytest.fixture
+def moto_session(monkeypatch, moto_sagemaker):
+    for k in list(os.environ):
+        if k.startswith("AWS_"):
+            monkeypatch.delitem(os.environ, k)
+    # The environment variables duplicate what happens when an AWS Lambda
+    # is executed. See
+    # https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
+    monkeypatch.setitem(os.environ, "AWS_ACCESS_KEY_ID", "dummy-access-key")
+    monkeypatch.setitem(os.environ, "AWS_SECRET_ACCESS_KEY", "dummy-access-key-secret")
+    monkeypatch.setitem(os.environ, "AWS_SECURITY_TOKEN", "dummy-security-token")
+    monkeypatch.setitem(os.environ, "AWS_SESSION_TOKEN", "dummy-session-token")
+    monkeypatch.setitem(os.environ, "AWS_REGION", MOTO_TEST_REGION)
+    with moto.mock_s3(), moto.mock_ssm(), moto_sagemaker.mock_sagemaker():
         yield boto3.Session(region_name=MOTO_TEST_REGION)
+
+
+@pytest.fixture()
+def data_fixtures():
+    """ Load a data fixture. """
+    return pathlib.Path(__file__).parent / "data"

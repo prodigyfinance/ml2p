@@ -19,7 +19,7 @@ def validate_model_type(ctx, param, value):
     model_types = ctx.obj.models.keys()
     if value is not None:
         if model_types and value not in model_types:
-            raise click.BadParameter("Uknown model type.")
+            raise click.BadParameter("Unknown model type.")
         return value
     if len(model_types) == 0:
         return None
@@ -76,7 +76,7 @@ def init(prj):
 
 @ml2p.group("dataset")
 def dataset():
-    """ Create and list datasets. """
+    """ Create and manage datasets. """
 
 
 @dataset.command("list")

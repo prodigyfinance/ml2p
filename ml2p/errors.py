@@ -26,17 +26,26 @@ class APIError(APIException):
             None, str or list of str
         :param details:
             Details of the errors that occurred.
+        :type status_code:
+            None or int
+        :param status_code:
+            The HTTP status code associated with the exception.
+            Defaults to the `status_code` attribute of the
+            exception class, which is 500 for this base exception class.
     """
 
     status_code = 500
 
-    def __init__(self, message, details=None):
+    def __init__(self, message, details=None, status_code=None):
         if details is None:
             details = []
         elif isinstance(details, str):
             details = [details]
+        if status_code is None:
+            status_code = self.__class__.status_code
         self.message = message
         self.details = details
+        self.status_code = status_code
 
 
 class ServerError(APIError):

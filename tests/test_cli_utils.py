@@ -326,12 +326,22 @@ class TestNamingValidation:
 
 
 class TestTrainingJobNameForModel:
-    def test_training_job_name_for_model(test):
+    def test_training_job_name_for_model(self):
         assert training_job_name_for_model("model-1-0-2") == "model-1-0"
         assert training_job_name_for_model("model-1-0-2-dev") == "model-1-0"
+
+    def test_invalid_model_name(self):
+        with pytest.raises(NamingError) as err:
+            training_job_name_for_model("not a valid model name")
+        assert str(err.value) == "Invalid model name 'not a valid model name'"
 
 
 class TestModelNameForEndpoint:
     def test_model_name_for_endpoint(self):
         assert model_name_for_endpoint("model-1-0-2-live") == "model-1-0-2"
         assert model_name_for_endpoint("model-1-0-2-dev-live") == "model-1-0-2-dev"
+
+    def test_invalid_endpoint_name(self):
+        with pytest.raises(NamingError) as err:
+            model_name_for_endpoint("not a valid endpoint name")
+        assert str(err.value) == "Invalid endpoint name 'not a valid endpoint name'"
