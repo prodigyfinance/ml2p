@@ -5,6 +5,7 @@
 import datetime
 import json
 import os
+import pathlib
 import uuid
 
 import boto3
@@ -129,3 +130,9 @@ def moto_session(monkeypatch):
         )
         monkeypatch.setitem(os.environ, "AWS_REGION", MOTO_TEST_REGION)
         yield boto3.Session(region_name=MOTO_TEST_REGION)
+
+
+@pytest.fixture()
+def data_fixtures():
+    """ Load a data fixture. """
+    return pathlib.Path(__file__).parent / "data"
