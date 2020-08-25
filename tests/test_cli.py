@@ -52,7 +52,18 @@ class CLIHelper:
     def s3_get_object(self, key):
         return self.s3.get_object(Bucket=self._bucket, Key=key)["Body"].read()
 
-    def invoke(self, args, output=None, output_startswith=None, exit_code=0, cfg=None):
+    def s3_put_object(self, key, data):
+        return self.s3.put_object(Bucket=self._bucket, Key=key, Body=data)
+
+    def invoke(
+        self,
+        args,
+        output=None,
+        output_startswith=None,
+        output_jsonl=None,
+        exit_code=0,
+        cfg=None,
+    ):
         if cfg is None:
             cfg = {}
         runner = CliRunner()
@@ -66,6 +77,10 @@ class CLIHelper:
             assert (
                 result.output.splitlines()[: len(output_startswith)]
                 == output_startswith
+            )
+        if output_jsonl is not None:
+            assert result.output == "\n".join(
+                [json.dumps(data, indent=2) for data in output_jsonl] + []
             )
 
 
@@ -195,8 +210,7 @@ class TestDataset:
         cli_helper.invoke(["dataset", "create", "ds-20201012"])
         cli_helper.invoke(["dataset", "create", "ds-20201013"])
         cli_helper.invoke(
-            ["dataset", "list"],
-            output=[json.dumps("ds-20201012"), json.dumps("ds-20201013")],
+            ["dataset", "list"], output_jsonl=["ds-20201012", "ds-20201013"],
         )
 
     def test_delete(self, cli_helper):
@@ -205,7 +219,19 @@ class TestDataset:
         cli_helper.invoke(["dataset", "delete", "ds-20201012"], [])
         assert cli_helper.s3_list_objects() is None
 
-    def test_upload(self, cli_helper, data_fixtures):
+    def test_ls(self, cli_helper):
+        cli_helper.s3_create_bucket()
+        cli_helper.s3_put_object("my-models/datasets/ds-20201012/a.txt", b"aa")
+        cli_helper.s3_put_object("my-models/datasets/ds-20201012/b.txt", b"bbb")
+        cli_helper.invoke(
+            ["dataset", "ls", "ds-20201012"],
+            output_jsonl=[
+                {"filename": "a.txt", "size": 2},
+                {"filename": "b.txt", "size": 3},
+            ],
+        )
+
+    def test_up(self, cli_helper, data_fixtures):
         cli_helper.s3_create_bucket()
         training_set = str(data_fixtures / "training_set.csv")
         cli_helper.invoke(["dataset", "up", "ds-20201012", training_set], [])
@@ -218,3 +244,9 @@ class TestDataset:
             ).decode("utf-8")
             == 'X1,X2,X3,y\n"A",1,10.5,1\n"B",2,7.4,0\n'
         )
+
+    def test_dn(self):
+        pass
+
+    def test_rm(self):
+        pass
