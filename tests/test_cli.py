@@ -52,7 +52,7 @@ class CLIHelper:
     def s3_get_object(self, key):
         return self.s3.get_object(Bucket=self._bucket, Key=key)["Body"].read()
 
-    def invoke(self, args, output, exit_code=0, cfg=None):
+    def invoke(self, args, output=None, output_startswith=None, exit_code=0, cfg=None):
         if cfg is None:
             cfg = {}
         runner = CliRunner()
@@ -60,7 +60,13 @@ class CLIHelper:
         if result.exception:
             raise result.exception.with_traceback(result.exc_info[2])
         assert result.exit_code == exit_code
-        assert result.output.splitlines()[: len(output)] == output
+        if output is not None:
+            assert result.output.splitlines() == output
+        if output_startswith is not None:
+            assert (
+                result.output.splitlines()[: len(output_startswith)]
+                == output_startswith
+            )
 
 
 @pytest.fixture
@@ -117,7 +123,7 @@ class TestML2P:
     def test_help(self, cli_helper):
         cli_helper.invoke(
             ["--help"],
-            [
+            output_startswith=[
                 "Usage: ml2p [OPTIONS] COMMAND [ARGS]...",
                 "",
                 "  Minimal Lovable Machine Learning Pipeline.",
@@ -127,15 +133,15 @@ class TestML2P:
         )
 
     def test_version(self, cli_helper):
-        cli_helper.invoke(["--version"], ["ml2p, version {}".format(ml2p_version)])
+        cli_helper.invoke(
+            ["--version"], output=["ml2p, version {}".format(ml2p_version)]
+        )
 
 
 class TestInit:
     def test_init(self, cli_helper):
         cli_helper.s3_create_bucket()
-        runner = CliRunner()
-        result = runner.invoke(cli.ml2p, ["--cfg", cli_helper.cfg(), "init"])
-        assert result.exit_code == 0
+        cli_helper.invoke(["init"], output=[])
         assert cli_helper.s3_list_objects() == [
             "my-models/datasets/README.rst",
             "my-models/models/README.rst",
@@ -152,25 +158,18 @@ class TestInit:
 
 class TestDataset:
     def test_help(self, cli_helper):
-        runner = CliRunner()
-        result = runner.invoke(
-            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "--help"]
+        cli_helper.invoke(
+            ["dataset", "--help"],
+            output_startswith=[
+                "Usage: ml2p dataset [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Create and manage datasets.",
+            ],
         )
-        assert result.exit_code == 0
-        assert result.output.splitlines()[:3] == [
-            "Usage: ml2p dataset [OPTIONS] COMMAND [ARGS]...",
-            "",
-            "  Create and manage datasets.",
-        ]
 
     def test_create(self, cli_helper):
         cli_helper.s3_create_bucket()
-        runner = CliRunner()
-        result = runner.invoke(
-            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "create", "ds-20201012"]
-        )
-        assert result.exit_code == 0
-        assert result.output.splitlines() == []
+        cli_helper.invoke(["dataset", "create", "ds-20201012"], output=[])
         assert cli_helper.s3_list_objects() == [
             "my-models/datasets/ds-20201012/README.rst"
         ]
@@ -183,38 +182,23 @@ class TestDataset:
 
     def test_list(self, cli_helper):
         cli_helper.s3_create_bucket()
-        runner = CliRunner()
-        runner.invoke(
-            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "create", "ds-20201012"]
+        cli_helper.invoke(["dataset", "create", "ds-20201012"])
+        cli_helper.invoke(["dataset", "create", "ds-20201013"])
+        cli_helper.invoke(
+            ["dataset", "list"],
+            output=[json.dumps("ds-20201012"), json.dumps("ds-20201013")],
         )
-        runner.invoke(
-            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "create", "ds-20201013"]
-        )
-        result = runner.invoke(cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "list"])
-        assert result.exit_code == 0
-        assert result.output == '"ds-20201012"\n"ds-20201013"\n'
 
     def test_delete(self, cli_helper):
         cli_helper.s3_create_bucket()
-        runner = CliRunner()
-        runner.invoke(
-            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "create", "ds-20201012"]
-        )
-        result = runner.invoke(
-            cli.ml2p, ["--cfg", cli_helper.cfg(), "dataset", "delete", "ds-20201012"]
-        )
-        assert result.exit_code == 0
+        cli_helper.invoke(["dataset", "create", "ds-20201012"], [])
+        cli_helper.invoke(["dataset", "delete", "ds-20201012"], [])
         assert cli_helper.s3_list_objects() is None
 
     def test_upload(self, cli_helper, data_fixtures):
         cli_helper.s3_create_bucket()
-        runner = CliRunner()
         training_set = str(data_fixtures / "training_set.csv")
-        result = runner.invoke(
-            cli.ml2p,
-            ["--cfg", cli_helper.cfg(), "dataset", "up", "ds-20201012", training_set],
-        )
-        assert result.exit_code == 0
+        cli_helper.invoke(["dataset", "up", "ds-20201012", training_set], [])
         assert cli_helper.s3_list_objects() == [
             "my-models/datasets/ds-20201012/training_set.csv"
         ]
