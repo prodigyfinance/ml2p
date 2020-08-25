@@ -80,7 +80,7 @@ class CLIHelper:
             )
         if output_jsonl is not None:
             assert result.output == "\n".join(
-                [json.dumps(data, indent=2) for data in output_jsonl] + []
+                [json.dumps(data, indent=2) for data in output_jsonl] + [""]
             )
 
 
@@ -245,8 +245,16 @@ class TestDataset:
             == 'X1,X2,X3,y\n"A",1,10.5,1\n"B",2,7.4,0\n'
         )
 
-    def test_dn(self):
-        pass
+    def test_dn(self, cli_helper, data_fixtures, tmpdir):
+        cli_helper.s3_create_bucket()
+        cli_helper.s3_put_object("my-models/datasets/ds-20201012/a.txt", b"aa")
+        with tmpdir.as_cwd():
+            cli_helper.invoke(["dataset", "dn", "ds-20201012", "a.txt"])
+        assert (tmpdir / "a.txt").read() == "aa"
 
-    def test_rm(self):
-        pass
+    def test_rm(self, cli_helper, data_fixtures):
+        cli_helper.s3_create_bucket()
+        cli_helper.s3_put_object("my-models/datasets/ds-20201012/a.txt", b"aa")
+        cli_helper.s3_put_object("my-models/datasets/ds-20201012/b.txt", b"bbb")
+        cli_helper.invoke(["dataset", "rm", "ds-20201012", "a.txt"])
+        assert cli_helper.s3_list_objects() == ["my-models/datasets/ds-20201012/b.txt"]
