@@ -7,6 +7,7 @@ import json
 import click
 import pytest
 from click.testing import CliRunner
+
 from ml2p import __version__ as ml2p_version
 from ml2p import cli
 from ml2p.core import ModellingProject
@@ -210,7 +211,7 @@ class TestDataset:
         cli_helper.invoke(["dataset", "create", "ds-20201012"])
         cli_helper.invoke(["dataset", "create", "ds-20201013"])
         cli_helper.invoke(
-            ["dataset", "list"], output_jsonl=["ds-20201012", "ds-20201013"],
+            ["dataset", "list"], output_jsonl=["ds-20201012", "ds-20201013"]
         )
 
     def test_delete(self, cli_helper):
