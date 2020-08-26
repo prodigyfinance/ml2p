@@ -2,6 +2,8 @@
 
 """ A fake SageMaker client until moto has one of its own. """
 
+import copy
+
 
 class Paginator:
     """ A fake paginator """
@@ -14,7 +16,7 @@ class Paginator:
     def paginate(self):
         for i in range(0, len(self._items), self._per_page):
             start, end = i, i + self._per_page
-            yield {self._summary_title: self._items[start:end]}
+            yield {self._summary_title: copy.deepcopy(self._items[start:end])}
 
 
 class SageFakerClient:
@@ -33,6 +35,17 @@ class SageFakerClient:
     def _list_training_jobs(self):
         return Paginator("TrainingJobSummaries", self._training_jobs)
 
+    def _get_training_job(self, name):
+        jobs = [t for t in self._training_jobs if t["TrainingJobName"] == name]
+        if not jobs:
+            return None
+        if len(jobs) == 1:
+            return jobs[0]
+        raise RuntimeError(
+            f"TrainingJobNames should be unique but {len(jobs)}"
+            f" jobs were discovered with the name {name}"
+        )
+
     def create_training_job(self, **kw):
         expected_kws = {
             "TrainingJobName",
@@ -47,5 +60,11 @@ class SageFakerClient:
             "Tags",
         }
         assert set(kw) == expected_kws
+        assert self._get_training_job(kw["TrainingJobName"]) is None
         self._training_jobs.append(kw)
-        return kw
+        return copy.deepcopy(kw)
+
+    def describe_training_job(self, TrainingJobName):
+        training_job = self._get_training_job(TrainingJobName)
+        assert training_job is not None
+        return copy.deepcopy(training_job)
