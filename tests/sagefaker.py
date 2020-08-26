@@ -6,7 +6,7 @@ import copy
 
 
 class Paginator:
-    """ A fake paginator """
+    """ A fake paginator. """
 
     def __init__(self, summary_title, items, per_page=2):
         self._summary_title = summary_title
@@ -17,6 +17,20 @@ class Paginator:
         for i in range(0, len(self._items), self._per_page):
             start, end = i, i + self._per_page
             yield {self._summary_title: copy.deepcopy(self._items[start:end])}
+
+
+class Waiter:
+    """ A fake waiter. """
+
+    def __init__(self, selector_name):
+        self._selector_name = selector_name
+
+    def wait(self, **kw):
+        expected_kws = {
+            self._selector_name,
+            "WaiterConfig",
+        }
+        assert set(kw) == expected_kws
 
 
 class SageFakerClient:
@@ -34,6 +48,16 @@ class SageFakerClient:
 
     def _list_training_jobs(self):
         return Paginator("TrainingJobSummaries", self._training_jobs)
+
+    def get_waiter(self, name):
+        if name == "training_job_completed_or_stopped":
+            return self._training_job_completed_or_stopped()
+        raise NotImplementedError(
+            f"SageFakerClient.get_waiter does not yet support {name}"
+        )
+
+    def _training_job_completed_or_stopped(self):
+        return Waiter("TrainingJobName")
 
     def _get_training_job(self, name):
         jobs = [t for t in self._training_jobs if t["TrainingJobName"] == name]

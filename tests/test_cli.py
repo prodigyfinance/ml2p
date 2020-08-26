@@ -342,3 +342,14 @@ class TestTrainingJob:
         cli_helper.invoke(
             ["training-job", "describe", "tj-0-1-11"], output_jsonl=[training_job],
         )
+
+    def test_create_and_wait(self, cli_helper):
+        training_job, cfg = self.example_1()
+        cli_helper.invoke(
+            ["training-job", "create", "tj-0-1-11", "ds-20201012"],
+            output_jsonl=[training_job],
+            cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["training-job", "wait", "tj-0-1-11"], output=[],
+        )
