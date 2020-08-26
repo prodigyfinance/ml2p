@@ -6,7 +6,16 @@ import copy
 
 
 class Paginator:
-    """ A fake paginator. """
+    """ A fake paginator.
+
+        :param str summary_title:
+            The key to store the list of items under in the page dictionary.
+        :param list items:
+            The list of items to paginate. Individual items are usually
+            dictionaries.
+        :param int per_page:
+            How many items to include in each page. Default: 2.
+    """
 
     def __init__(self, summary_title, items, per_page=2):
         self._summary_title = summary_title
@@ -20,10 +29,20 @@ class Paginator:
 
 
 class Waiter:
-    """ A fake waiter. """
+    """ A fake waiter.
 
-    def __init__(self, selector_name):
+        :param str selector_name:
+            The name of the keyword argument passed to .wait() that
+            will select the item to wait on.
+        :param function selector:
+            The function to retrieve the item to wait on. It should accept
+            a single argument (the value passed as selector_name) and return
+            the item or None if the item does not exist.
+    """
+
+    def __init__(self, selector_name, selector):
         self._selector_name = selector_name
+        self._selector = selector
 
     def wait(self, **kw):
         expected_kws = {
@@ -31,6 +50,7 @@ class Waiter:
             "WaiterConfig",
         }
         assert set(kw) == expected_kws
+        assert self._selector(kw[self._selector_name]) is not None
 
 
 class SageFakerClient:
@@ -57,7 +77,7 @@ class SageFakerClient:
         )
 
     def _training_job_completed_or_stopped(self):
-        return Waiter("TrainingJobName")
+        return Waiter("TrainingJobName", self._get_training_job)
 
     def _get_training_job(self, name):
         jobs = [t for t in self._training_jobs if t["TrainingJobName"] == name]
