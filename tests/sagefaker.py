@@ -20,6 +20,9 @@ class Paginator:
 class SageFakerClient:
     """ A fake SageMaker client. """
 
+    def __init__(self):
+        self._training_jobs = []
+
     def get_paginator(self, name):
         if name == "list_training_jobs":
             return self._list_training_jobs()
@@ -28,11 +31,21 @@ class SageFakerClient:
         )
 
     def _list_training_jobs(self):
-        return Paginator(
-            "TrainingJobSummaries",
-            [
-                {"TrainingJobName": "xxx"},
-                {"TrainingJobName": "yyy"},
-                {"TrainingJobName": "my-models-zzz"},
-            ],
-        )
+        return Paginator("TrainingJobSummaries", self._training_jobs)
+
+    def create_training_job(self, **kw):
+        expected_kws = {
+            "TrainingJobName",
+            "AlgorithmSpecification",
+            "EnableNetworkIsolation",
+            "HyperParameters",
+            "InputDataConfig",
+            "OutputDataConfig",
+            "ResourceConfig",
+            "RoleArn",
+            "StoppingCondition",
+            "Tags",
+        }
+        assert set(kw) == expected_kws
+        self._training_jobs.append(kw)
+        return kw

@@ -272,8 +272,57 @@ class TestTrainingJob:
             ],
         )
 
-    def test_list(self, cli_helper):
+    def test_list_empty(self, cli_helper):
         cli_helper.invoke(
-            ["training-job", "list"],
-            output_jsonl=[{"TrainingJobName": "my-models-zzz"}],
+            ["training-job", "list"], output_jsonl=[],
+        )
+
+    def test_create_and_list(self, cli_helper):
+        expected_training_job = {
+            "TrainingJobName": "my-models-tj-0-1-11",
+            "AlgorithmSpecification": {
+                "TrainingImage": (
+                    "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2"
+                ),
+                "TrainingInputMode": "File",
+            },
+            "EnableNetworkIsolation": True,
+            "HyperParameters": {
+                "ML2P_ENV.ML2P_PROJECT": '"my-models"',
+                "ML2P_ENV.ML2P_S3_URL": '"s3://my-bucket/my-models/"',
+            },
+            "InputDataConfig": [
+                {
+                    "ChannelName": "training",
+                    "DataSource": {
+                        "S3DataSource": {
+                            "S3DataType": "S3Prefix",
+                            "S3Uri": ("s3://my-bucket/my-models/datasets/ds-20201012"),
+                        }
+                    },
+                }
+            ],
+            "OutputDataConfig": {"S3OutputPath": "s3://my-bucket/my-models/models/"},
+            "ResourceConfig": {
+                "InstanceCount": 1,
+                "InstanceType": "ml.m5.large",
+                "VolumeSizeInGB": 20,
+            },
+            "RoleArn": "arn:aws:iam::12345:role/role-name",
+            "StoppingCondition": {"MaxRuntimeInSeconds": 3600},
+            "Tags": [{"Key": "ml2p-project", "Value": "my-models"}],
+        }
+        cli_helper.invoke(
+            ["training-job", "create", "tj-0-1-11", "ds-20201012"],
+            output_jsonl=[expected_training_job],
+            cfg={
+                "defaults": {
+                    "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                    "role": "arn:aws:iam::12345:role/role-name",
+                },
+                "train": {"instance_type": "ml.m5.large"},
+            },
+        )
+        cli_helper.invoke(
+            ["training-job", "list"], output_jsonl=[expected_training_job],
         )
