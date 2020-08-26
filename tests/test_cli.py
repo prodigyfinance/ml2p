@@ -132,7 +132,7 @@ class TestValidateModelType:
 class TestModellingProjectWithSagemakerClient:
     def test_create(self, cli_helper):
         prj = cli.ModellingProjectWithSagemakerClient(cli_helper.cfg())
-        assert type(prj.client).__name__ == "MockSageMakerClient"
+        assert type(prj.client).__name__ == "SageFakerClient"
 
 
 class TestML2P:
@@ -259,3 +259,21 @@ class TestDataset:
         cli_helper.s3_put_object("my-models/datasets/ds-20201012/b.txt", b"bbb")
         cli_helper.invoke(["dataset", "rm", "ds-20201012", "a.txt"])
         assert cli_helper.s3_list_objects() == ["my-models/datasets/ds-20201012/b.txt"]
+
+
+class TestTrainingJob:
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["training-job", "--help"],
+            output_startswith=[
+                "Usage: ml2p training-job [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Create and inspect training jobs.",
+            ],
+        )
+
+    def test_list(self, cli_helper):
+        cli_helper.invoke(
+            ["training-job", "list"],
+            output_jsonl=[{"TrainingJobName": "my-models-zzz"}],
+        )
