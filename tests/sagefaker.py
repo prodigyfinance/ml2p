@@ -182,7 +182,7 @@ class SageFakerClient:
             return config[0]
         raise RuntimeError(
             f"EndpointConfigName should be unique but {len(config)}"
-            f" endpoints were discovered with the name {name}"
+            f" endpoint configs were discovered with the name {name}"
         )
 
     def create_endpoint_config(self, **kw):
