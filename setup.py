@@ -16,7 +16,7 @@ setup(
     install_requires=["boto3", "click", "flask", "flask-API", "PyYAML"],
     extras_require={
         "dev": [
-            "black",
+            "black==19.10b0",
             "bumpversion",
             "coverage",
             "flake8",
