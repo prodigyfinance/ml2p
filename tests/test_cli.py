@@ -18,12 +18,13 @@ class DummyCtx:
 
 
 class CLIHelper:
-    def __init__(self, moto_session, tmp_path, bucket, base_cfg):
+    def __init__(self, moto_session, moto_sagemaker, tmp_path, bucket, base_cfg):
         self._moto_session = moto_session
         self._tmp_path = tmp_path
         self._bucket = bucket
         self._base_cfg = base_cfg
         self.s3 = self._moto_session.client("s3")
+        self.sagefaker = moto_sagemaker.mocked_client("sagemaker")
 
     def _apply_base_cfg(self, **kw):
         d = {}
@@ -88,9 +89,10 @@ class CLIHelper:
 
 
 @pytest.fixture
-def cli_helper(moto_session, tmp_path):
+def cli_helper(moto_session, moto_sagemaker, tmp_path):
     return CLIHelper(
         moto_session,
+        moto_sagemaker,
         tmp_path,
         bucket="my-bucket",
         base_cfg={"project": "my-models", "s3folder": "s3://my-bucket/my-models/"},
@@ -421,7 +423,33 @@ class TestModel:
 
 class TestEndpoint:
     def example_1(self):
-        pass
+        endpoint = {
+            "EndpointName": "my-models-endpoint-0-1-12",
+            "EndpointConfigName": "my-models-endpoint-0-1-12-config",
+            "Tags": [{"Key": "ml2p-project", "Value": "my-models"}],
+        }
+        endpoint_cfg = {
+            "EndpointConfigName": "my-models-endpoint-0-1-12-config",
+            "ProductionVariants": [
+                {
+                    "VariantName": "my-models-endpoint-0-1-12-variant-1",
+                    "ModelName": "my-models-endpoint-0-1-12",
+                    "InitialInstanceCount": 1,
+                    "InstanceType": "ml.t2.medium",
+                    "InitialVariantWeight": 1.0,
+                }
+            ],
+            "Tags": [{"Key": "ml2p-project", "Value": "my-models"}],
+        }
+        cfg = {
+            "defaults": {
+                "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "role": "arn:aws:iam::12345:role/role-name",
+            },
+            "deploy": {"instance_type": "ml.t2.medium"},
+        }
+
+        return endpoint, endpoint_cfg, cfg
 
     def test_help(self, cli_helper):
         cli_helper.invoke(
@@ -435,3 +463,16 @@ class TestEndpoint:
 
     def test_list_empty(self, cli_helper):
         cli_helper.invoke(["endpoint", "list"], output_jsonl=[])
+
+    def test_create_and_list(self, cli_helper):
+        endpoint, endpoint_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["endpoint", "list"], output_jsonl=[endpoint],
+        )
+        pages = list(
+            cli_helper.sagefaker.get_paginator("list_endpoint_configs").paginate()
+        )
+        assert pages == [{"EndpointConfigName": [endpoint_cfg]}]
