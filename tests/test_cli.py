@@ -420,6 +420,15 @@ class TestModel:
             ["model", "describe", "mdl-0-1-12"], output_jsonl=[model],
         )
 
+    def test_create_and_delete(self, cli_helper):
+        model, cfg = self.example_1()
+        cli_helper.invoke(
+            ["model", "create", "mdl-0-1-12"], output_jsonl=[model], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["model", "delete", "mdl-0-1-12"], output_jsonl=[model], cfg=cfg,
+        )
+
 
 class TestEndpoint:
     def example_1(self):

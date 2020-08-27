@@ -168,6 +168,12 @@ class SageFakerClient:
         assert model is not None
         return copy.deepcopy(model)
 
+    def delete_model(self, ModelName):
+        model = self._get_model(ModelName)
+        assert model is not None
+        self._models.remove(model)
+        return copy.deepcopy(model)
+
     def _get_endpoint_config(self, name):
         config = [e for e in self._endpoint_configs if e["EndpointConfigName"] == name]
         if not config:
