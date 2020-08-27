@@ -3,6 +3,8 @@
 """ A fake SageMaker client until moto has one of its own. """
 
 import copy
+import io
+import json
 
 
 class Paginator:
@@ -56,15 +58,22 @@ class Waiter:
 class SageFakerClient:
     """ A fake SageMaker client. """
 
-    def __init__(self):
+    def __init__(self, aws_region):
+        self._aws_region = aws_region
         self._training_jobs = []
         self._models = []
+        self._endpoint_configs = []
+        self._endpoints = []
 
     def get_paginator(self, name):
         if name == "list_training_jobs":
             return self._list_training_jobs()
         elif name == "list_models":
             return self._list_models()
+        elif name == "list_endpoints":
+            return self._list_endpoints()
+        elif name == "list_endpoint_configs":
+            return self._list_endpoint_configs()
         raise NotImplementedError(
             f"SageFakerClient.get_paginator does not yet support {name}"
         )
@@ -75,15 +84,26 @@ class SageFakerClient:
     def _list_models(self):
         return Paginator("Models", self._models)
 
+    def _list_endpoints(self):
+        return Paginator("Endpoints", self._endpoints)
+
+    def _list_endpoint_configs(self):
+        return Paginator("EndpointConfigs", self._endpoint_configs)
+
     def get_waiter(self, name):
         if name == "training_job_completed_or_stopped":
             return self._training_job_completed_or_stopped()
+        elif name == "endpoint_in_service":
+            return self._endpoint_in_service()
         raise NotImplementedError(
             f"SageFakerClient.get_waiter does not yet support {name}"
         )
 
     def _training_job_completed_or_stopped(self):
         return Waiter("TrainingJobName", self._get_training_job)
+
+    def _endpoint_in_service(self):
+        return Waiter("EndpointName", self._get_endpoint)
 
     def _get_training_job(self, name):
         jobs = [t for t in self._training_jobs if t["TrainingJobName"] == name]
@@ -153,3 +173,85 @@ class SageFakerClient:
         assert model is not None
         self._models.remove(model)
         return copy.deepcopy(model)
+
+    def _get_endpoint_config(self, name):
+        config = [e for e in self._endpoint_configs if e["EndpointConfigName"] == name]
+        if not config:
+            return None
+        if len(config) == 1:
+            return config[0]
+        raise RuntimeError(
+            f"EndpointConfigName should be unique but {len(config)}"
+            f" endpoint configs were discovered with the name {name}"
+        )
+
+    def create_endpoint_config(self, **kw):
+        expected_kws = {
+            "EndpointConfigName",
+            "Tags",
+            "ProductionVariants",
+        }
+        assert set(kw) == expected_kws
+        assert self._get_endpoint_config(kw["EndpointConfigName"]) is None
+        self._endpoint_configs.append(kw)
+        return copy.deepcopy(kw)
+
+    def describe_endpoint_config(self, EndpointConfigName):
+        endpoint_cfg = self._get_endpoint_config(EndpointConfigName)
+        assert endpoint_cfg is not None
+        return copy.deepcopy(endpoint_cfg)
+
+    def delete_endpoint_config(self, EndpointConfigName):
+        endpoint_cfg = self._get_endpoint_config(EndpointConfigName)
+        assert endpoint_cfg is not None
+        self._endpoint_configs.remove(endpoint_cfg)
+        return copy.deepcopy(endpoint_cfg)
+
+    def _get_endpoint(self, name):
+        endpoint = [e for e in self._endpoints if e["EndpointName"] == name]
+        if not endpoint:
+            return None
+        if len(endpoint) == 1:
+            return endpoint[0]
+        raise RuntimeError(
+            f"EndpointName should be unique but {len(endpoint)}"
+            f" endpoints were discovered with the name {name}"
+        )
+
+    def create_endpoint(self, **kw):
+        expected_kws = {"EndpointConfigName", "EndpointName", "Tags"}
+        assert set(kw) == expected_kws
+        assert self._get_endpoint(kw["EndpointName"]) is None
+        kw[
+            "EndpointArn"
+        ] = f"arn:aws:sagemaker:{self._aws_region}:12345:endpoint/{kw['EndpointName']}"
+        self._endpoints.append(kw)
+        return copy.deepcopy(kw)
+
+    def describe_endpoint(self, EndpointName):
+        endpoint = self._get_endpoint(EndpointName)
+        assert endpoint is not None
+        return copy.deepcopy(endpoint)
+
+    def delete_endpoint(self, EndpointName):
+        endpoint = self._get_endpoint(EndpointName)
+        assert endpoint is not None
+        self._endpoints.remove(endpoint)
+        return copy.deepcopy(endpoint)
+
+
+class SageFakerRuntimeClient:
+    """ A fake SageMaker Runtime client. """
+
+    def __init__(self, sagefaker):
+        self._sagefaker = sagefaker
+        self._invokes = []
+
+    def invoke_endpoint(self, **kw):
+        expected_kws = {"EndpointName", "Body", "ContentType", "Accept"}
+        assert set(kw) == expected_kws
+        assert kw["ContentType"] == "application/json"
+        assert kw["Accept"] == "application/json"
+        data = json.loads(kw["Body"])
+        self._invokes.append({"EndpointName": kw["EndpointName"], "Data": data})
+        return {"Body": io.BytesIO(json.dumps({"inputs": data}).encode("utf-8"))}
