@@ -521,7 +521,7 @@ class TestEndpoint:
         )
         cli_helper.invoke(
             ["endpoint", "invoke", "endpoint-0-1-12", json.dumps({"j": "son"})],
-            output_jsonl=[{"Body": {"r": "esult"}}],
+            output_jsonl=[{"Body": {"inputs": {"j": "son"}}}],
             cfg=cfg,
         )
 

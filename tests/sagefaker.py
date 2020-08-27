@@ -248,4 +248,4 @@ class SageFakerRuntimeClient:
         assert kw["Accept"] == "application/json"
         data = json.loads(kw["Body"])
         self._invokes.append({"EndpointName": kw["EndpointName"], "Data": data})
-        return {"Body": io.BytesIO(json.dumps({"r": "esult"}).encode("utf-8"))}
+        return {"Body": io.BytesIO(json.dumps({"inputs": data}).encode("utf-8"))}
