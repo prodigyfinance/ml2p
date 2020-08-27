@@ -122,7 +122,7 @@ class MotoSageMakerFixture:
     def __init__(self, monkeypatch):
         self._monkeypatch = monkeypatch
         self._orig_boto_client = boto3.client
-        self._sagefaker_client = SageFakerClient()
+        self._sagefaker_client = SageFakerClient(aws_region=MOTO_TEST_REGION)
 
     def mocked_client(self, service):
         if service == "sagemaker":

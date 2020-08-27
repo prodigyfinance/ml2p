@@ -427,6 +427,9 @@ class TestEndpoint:
             "EndpointName": "my-models-endpoint-0-1-12",
             "EndpointConfigName": "my-models-endpoint-0-1-12-config",
             "Tags": [{"Key": "ml2p-project", "Value": "my-models"}],
+            "EndpointArn": (
+                "arn:aws:sagemaker:us-east-1:12345:endpoint/my-models-endpoint-0-1-12"
+            ),
         }
         endpoint_cfg = {
             "EndpointConfigName": "my-models-endpoint-0-1-12-config",
@@ -476,3 +479,26 @@ class TestEndpoint:
             cli_helper.sagefaker.get_paginator("list_endpoint_configs").paginate()
         )
         assert pages == [{"EndpointConfigs": [endpoint_cfg]}]
+
+    def test_create_and_describe(self, cli_helper):
+        endpoint, endpoint_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+        )
+        endpoint_with_url = dict(
+            **endpoint,
+            EndpointUrl=(
+                "https://runtime.sagemaker.us-east-1.amazonaws.com"
+                "/endpoints/my-models-endpoint-0-1-12/invocations"
+            )
+        )
+        cli_helper.invoke(
+            ["endpoint", "describe", "endpoint-0-1-12"],
+            output_jsonl=[endpoint_with_url],
+        )
+        assert (
+            cli_helper.sagefaker.describe_endpoint_config(
+                EndpointConfigName="my-models-endpoint-0-1-12-config"
+            )
+            == endpoint_cfg
+        )

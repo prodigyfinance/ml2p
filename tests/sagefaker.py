@@ -56,7 +56,8 @@ class Waiter:
 class SageFakerClient:
     """ A fake SageMaker client. """
 
-    def __init__(self):
+    def __init__(self, aws_region):
+        self._aws_region = aws_region
         self._training_jobs = []
         self._models = []
         self._endpoint_configs = []
@@ -182,6 +183,11 @@ class SageFakerClient:
         self._endpoint_configs.append(kw)
         return copy.deepcopy(kw)
 
+    def describe_endpoint_config(self, EndpointConfigName):
+        endpoint_cfg = self._get_endpoint_config(EndpointConfigName)
+        assert endpoint_cfg is not None
+        return copy.deepcopy(endpoint_cfg)
+
     def _get_endpoint(self, name):
         endpoint = [e for e in self._endpoints if e["EndpointName"] == name]
         if not endpoint:
@@ -197,5 +203,13 @@ class SageFakerClient:
         expected_kws = {"EndpointConfigName", "EndpointName", "Tags"}
         assert set(kw) == expected_kws
         assert self._get_endpoint(kw["EndpointName"]) is None
+        kw[
+            "EndpointArn"
+        ] = f"arn:aws:sagemaker:{self._aws_region}:12345:endpoint/{kw['EndpointName']}"
         self._endpoints.append(kw)
         return copy.deepcopy(kw)
+
+    def describe_endpoint(self, EndpointName):
+        endpoint = self._get_endpoint(EndpointName)
+        assert endpoint is not None
+        return copy.deepcopy(endpoint)
