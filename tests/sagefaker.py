@@ -85,7 +85,7 @@ class SageFakerClient:
         return Paginator("Endpoints", self._endpoints)
 
     def _list_endpoint_configs(self):
-        return Paginator("EndpointConfigName", self._endpoint_configs)
+        return Paginator("EndpointConfigs", self._endpoint_configs)
 
     def get_waiter(self, name):
         if name == "training_job_completed_or_stopped":

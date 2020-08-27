@@ -475,4 +475,4 @@ class TestEndpoint:
         pages = list(
             cli_helper.sagefaker.get_paginator("list_endpoint_configs").paginate()
         )
-        assert pages == [{"EndpointConfigName": [endpoint_cfg]}]
+        assert pages == [{"EndpointConfigs": [endpoint_cfg]}]
