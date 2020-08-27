@@ -64,6 +64,8 @@ class SageFakerClient:
         self._models = []
         self._endpoint_configs = []
         self._endpoints = []
+        self._notebooks = []
+        self._notebook_lifecycle_configs = []
 
     def get_paginator(self, name):
         if name == "list_training_jobs":
@@ -74,6 +76,10 @@ class SageFakerClient:
             return self._list_endpoints()
         elif name == "list_endpoint_configs":
             return self._list_endpoint_configs()
+        elif name == "list_notebook_instances":
+            return self._list_notebook_instances()
+        elif name == "list_notebook_instance_lifecycle_configs":
+            return self._list_notebook_instance_lifecycle_configs()
         raise NotImplementedError(
             f"SageFakerClient.get_paginator does not yet support {name}"
         )
@@ -89,6 +95,14 @@ class SageFakerClient:
 
     def _list_endpoint_configs(self):
         return Paginator("EndpointConfigs", self._endpoint_configs)
+
+    def _list_notebook_instances(self):
+        return Paginator("NotebookInstances", self._notebooks)
+
+    def _list_notebook_instance_lifecycle_configs(self):
+        return Paginator(
+            "NotebookInstanceLifecycleConfigs", self._notebook_lifecycle_configs
+        )
 
     def get_waiter(self, name):
         if name == "training_job_completed_or_stopped":
@@ -238,6 +252,73 @@ class SageFakerClient:
         assert endpoint is not None
         self._endpoints.remove(endpoint)
         return copy.deepcopy(endpoint)
+
+    def _get_lifecycle_config(self, name):
+        lifecycle_cfgs = [
+            lifecyle
+            for lifecyle in self._notebook_lifecycle_configs
+            if lifecyle["NotebookInstanceLifecycleConfigName"] == name
+        ]
+        if not lifecycle_cfgs:
+            return None
+        if len(lifecycle_cfgs) == 1:
+            return lifecycle_cfgs[0]
+        raise RuntimeError(
+            f"NotebookInstanceLifecycleConfigName should be unique but"
+            f" {len(lifecycle_cfgs)} lifecycle configs were discovered with"
+            f" the name {name}"
+        )
+
+    def create_notebook_instance_lifecycle_config(self, **kw):
+        expected_kws = {"NotebookInstanceLifecycleConfigName"}
+        assert set(kw) == expected_kws
+        assert (
+            self._get_lifecycle_config(kw["NotebookInstanceLifecycleConfigName"])
+            is None
+        )
+        self._notebook_lifecycle_configs.append(kw)
+        return copy.deepcopy(kw)
+
+    def describe_notebook_instance_lifecycle_config(
+        self, NotebookInstanceLifecycleConfigName
+    ):
+        lifecycle_config = self._get_lifecycle_config(
+            NotebookInstanceLifecycleConfigName
+        )
+        assert lifecycle_config is not None
+        return copy.deepcopy(lifecycle_config)
+
+    def _get_notebook(self, name):
+        notebooks = [nb for nb in self._notebooks if nb["NotebookInstanceName"] == name]
+        if not notebooks:
+            return None
+        if len(notebooks) == 1:
+            return notebooks[0]
+        raise RuntimeError(
+            f"NotebookInstanceName should be unique but {len(notebooks)} notebooks were"
+            f" discovered with the name {name}"
+        )
+
+    def create_notebook_instance(self, **kw):
+        expected_kws = {
+            "NotebookInstanceName",
+            "InstanceType",
+            "RoleArn",
+            "Tags",
+            "LifecycleConfigName",
+            "VolumeSizeInGB",
+            "DirectInternetAccess",
+        }
+        assert set(kw) == expected_kws
+        assert self._get_notebook(kw["NotebookInstanceName"]) is None
+        kw["DefaultCodeRepository"] = None
+        self._notebooks.append(kw)
+        return copy.deepcopy(kw)
+
+    def describe_notebook_instance(self, NotebookInstanceName):
+        notebook = self._get_notebook(NotebookInstanceName)
+        assert notebook is not None
+        return copy.deepcopy(notebook)
 
 
 class SageFakerRuntimeClient:
