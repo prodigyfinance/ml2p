@@ -59,6 +59,7 @@ class SageFakerClient:
     def __init__(self):
         self._training_jobs = []
         self._models = []
+        self._endpoint_configs = []
         self._endpoints = []
 
     def get_paginator(self, name):
@@ -68,6 +69,8 @@ class SageFakerClient:
             return self._list_models()
         elif name == "list_endpoints":
             return self._list_endpoints()
+        elif name == "list_endpoint_configs":
+            return self._list_endpoint_configs()
         raise NotImplementedError(
             f"SageFakerClient.get_paginator does not yet support {name}"
         )
@@ -80,6 +83,9 @@ class SageFakerClient:
 
     def _list_endpoints(self):
         return Paginator("Endpoints", self._endpoints)
+
+    def _list_endpoint_configs(self):
+        return Paginator("EndpointConfigName", self._endpoint_configs)
 
     def get_waiter(self, name):
         if name == "training_job_completed_or_stopped":
@@ -153,3 +159,43 @@ class SageFakerClient:
         model = self._get_model(ModelName)
         assert model is not None
         return copy.deepcopy(model)
+
+    def _get_endpoint_config(self, name):
+        config = [e for e in self._endpoint_configs if e["EndpointConfigName"] == name]
+        if not config:
+            return None
+        if len(config) == 1:
+            return config[0]
+        raise RuntimeError(
+            f"EndpointConfigName should be unique but {len(config)}"
+            f" endpoints were discovered with the name {name}"
+        )
+
+    def create_endpoint_config(self, **kw):
+        expected_kws = {
+            "EndpointConfigName",
+            "Tags",
+            "ProductionVariants",
+        }
+        assert set(kw) == expected_kws
+        assert self._get_endpoint_config(kw["EndpointConfigName"]) is None
+        self._endpoint_configs.append(kw)
+        return copy.deepcopy(kw)
+
+    def _get_endpoint(self, name):
+        endpoint = [e for e in self._endpoints if e["EndpointName"] == name]
+        if not endpoint:
+            return None
+        if len(endpoint) == 1:
+            return endpoint[0]
+        raise RuntimeError(
+            f"EndpointName should be unique but {len(endpoint)}"
+            f" endpoints were discovered with the name {name}"
+        )
+
+    def create_endpoint(self, **kw):
+        expected_kws = {"EndpointConfigName", "EndpointName", "Tags"}
+        assert set(kw) == expected_kws
+        assert self._get_endpoint(kw["EndpointName"]) is None
+        self._endpoints.append(kw)
+        return copy.deepcopy(kw)
