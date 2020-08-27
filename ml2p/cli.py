@@ -490,7 +490,7 @@ def notebook_create(prj, notebook_name):
 @notebook.command("presigned-url")
 @click.argument("notebook-name")
 @pass_prj
-def presigned_url(prj, notebook_name):
+def notebook_presigned_url(prj, notebook_name):
     """ Create a URL to connect to the Jupyter server from a notebook instance.
     """
     response = prj.client.create_presigned_notebook_instance_url(
