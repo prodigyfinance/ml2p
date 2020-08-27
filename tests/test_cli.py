@@ -502,3 +502,34 @@ class TestEndpoint:
             )
             == endpoint_cfg
         )
+
+    def test_create_and_delete(self, cli_helper):
+        endpoint, endpoint_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["endpoint", "delete", "endpoint-0-1-12"],
+            output_jsonl=[endpoint, endpoint_cfg],
+            cfg=cfg,
+        )
+
+    def test_create_and_invoke(self, cli_helper):
+        endpoint, endpoint_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["endpoint", "invoke", "endpoint-0-1-12", json.dumps({"j": "son"})],
+            output_jsonl=[{"Body": {"r": "esult"}}],
+            cfg=cfg,
+        )
+
+    def test_create_and_wait(self, cli_helper):
+        endpoint, endpoint_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["endpoint", "wait", "endpoint-0-1-12"], output=[], cfg=cfg,
+        )
