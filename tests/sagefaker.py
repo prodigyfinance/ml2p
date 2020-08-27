@@ -58,16 +58,22 @@ class SageFakerClient:
 
     def __init__(self):
         self._training_jobs = []
+        self._models = []
 
     def get_paginator(self, name):
         if name == "list_training_jobs":
             return self._list_training_jobs()
+        elif name == "list_models":
+            return self._list_models()
         raise NotImplementedError(
             f"SageFakerClient.get_paginator does not yet support {name}"
         )
 
     def _list_training_jobs(self):
         return Paginator("TrainingJobSummaries", self._training_jobs)
+
+    def _list_models(self):
+        return Paginator("Models", self._models)
 
     def get_waiter(self, name):
         if name == "training_job_completed_or_stopped":
@@ -112,3 +118,32 @@ class SageFakerClient:
         training_job = self._get_training_job(TrainingJobName)
         assert training_job is not None
         return copy.deepcopy(training_job)
+
+    def _get_model(self, name):
+        models = [m for m in self._models if m["ModelName"] == name]
+        if not models:
+            return None
+        if len(models) == 1:
+            return models[0]
+        raise RuntimeError(
+            f"ModelNames should be unique but {len(models)}"
+            f" models were discovered with the name {name}"
+        )
+
+    def create_model(self, **kw):
+        expected_kws = {
+            "ModelName",
+            "PrimaryContainer",
+            "ExecutionRoleArn",
+            "Tags",
+            "EnableNetworkIsolation",
+        }
+        assert set(kw) == expected_kws
+        assert self._get_model(kw["ModelName"]) is None
+        self._models.append(kw)
+        return copy.deepcopy(kw)
+
+    def describe_model(self, ModelName):
+        model = self._get_model(ModelName)
+        assert model is not None
+        return copy.deepcopy(model)
