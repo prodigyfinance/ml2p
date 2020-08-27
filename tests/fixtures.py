@@ -17,6 +17,8 @@ import yaml
 from ml2p import hyperparameters
 from ml2p.core import LocalEnv, SageMakerEnv
 
+from .sagefaker import SageFakerClient
+
 MOTO_TEST_REGION = "us-east-1"
 
 
@@ -116,18 +118,15 @@ def sagemaker(tmpdir, monkeypatch, moto_session):
     )
 
 
-class MockSageMakerClient:
-    pass
-
-
 class MotoSageMakerFixture:
     def __init__(self, monkeypatch):
         self._monkeypatch = monkeypatch
         self._orig_boto_client = boto3.client
+        self._sagefaker_client = SageFakerClient()
 
     def mocked_client(self, service):
         if service == "sagemaker":
-            return MockSageMakerClient()
+            return self._sagefaker_client
         return self._orig_boto_client(service)
 
     @contextlib.contextmanager

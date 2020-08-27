@@ -132,7 +132,7 @@ class TestValidateModelType:
 class TestModellingProjectWithSagemakerClient:
     def test_create(self, cli_helper):
         prj = cli.ModellingProjectWithSagemakerClient(cli_helper.cfg())
-        assert type(prj.client).__name__ == "MockSageMakerClient"
+        assert type(prj.client).__name__ == "SageFakerClient"
 
 
 class TestML2P:
@@ -259,3 +259,97 @@ class TestDataset:
         cli_helper.s3_put_object("my-models/datasets/ds-20201012/b.txt", b"bbb")
         cli_helper.invoke(["dataset", "rm", "ds-20201012", "a.txt"])
         assert cli_helper.s3_list_objects() == ["my-models/datasets/ds-20201012/b.txt"]
+
+
+class TestTrainingJob:
+    def example_1(self):
+        training_job = {
+            "TrainingJobName": "my-models-tj-0-1-11",
+            "AlgorithmSpecification": {
+                "TrainingImage": (
+                    "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2"
+                ),
+                "TrainingInputMode": "File",
+            },
+            "EnableNetworkIsolation": True,
+            "HyperParameters": {
+                "ML2P_ENV.ML2P_PROJECT": '"my-models"',
+                "ML2P_ENV.ML2P_S3_URL": '"s3://my-bucket/my-models/"',
+            },
+            "InputDataConfig": [
+                {
+                    "ChannelName": "training",
+                    "DataSource": {
+                        "S3DataSource": {
+                            "S3DataType": "S3Prefix",
+                            "S3Uri": ("s3://my-bucket/my-models/datasets/ds-20201012"),
+                        }
+                    },
+                }
+            ],
+            "OutputDataConfig": {"S3OutputPath": "s3://my-bucket/my-models/models/"},
+            "ResourceConfig": {
+                "InstanceCount": 1,
+                "InstanceType": "ml.m5.large",
+                "VolumeSizeInGB": 20,
+            },
+            "RoleArn": "arn:aws:iam::12345:role/role-name",
+            "StoppingCondition": {"MaxRuntimeInSeconds": 3600},
+            "Tags": [{"Key": "ml2p-project", "Value": "my-models"}],
+        }
+        cfg = {
+            "defaults": {
+                "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "role": "arn:aws:iam::12345:role/role-name",
+            },
+            "train": {"instance_type": "ml.m5.large"},
+        }
+        return training_job, cfg
+
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["training-job", "--help"],
+            output_startswith=[
+                "Usage: ml2p training-job [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Create and inspect training jobs.",
+            ],
+        )
+
+    def test_list_empty(self, cli_helper):
+        cli_helper.invoke(
+            ["training-job", "list"], output_jsonl=[],
+        )
+
+    def test_create_and_list(self, cli_helper):
+        training_job, cfg = self.example_1()
+        cli_helper.invoke(
+            ["training-job", "create", "tj-0-1-11", "ds-20201012"],
+            output_jsonl=[training_job],
+            cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["training-job", "list"], output_jsonl=[training_job],
+        )
+
+    def test_create_and_describe(self, cli_helper):
+        training_job, cfg = self.example_1()
+        cli_helper.invoke(
+            ["training-job", "create", "tj-0-1-11", "ds-20201012"],
+            output_jsonl=[training_job],
+            cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["training-job", "describe", "tj-0-1-11"], output_jsonl=[training_job],
+        )
+
+    def test_create_and_wait(self, cli_helper):
+        training_job, cfg = self.example_1()
+        cli_helper.invoke(
+            ["training-job", "create", "tj-0-1-11", "ds-20201012"],
+            output_jsonl=[training_job],
+            cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["training-job", "wait", "tj-0-1-11"], output=[],
+        )
