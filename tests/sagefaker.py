@@ -59,12 +59,15 @@ class SageFakerClient:
     def __init__(self):
         self._training_jobs = []
         self._models = []
+        self._endpoints = []
 
     def get_paginator(self, name):
         if name == "list_training_jobs":
             return self._list_training_jobs()
         elif name == "list_models":
             return self._list_models()
+        elif name == "list_endpoints":
+            return self._list_endpoints()
         raise NotImplementedError(
             f"SageFakerClient.get_paginator does not yet support {name}"
         )
@@ -74,6 +77,9 @@ class SageFakerClient:
 
     def _list_models(self):
         return Paginator("Models", self._models)
+
+    def _list_endpoints(self):
+        return Paginator("Endpoints", self._endpoints)
 
     def get_waiter(self, name):
         if name == "training_job_completed_or_stopped":
