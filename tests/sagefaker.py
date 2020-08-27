@@ -389,6 +389,12 @@ class SageFakerClient:
         assert repo is not None
         return copy.deepcopy(repo)
 
+    def delete_code_repository(self, CodeRepositoryName):
+        repo = self._get_repo(CodeRepositoryName)
+        assert repo is not None
+        self._repos.remove(repo)
+        return copy.deepcopy(repo)
+
 
 class SageFakerRuntimeClient:
     """ A fake SageMaker Runtime client. """

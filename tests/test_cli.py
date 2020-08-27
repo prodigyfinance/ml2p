@@ -658,6 +658,25 @@ class TestNotebook:
         )
         assert pages == [{"NotebookInstanceLifecycleConfigs": []}]
 
+    def test_create_and_delete_with_repo(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_2_repo_url()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        lifecycle_pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert lifecycle_pages == [{"NotebookInstanceLifecycleConfigs": []}]
+        repo_pages = list(
+            cli_helper.sagefaker.get_paginator("list_code_repositories").paginate()
+        )
+        assert repo_pages == [{"CodeRepositorySummaryList": []}]
+
     def test_presigned_url(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
