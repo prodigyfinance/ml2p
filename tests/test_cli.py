@@ -417,3 +417,21 @@ class TestModel:
         cli_helper.invoke(
             ["model", "describe", "mdl-0-1-12"], output_jsonl=[model],
         )
+
+
+class TestEndpoint:
+    def example_1(self):
+        pass
+
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["endpoint", "--help"],
+            output_startswith=[
+                "Usage: ml2p endpoint [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Create and inspect endpoints.",
+            ],
+        )
+
+    def test_list_empty(self, cli_helper):
+        cli_helper.invoke(["endpoint", "list"], output_jsonl=[])
