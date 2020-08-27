@@ -658,6 +658,25 @@ class TestNotebook:
         )
         assert pages == [{"NotebookInstanceLifecycleConfigs": []}]
 
+    def test_create_and_delete_while_in_service(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "start", "notebook-test"], output_jsonl=[], cfg=cfg,
+        )
+        notebook["NotebookInstanceStatus"] = "Stopped"
+        cli_helper.invoke(
+            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert pages == [{"NotebookInstanceLifecycleConfigs": []}]
+
     def test_create_and_delete_with_repo(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_2_repo_url()
         cli_helper.invoke(

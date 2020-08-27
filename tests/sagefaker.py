@@ -117,6 +117,8 @@ class SageFakerClient:
             return self._training_job_completed_or_stopped()
         elif name == "endpoint_in_service":
             return self._endpoint_in_service()
+        elif name == "notebook_instance_stopped":
+            return self._notebook_instance_stopped()
         raise NotImplementedError(
             f"SageFakerClient.get_waiter does not yet support {name}"
         )
@@ -126,6 +128,9 @@ class SageFakerClient:
 
     def _endpoint_in_service(self):
         return Waiter("EndpointName", self._get_endpoint)
+
+    def _notebook_instance_stopped(self):
+        return Waiter("NotebookInstanceName", self._get_notebook)
 
     def _get_training_job(self, name):
         jobs = [t for t in self._training_jobs if t["TrainingJobName"] == name]
