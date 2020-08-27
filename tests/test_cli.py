@@ -571,6 +571,18 @@ class TestNotebook:
         }
         return notebook, lifecycle_cfg, cfg
 
+    def example_2_repo_url(self):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        notebook["DefaultCodeRepository"] = "my-models-notebook-test-repo"
+        cfg["notebook"].update(
+            **{
+                "repo_url": "https://example.com/repo-1234",
+                "repo_branch": "master",
+                "repo_secret_arn": "arn:secret:1234",
+            }
+        )
+        return notebook, lifecycle_cfg, cfg
+
     def test_help(self, cli_helper):
         cli_helper.invoke(
             ["notebook", "--help"],
@@ -586,6 +598,21 @@ class TestNotebook:
 
     def test_create_and_list(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "list"], output_jsonl=[notebook],
+        )
+        pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert pages == [{"NotebookInstanceLifecycleConfigs": [lifecycle_cfg]}]
+
+    def test_create_and_list_with_repo_url(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_2_repo_url()
         cli_helper.invoke(
             ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
         )

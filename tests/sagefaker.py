@@ -327,9 +327,10 @@ class SageFakerClient:
             "VolumeSizeInGB",
             "DirectInternetAccess",
         }
+        repo = kw.pop("DefaultCodeRepository", None)  # optional argument
         assert set(kw) == expected_kws
         assert self._get_notebook(kw["NotebookInstanceName"]) is None
-        kw["DefaultCodeRepository"] = None
+        kw["DefaultCodeRepository"] = repo
         kw["NotebookInstanceStatus"] = "Pending"
         self._notebooks.append(kw)
         return copy.deepcopy(kw)
