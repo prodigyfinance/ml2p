@@ -339,6 +339,23 @@ class SageFakerClient:
         self._notebooks.remove(notebook)
         return copy.deepcopy(notebook)
 
+    def create_presigned_notebook_instance_url(self, NotebookInstanceName):
+        notebook = self._get_notebook(NotebookInstanceName)
+        assert notebook is not None
+        return {
+            "AuthorizedUrl": f"https://example.com/{notebook['NotebookInstanceName']}"
+        }
+
+    def start_notebook_instance(self, NotebookInstanceName):
+        notebook = self._get_notebook(NotebookInstanceName)
+        assert notebook is not None
+        notebook["NotebookInstanceStatus"] = "InService"
+
+    def stop_notebook_instance(self, NotebookInstanceName):
+        notebook = self._get_notebook(NotebookInstanceName)
+        assert notebook is not None
+        notebook["NotebookInstanceStatus"] = "Stopped"
+
 
 class SageFakerRuntimeClient:
     """ A fake SageMaker Runtime client. """

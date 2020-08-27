@@ -630,3 +630,42 @@ class TestNotebook:
             ).paginate()
         )
         assert pages == [{"NotebookInstanceLifecycleConfigs": []}]
+
+    def test_presigned_url(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "presigned-url", "notebook-test"],
+            output_jsonl=[
+                {"AuthorizedUrl": "https://example.com/my-models-notebook-test"}
+            ],
+            cfg=cfg,
+        )
+
+    def test_stop(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "stop", "notebook-test"], output_jsonl=[], cfg=cfg,
+        )
+        notebook["NotebookInstanceStatus"] = "Stopped"
+        cli_helper.invoke(
+            ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+        )
+
+    def test_start(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "start", "notebook-test"], output_jsonl=[], cfg=cfg,
+        )
+        notebook["NotebookInstanceStatus"] = "InService"
+        cli_helper.invoke(
+            ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+        )
