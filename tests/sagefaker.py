@@ -25,6 +25,8 @@ class Paginator:
         self._per_page = per_page
 
     def paginate(self):
+        if not self._items:
+            yield {self._summary_title: []}
         for i in range(0, len(self._items), self._per_page):
             start, end = i, i + self._per_page
             yield {self._summary_title: copy.deepcopy(self._items[start:end])}
@@ -288,6 +290,16 @@ class SageFakerClient:
         assert lifecycle_config is not None
         return copy.deepcopy(lifecycle_config)
 
+    def delete_notebook_instance_lifecycle_config(
+        self, NotebookInstanceLifecycleConfigName
+    ):
+        lifecycle_config = self._get_lifecycle_config(
+            NotebookInstanceLifecycleConfigName
+        )
+        assert lifecycle_config is not None
+        self._notebook_lifecycle_configs.remove(lifecycle_config)
+        return copy.deepcopy(lifecycle_config)
+
     def _get_notebook(self, name):
         notebooks = [nb for nb in self._notebooks if nb["NotebookInstanceName"] == name]
         if not notebooks:
@@ -312,12 +324,19 @@ class SageFakerClient:
         assert set(kw) == expected_kws
         assert self._get_notebook(kw["NotebookInstanceName"]) is None
         kw["DefaultCodeRepository"] = None
+        kw["NotebookInstanceStatus"] = "Pending"
         self._notebooks.append(kw)
         return copy.deepcopy(kw)
 
     def describe_notebook_instance(self, NotebookInstanceName):
         notebook = self._get_notebook(NotebookInstanceName)
         assert notebook is not None
+        return copy.deepcopy(notebook)
+
+    def delete_notebook_instance(self, NotebookInstanceName):
+        notebook = self._get_notebook(NotebookInstanceName)
+        assert notebook is not None
+        self._notebooks.remove(notebook)
         return copy.deepcopy(notebook)
 
 

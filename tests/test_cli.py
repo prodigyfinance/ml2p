@@ -555,6 +555,7 @@ class TestNotebook:
             "VolumeSizeInGB": 8,
             "DirectInternetAccess": "Disabled",
             "DefaultCodeRepository": None,
+            "NotebookInstanceStatus": "Pending",
         }
         lifecycle_cfg = {
             "NotebookInstanceLifecycleConfigName": (
@@ -614,3 +615,18 @@ class TestNotebook:
             )
             == lifecycle_cfg
         )
+
+    def test_create_and_delete(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert pages == [{"NotebookInstanceLifecycleConfigs": []}]
