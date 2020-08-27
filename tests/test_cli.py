@@ -71,6 +71,8 @@ class CLIHelper:
         result = runner.invoke(
             cli.ml2p, ["--cfg", self.cfg(**cfg)] + args, catch_exceptions=False,
         )
+        if result.exception is not None:
+            raise result.exception.with_traceback(result.exc_info[2])
         assert result.exit_code == exit_code
         if output is not None:
             assert result.output.splitlines() == output
@@ -352,4 +354,66 @@ class TestTrainingJob:
         )
         cli_helper.invoke(
             ["training-job", "wait", "tj-0-1-11"], output=[],
+        )
+
+
+class TestModel:
+    def example_1(self):
+        model = {
+            "ModelName": "my-models-mdl-0-1-12",
+            "PrimaryContainer": {
+                "Image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "ModelDataUrl": (
+                    "s3://my-bucket/my-models/models/"
+                    "my-models-mdl-0-1/output/model.tar.gz"
+                ),
+                "Environment": {
+                    "ML2P_MODEL_VERSION": "my-models-mdl-0-1-12",
+                    "ML2P_PROJECT": "my-models",
+                    "ML2P_S3_URL": "s3://my-bucket/my-models/",
+                },
+            },
+            "ExecutionRoleArn": "arn:aws:iam::12345:role/role-name",
+            "Tags": [{"Key": "ml2p-project", "Value": "my-models"}],
+            "EnableNetworkIsolation": False,
+        }
+        cfg = {
+            "defaults": {
+                "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "role": "arn:aws:iam::12345:role/role-name",
+            },
+        }
+        return model, cfg
+
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["model", "--help"],
+            output_startswith=[
+                "Usage: ml2p model [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Create and inspect models.",
+            ],
+        )
+
+    def test_list_empty(self, cli_helper):
+        cli_helper.invoke(
+            ["model", "list"], output_jsonl=[],
+        )
+
+    def test_create_and_list(self, cli_helper):
+        model, cfg = self.example_1()
+        cli_helper.invoke(
+            ["model", "create", "mdl-0-1-12"], output_jsonl=[model], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["model", "list"], output_jsonl=[model],
+        )
+
+    def test_create_and_describe(self, cli_helper):
+        model, cfg = self.example_1()
+        cli_helper.invoke(
+            ["model", "create", "mdl-0-1-12"], output_jsonl=[model], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["model", "describe", "mdl-0-1-12"], output_jsonl=[model],
         )
