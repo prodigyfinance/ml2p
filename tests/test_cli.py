@@ -669,3 +669,45 @@ class TestNotebook:
         cli_helper.invoke(
             ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
         )
+
+
+class TestRepo:
+    def example_1(self):
+        repo = {
+            "CodeRepositoryName": "my-models-repo-1234",
+            "GitConfig": {
+                "RepositoryUrl": "https://example.com/repo-1234",
+                "Branch": "master",
+                "SecretArn": "arn:secret:repo-1234",
+            },
+        }
+        return repo
+
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["repo", "--help"],
+            output_startswith=[
+                "Usage: ml2p repo [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Describe and list code repositories.",
+            ],
+        )
+
+    def test_list_empty(self, cli_helper):
+        cli_helper.invoke(
+            ["repo", "list"], output_jsonl=[],
+        )
+
+    def test_list(self, cli_helper):
+        repo = self.example_1()
+        cli_helper.sagefaker.create_code_repository(**repo)
+        cli_helper.invoke(
+            ["repo", "list"], output_jsonl=[repo],
+        )
+
+    def test_describe(self, cli_helper):
+        repo = self.example_1()
+        cli_helper.sagefaker.create_code_repository(**repo)
+        cli_helper.invoke(
+            ["repo", "describe", "repo-1234"], output_jsonl=[repo],
+        )

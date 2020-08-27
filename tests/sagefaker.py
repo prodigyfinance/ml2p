@@ -68,6 +68,7 @@ class SageFakerClient:
         self._endpoints = []
         self._notebooks = []
         self._notebook_lifecycle_configs = []
+        self._repos = []
 
     def get_paginator(self, name):
         if name == "list_training_jobs":
@@ -82,6 +83,8 @@ class SageFakerClient:
             return self._list_notebook_instances()
         elif name == "list_notebook_instance_lifecycle_configs":
             return self._list_notebook_instance_lifecycle_configs()
+        elif name == "list_code_repositories":
+            return self._list_code_repositories()
         raise NotImplementedError(
             f"SageFakerClient.get_paginator does not yet support {name}"
         )
@@ -105,6 +108,9 @@ class SageFakerClient:
         return Paginator(
             "NotebookInstanceLifecycleConfigs", self._notebook_lifecycle_configs
         )
+
+    def _list_code_repositories(self):
+        return Paginator("CodeRepositorySummaryList", self._repos)
 
     def get_waiter(self, name):
         if name == "training_job_completed_or_stopped":
@@ -355,6 +361,32 @@ class SageFakerClient:
         notebook = self._get_notebook(NotebookInstanceName)
         assert notebook is not None
         notebook["NotebookInstanceStatus"] = "Stopped"
+
+    def _get_repo(self, name):
+        repos = [r for r in self._repos if r["CodeRepositoryName"] == name]
+        if not repos:
+            return None
+        if len(repos) == 1:
+            return repos[0]
+        raise RuntimeError(
+            f"CodeRepositoryName should be unique but {len(repos)} repos were"
+            f" discovered with the name {name}"
+        )
+
+    def create_code_repository(self, **kw):
+        expected_kws = {
+            "CodeRepositoryName",
+            "GitConfig",
+        }
+        assert set(kw) == expected_kws
+        assert self._get_repo(kw["CodeRepositoryName"]) is None
+        self._repos.append(kw)
+        return copy.deepcopy(kw)
+
+    def describe_code_repository(self, CodeRepositoryName):
+        repo = self._get_repo(CodeRepositoryName)
+        assert repo is not None
+        return copy.deepcopy(repo)
 
 
 class SageFakerRuntimeClient:
