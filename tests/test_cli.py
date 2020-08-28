@@ -571,6 +571,18 @@ class TestNotebook:
         }
         return notebook, lifecycle_cfg, cfg
 
+    def example_2_repo_url(self):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        notebook["DefaultCodeRepository"] = "my-models-notebook-test-repo"
+        cfg["notebook"].update(
+            **{
+                "repo_url": "https://example.com/repo-1234",
+                "repo_branch": "master",
+                "repo_secret_arn": "arn:secret:1234",
+            }
+        )
+        return notebook, lifecycle_cfg, cfg
+
     def test_help(self, cli_helper):
         cli_helper.invoke(
             ["notebook", "--help"],
@@ -586,6 +598,21 @@ class TestNotebook:
 
     def test_create_and_list(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "list"], output_jsonl=[notebook],
+        )
+        pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert pages == [{"NotebookInstanceLifecycleConfigs": [lifecycle_cfg]}]
+
+    def test_create_and_list_with_repo_url(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_2_repo_url()
         cli_helper.invoke(
             ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
         )
@@ -631,6 +658,44 @@ class TestNotebook:
         )
         assert pages == [{"NotebookInstanceLifecycleConfigs": []}]
 
+    def test_create_and_delete_while_in_service(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "start", "notebook-test"], output_jsonl=[], cfg=cfg,
+        )
+        notebook["NotebookInstanceStatus"] = "Stopped"
+        cli_helper.invoke(
+            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert pages == [{"NotebookInstanceLifecycleConfigs": []}]
+
+    def test_create_and_delete_with_repo(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_2_repo_url()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        lifecycle_pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert lifecycle_pages == [{"NotebookInstanceLifecycleConfigs": []}]
+        repo_pages = list(
+            cli_helper.sagefaker.get_paginator("list_code_repositories").paginate()
+        )
+        assert repo_pages == [{"CodeRepositorySummaryList": []}]
+
     def test_presigned_url(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
@@ -668,4 +733,46 @@ class TestNotebook:
         notebook["NotebookInstanceStatus"] = "InService"
         cli_helper.invoke(
             ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+        )
+
+
+class TestRepo:
+    def example_1(self):
+        repo = {
+            "CodeRepositoryName": "my-models-repo-1234",
+            "GitConfig": {
+                "RepositoryUrl": "https://example.com/repo-1234",
+                "Branch": "master",
+                "SecretArn": "arn:secret:repo-1234",
+            },
+        }
+        return repo
+
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["repo", "--help"],
+            output_startswith=[
+                "Usage: ml2p repo [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Describe and list code repositories.",
+            ],
+        )
+
+    def test_list_empty(self, cli_helper):
+        cli_helper.invoke(
+            ["repo", "list"], output_jsonl=[],
+        )
+
+    def test_list(self, cli_helper):
+        repo = self.example_1()
+        cli_helper.sagefaker.create_code_repository(**repo)
+        cli_helper.invoke(
+            ["repo", "list"], output_jsonl=[repo],
+        )
+
+    def test_describe(self, cli_helper):
+        repo = self.example_1()
+        cli_helper.sagefaker.create_code_repository(**repo)
+        cli_helper.invoke(
+            ["repo", "describe", "repo-1234"], output_jsonl=[repo],
         )

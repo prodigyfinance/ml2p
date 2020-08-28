@@ -52,6 +52,7 @@ class SageMakerFixture:
     def __init__(self, ml_folder, monkeypatch, moto_session):
         self.ml_folder = ml_folder
         self.monkeypatch = monkeypatch
+        self.moto_session = moto_session
         self.s3 = moto_session.client("s3")
 
     def s3_create_bucket(self, bucket):
@@ -107,7 +108,7 @@ class SageMakerFixture:
             cfg = {"project": "test-project", "s3folder": "s3://foo/bar"}
             yaml.safe_dump(cfg, f)
         ml_folder = kw.pop("ml_folder", self.ml_folder)
-        session = kw.pop("session", boto3.session.Session())
+        session = kw.pop("session", self.moto_session)
         return LocalEnv(str(ml_folder), str(cfg_file), session)
 
 
