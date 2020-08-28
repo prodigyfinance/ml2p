@@ -542,3 +542,130 @@ class TestEndpoint:
         cli_helper.invoke(
             ["endpoint", "wait", "endpoint-0-1-12"], output=[], cfg=cfg,
         )
+
+
+class TestNotebook:
+    def example_1(self):
+        notebook = {
+            "NotebookInstanceName": "my-models-notebook-test",
+            "InstanceType": "ml.t2.medium",
+            "RoleArn": "arn:aws:iam::12345:role/role-name",
+            "Tags": [{"Key": "ml2p-project", "Value": "my-models"}],
+            "LifecycleConfigName": "my-models-notebook-test-lifecycle-config",
+            "VolumeSizeInGB": 8,
+            "DirectInternetAccess": "Disabled",
+            "DefaultCodeRepository": None,
+            "NotebookInstanceStatus": "Pending",
+        }
+        lifecycle_cfg = {
+            "NotebookInstanceLifecycleConfigName": (
+                "my-models-notebook-test-lifecycle-config"
+            ),
+        }
+        cfg = {
+            "defaults": {
+                "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "role": "arn:aws:iam::12345:role/role-name",
+            },
+            "notebook": {"instance_type": "ml.t2.medium", "volume_size": 8},
+        }
+        return notebook, lifecycle_cfg, cfg
+
+    def test_help(self, cli_helper):
+        cli_helper.invoke(
+            ["notebook", "--help"],
+            output_startswith=[
+                "Usage: ml2p notebook [OPTIONS] COMMAND [ARGS]...",
+                "",
+                "  Create and manage notebooks.",
+            ],
+        )
+
+    def test_list_empty(self, cli_helper):
+        cli_helper.invoke(["notebook", "list"], output_jsonl=[])
+
+    def test_create_and_list(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "list"], output_jsonl=[notebook],
+        )
+        pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert pages == [{"NotebookInstanceLifecycleConfigs": [lifecycle_cfg]}]
+
+    def test_create_and_describe(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+        )
+        assert (
+            cli_helper.sagefaker.describe_notebook_instance_lifecycle_config(
+                NotebookInstanceLifecycleConfigName=(
+                    "my-models-notebook-test-lifecycle-config"
+                )
+            )
+            == lifecycle_cfg
+        )
+
+    def test_create_and_delete(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        pages = list(
+            cli_helper.sagefaker.get_paginator(
+                "list_notebook_instance_lifecycle_configs"
+            ).paginate()
+        )
+        assert pages == [{"NotebookInstanceLifecycleConfigs": []}]
+
+    def test_presigned_url(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "presigned-url", "notebook-test"],
+            output_jsonl=[
+                {"AuthorizedUrl": "https://example.com/my-models-notebook-test"}
+            ],
+            cfg=cfg,
+        )
+
+    def test_stop(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "stop", "notebook-test"], output_jsonl=[], cfg=cfg,
+        )
+        notebook["NotebookInstanceStatus"] = "Stopped"
+        cli_helper.invoke(
+            ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+        )
+
+    def test_start(self, cli_helper):
+        notebook, lifecycle_cfg, cfg = self.example_1()
+        cli_helper.invoke(
+            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+        )
+        cli_helper.invoke(
+            ["notebook", "start", "notebook-test"], output_jsonl=[], cfg=cfg,
+        )
+        notebook["NotebookInstanceStatus"] = "InService"
+        cli_helper.invoke(
+            ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+        )

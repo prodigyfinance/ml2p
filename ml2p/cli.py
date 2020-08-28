@@ -452,7 +452,7 @@ def endpoint_invoke(prj, endpoint_name, json_data):
 
 @ml2p.group("notebook")
 def notebook():
-    """ Create notebooks. """
+    """ Create and manage notebooks. """
 
 
 @notebook.command("list")
