@@ -21,7 +21,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = "ml2p"
-copyright = "2019, Prodigy Finance"
+copyright = "2018-2020, Prodigy Finance"
 author = "Prodigy Finance"
 
 # The full version, including alpha/beta/rc tags
@@ -148,8 +148,8 @@ texinfo_documents = [
         "ml2p Documentation",
         author,
         "ml2p",
-        "One line description of project.",
-        "Miscellaneous",
+        "A minimum-lovable machine-learning pipeline, built on top of AWS SageMaker.",
+        "Machine Learning",
     )
 ]
 
