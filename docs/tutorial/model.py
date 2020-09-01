@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 
-""" A simple regressor model (part of the ML2P tutorial).
+""" A model for predicting Boston house prices (part of the ML2P tutorial).
 """
 
 from ml2p.core import Model, ModelPredictor, ModelTrainer
 
 
-class RegressorTrainer(ModelTrainer):
+class BostonTrainer(ModelTrainer):
     def train(self):
         """ Train the model. """
 
 
-class RegressorPredictor(ModelPredictor):
+class BostonPredictor(ModelPredictor):
     def setup(self):
         """ Load the model. """
 
@@ -26,7 +26,7 @@ class RegressorPredictor(ModelPredictor):
         """
 
 
-class RegressorModel(Model):
+class BostonModel(Model):
 
-    TRAINER = RegressorTrainer
-    PREDICTOR = RegressorPredictor
+    TRAINER = BostonTrainer
+    PREDICTOR = BostonPredictor

@@ -1,7 +1,7 @@
 project: "ml2p-tutorial"
 s3folder: "s3://your-s3-bucket/"
 models:
-  bob: "models.RegressorModel"
+  boston: "models.BostonModel"
 defaults:
   image: "XXXXX.dkr.ecr.REGION.amazonaws.com/your-docker-image:X.Y.Z"
   role: "arn:aws:iam::XXXXX:role/your-role"
