@@ -12,7 +12,7 @@ Welcome to ml2p's documentation!
 
    overview
    install
-   quickstart
+   tutorial/index
    reference/index
    releases
 
