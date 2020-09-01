@@ -3,74 +3,116 @@
 Tutorial
 ========
 
+Welcome to ML2P! In this tutorial we'll take you through:
+
+* setting up your first project
+* uploading a training dataset to S3
+* training a model
+* deploying a model
+* making predictions
+
+Through out all of this we'll be working with the classic Boston house pricing
+dataset that is available within `scikit-learn <https://scikit-learn.org/>`_.
+
+
+Setting up your project
+-----------------------
+
+Before running ML2P you'll need to create:
+
+  * a docker image,
+  * a S3 bucket,
+  * and an AWS role
+
+yourself. ML2P does not manage these for you.
+
+Once you have the docker image, bucket and role set up, you are ready to
+create your ML2P configuration file. Save the follow as `ml2p.yml`:
+
+.. literalinclude:: ml2p.yml
+   :language: yaml
+   :emphasize-lines: 2,6-7
+   :linenos:
+
+The yellow high-lights show the lines where you'll need to fill in the details
+for the docker image, S3 bucket and AWS role.
+
+
+Initialize the ML2P project
+---------------------------
+
+You're now ready to run your first ML2P command!
+
+First set the AWS profile you'd like to use:
+
+.. code-block:: console
+
+   $ export AWS_PROFILE="my-profile"
+
+You'll need to set the `AWS_PROFILE` or otherwise provide your AWS credentials
+whenever you run an `ml2p` command.
+
+If you haven't initialized your project before, run:
+
+.. code-block:: console
+
+   $ ml2p init
+
+which will create the S3 model and dataset folder for you.
+
+Once you've run `ml2p init`,  ML2P have will created the following folder
+structure in your S3 bucket::
+
+  s3://your-s3-bucket/
+    models/
+      ... ml2p will place the outputs of your training jobs here ...
+    datasets/
+      ... ml2p will place your datasets here, the name of the
+          subfolder is the name of the dataset ...
+
+
+Creating a training dataset
+---------------------------
+
+First create a CSV file containing the Boston house prices that you'll be
+using to train your model. You can do this by saving the file below as
+`create_boston_prices_csv.py`:
+
+.. literalinclude:: create_boston_prices_csv.py
+    :language: python
+    :linenos:
+
+and running:
+
+.. code-block:: console
+
+   $ python create_boston_prices_csv.py
+
+This will write the file `house-prices.csv` to the current folder.
+
+Now create a training dataset and upload the CSV file to it:
+
+.. code-block:: console
+
+   $ ml2p dataset create boston-20200901
+   $ ml2p dataset up boston-20200901 house-prices.csv
+
+And check that the contents of the training dataset is as expected by
+listing the files in it:
+
+.. code-block:: console
+
+   $ ml2p dataset ls boston-20200901
+
+
+Training and deploying a model
+------------------------------
+
 The code for the model:
 
 .. literalinclude:: model.py
    :language: python
-   :emphasize-lines: 12,15-18
    :linenos:
-
-The ML2P configuration file:
-
-.. literalinclude:: ml2p.yml
-   :language: yaml
-   :linenos:
-
-
-Setting up your project
-=======================
-
-To set up your project you'll need to create:
-
-  * the docker image,
-  * the S3 bucket,
-  * and the AWS role
-
-yourself. ML2P does not manage these for you.
-
-When you run `ml2p init` (see below),  ML2P will create the following folder
-structure in your S3 bucket::
-
-  s3://my-project-bucket/
-    models/
-      ... ml2p with place the outputs of your training jobs here ...
-    datasets/
-      ... you should place your data sets here, the name of the
-          subfolder is the name of the data set ...
-
-
-Assumptions made by ML2P
-========================
-
-ML2P is minimal, opinionated and probably wrong in some cases. It currently assumes:
-
-* You want your datasets and models stored in the folder structure described above.
-
-* You've uploaded your training data to folders under `datasets/`.
-
-
-Training and deploying a model
-==============================
-
-First set the AWS profile you'd like to use::
-
-  $ export AWS_PROFILE="my-profile"
-
-If you haven't initialized your project before, run::
-
-  $ ml2p init
-
-which will create the S3 model and dataset folder for you.
-
-Now create a training dataset and upload data to it::
-
-  $ ml2p dataset create boston-20200901
-  $ ml2p dataset up boston-20200901 housing-prices.csv
-
-And check that the contents of the training dataset is as expected by
-listing the files in it::
-
-  $ ml2p dataset ls boston-20200901
 
 Next start a training job to train your model::
 
@@ -119,7 +161,7 @@ And you're done!
 
 
 Working with models locally
-===========================
+---------------------------
 
 At times it may be convenient to work with ML2P models on a local machine, rather than
 within SageMaker. ML2P supports both training models locally and loading models trained
