@@ -11,7 +11,7 @@ Welcome to ML2P! In this tutorial we'll take you through:
 * deploying a model
 * making predictions
 
-Through out all of this we'll be working with the classic Boston house pricing
+Through out all of this we'll be working with the classic Boston house prices
 dataset that is available within `scikit-learn <https://scikit-learn.org/>`_.
 
 
@@ -27,7 +27,7 @@ Before running ML2P you'll need to create:
 yourself. ML2P does not manage these for you.
 
 Once you have the docker image, bucket and role set up, you are ready to
-create your ML2P configuration file. Save the follow as `ml2p.yml`:
+create your ML2P configuration file. Save the following as `ml2p.yml`:
 
 .. literalinclude:: ml2p.yml
    :language: yaml
@@ -58,7 +58,7 @@ If you haven't initialized your project before, run:
 
    $ ml2p init
 
-which will create the S3 model and dataset folder for you.
+which will create the S3 model and dataset folders for you.
 
 Once you've run `ml2p init`,  ML2P have will created the following folder
 structure in your S3 bucket::
@@ -120,8 +120,8 @@ Next start a training job to train your model:
 
   $ ml2p training-job create boston-train boston-20200901 --model-type boston
 
-The first argument is the name of the training job, the second is name of the data
-set (i.e. the folder under ``/datasets/`` in your project's S3 bucket). You will need
+The first argument is the name of the training job, the second is name of the dataset
+(i.e. the folder under ``/datasets/`` in your project's S3 bucket). You will need
 to have uploaded some training data. The `--model-type` argument is optional -- the
 model type to use may also be specified directly in the docker image.
 
@@ -129,14 +129,14 @@ Wait for your training job to finish. To check up on it you can run:
 
 .. code-block:: console
 
-  $ ml2p training-job wait boston-train-  # wait for job to finish
-  $ ml2p training-job describe boston-train-  # inspect job
+  $ ml2p training-job wait boston-train  # wait for job to finish
+  $ ml2p training-job describe boston-train  # inspect job
 
 Once your training job is done, create a model from the output of the training job:
 
 .. code-block:: console
 
-  $ ml2p model create boston-model boston-train- --model-type boston
+  $ ml2p model create boston-model boston-train --model-type boston
 
 The first argument is the name of the model to create, the second is the training job
 the model should be created from.  The `--model-type` argument is optional -- the
