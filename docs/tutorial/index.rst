@@ -114,23 +114,29 @@ The code for the model:
    :language: python
    :linenos:
 
-Next start a training job to train your model::
+Next start a training job to train your model:
 
-  $ ml2p training-job create boston-train-6 boston-20190412 --model-type boston
+.. code-block:: console
+
+  $ ml2p training-job create boston-train boston-20200901 --model-type boston
 
 The first argument is the name of the training job, the second is name of the data
 set (i.e. the folder under ``/datasets/`` in your project's S3 bucket). You will need
 to have uploaded some training data. The `--model-type` argument is optional -- the
 model type to use may also be specified directly in the docker image.
 
-Wait for your training job to finish. To check up on it you can run::
+Wait for your training job to finish. To check up on it you can run:
 
-  $ ml2p training-job wait boston-train-6  # wait for job to finish
-  $ ml2p training-job describe boston-train-6  # inspect job
+.. code-block:: console
 
-Once your training job is done, create a model from the output of the training job::
+  $ ml2p training-job wait boston-train-  # wait for job to finish
+  $ ml2p training-job describe boston-train-  # inspect job
 
-  $ ml2p model create boston-model-6 boston-train-6 --model-type boston
+Once your training job is done, create a model from the output of the training job:
+
+.. code-block:: console
+
+  $ ml2p model create boston-model boston-train- --model-type boston
 
 The first argument is the name of the model to create, the second is the training job
 the model should be created from.  The `--model-type` argument is optional -- the
@@ -139,23 +145,29 @@ model type to use may also be specified directly in the docker image.
 The model is just an object in SageMaker -- it doesn't run any instances -- so it will be
 created immediately.
 
-Now its time to deploy your model by creating an endpoint for it::
+Now its time to deploy your model by creating an endpoint for it:
 
-  $ ml2p endpoint create boston-endpoint-6 --model-name boston-model-6
+.. code-block:: console
+
+  $ ml2p endpoint create boston-endpoint --model-name boston-model
 
 The first argument is the name of the endpoint to create, the second is the name of
 the model to create the endpoint from.
 
-Setting up the endpoint takes awhile. To check up on it you can run::
+Setting up the endpoint takes awhile. To check up on it you can run:
 
-  $ ml2p endpoint wait boston-endpoint-6  # wait for endpoint to be ready
-  $ ml2p endpoint describe boston-endpoint-6  # inspect endpoint
+.. code-block:: console
+
+  $ ml2p endpoint wait boston-endpoint  # wait for endpoint to be ready
+  $ ml2p endpoint describe boston-endpoint  # inspect endpoint
 
 Once the endpoint is ready, your model is deployed!
 
-You can make a test prediction using::
+You can make a test prediction using:
 
-  $ ml2p endpoint invoke boston-endpoint-6 '{"your": "data"}'
+.. code-block:: console
+
+  $ ml2p endpoint invoke boston-endpoint '{"your": "data"}'
 
 And you're done!
 
