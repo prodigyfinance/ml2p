@@ -2,7 +2,7 @@
 
 """ A model for predicting Boston house prices (part of the ML2P tutorial).
 """
-import json
+
 import jsonpickle
 
 import pandas as pd
@@ -21,19 +21,20 @@ class BostonTrainer(ModelTrainer):
         X = df.drop(columns="target")
         features = sorted(X.columns)
         X = X[features]
-        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
         model = LinearRegression().fit(X_train, y_train)
-        encoded_model = jsonpickle.encode(model)
         with (self.env.model_folder() / "boston-model.json").open("w") as f:
-            f.write(encoded_model)
+            f.write(jsonpickle.encode({"model": model, "features": features}))
 
 
 class BostonPredictor(ModelPredictor):
     def setup(self):
-        """ Load the model. """
-
+        """ Load the model.
+        """
         with (self.env.model_folder() / "boston-model.json").open("r") as f:
-            self.model = jsonpickle.decode(f.read())
+            data = jsonpickle.decode(f.read())
+            self.model = data["model"]
+            self.features = data["features"]
 
     def result(self, data):
         """ Perform a prediction on the given data and return the result.
@@ -44,8 +45,10 @@ class BostonPredictor(ModelPredictor):
             :returns dict:
                 The result of the prediction.
         """
-        result = self.model.predict(data)
-        return result
+        X = pd.DataFrame([data])
+        X = X[self.features]
+        price = self.model.predict(X)[0]
+        return {"predicted_price": price}
 
 
 class BostonModel(Model):
