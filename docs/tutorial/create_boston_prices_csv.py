@@ -12,7 +12,7 @@ def write_boston_csv(csv_name):
     boston = sklearn.datasets.load_boston()
     df = pandas.DataFrame(boston["data"], columns=boston["feature_names"])
     df["target"] = boston["target"]
-    df.to_csv(csv_name)
+    df.to_csv(csv_name, index=False)
 
 
 if __name__ == "__main__":
