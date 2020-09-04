@@ -174,7 +174,7 @@ SageMaker model from the output of the training job:
 The first argument is the name of the model to create, the second is the training job
 the model should be created from.
 
-The docker image to use is read from the `image` parameter in `ml2p.yml` so
+The Docker image to use is read from the `image` parameter in `ml2p.yml` so
 you don't have to specify it here.
 
 The model is just an object in SageMaker -- it doesn't run any instances -- so it will be
