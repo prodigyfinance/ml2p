@@ -11,7 +11,7 @@ Welcome to ML2P! In this tutorial we'll take you through:
 * deploying a model
 * making predictions
 
-Through out all of this we'll be working with the classic Boston house prices
+Throughout all of this we'll be working with the classic Boston house prices
 dataset that is available within `scikit-learn <https://scikit-learn.org/>`_.
 
 
