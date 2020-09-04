@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" A small script for creating a Boston house price data traing set.
+""" A small script for creating a Boston house price data training set.
 """
 
 import pandas

@@ -11,7 +11,7 @@ Welcome to ML2P! In this tutorial we'll take you through:
 * deploying a model
 * making predictions
 
-Through out all of this we'll be working with the classic Boston house prices
+Throughout all of this we'll be working with the classic Boston house prices
 dataset that is available within `scikit-learn <https://scikit-learn.org/>`_.
 
 
@@ -144,13 +144,13 @@ Later in the tutorial you will learn how to download a dataset directly from
 S3 for use in a local environment.
 
 Once your model works locally, you are ready to train it in SageMaker by
-creating an training job with:
+creating a training job with:
 
 .. code-block:: console
 
   $ ml2p training-job create boston-train boston-20200901 --model-type boston
 
-The first argument is the name of the training job, the second is name of the
+The first argument is the name of the training job, the second is the name of the
 dataset. You will need to have uploaded some training data. The `--model-type`
 argument is optional -- if you have only a single model defined in `ml2p.yml`,
 ML2P will automatically select that one for you.
@@ -174,13 +174,13 @@ SageMaker model from the output of the training job:
 The first argument is the name of the model to create, the second is the training job
 the model should be created from.
 
-The docker image to use is read from the `image` parameter in `ml2p.yml` so
+The Docker image to use is read from the `image` parameter in `ml2p.yml` so
 you don't have to specify it here.
 
 The model is just an object in SageMaker -- it doesn't run any instances -- so it will be
 created immediately.
 
-Now its time to deploy your model by creating an endpoint for it!
+Now it's time to deploy your model by creating an endpoint for it!
 
 
 Deploying a model
