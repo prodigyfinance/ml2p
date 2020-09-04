@@ -144,7 +144,7 @@ Later in the tutorial you will learn how to download a dataset directly from
 S3 for use in a local environment.
 
 Once your model works locally, you are ready to train it in SageMaker by
-creating an training job with:
+creating a training job with:
 
 .. code-block:: console
 
