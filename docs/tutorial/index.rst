@@ -150,7 +150,7 @@ creating a training job with:
 
   $ ml2p training-job create boston-train boston-20200901 --model-type boston
 
-The first argument is the name of the training job, the second is name of the
+The first argument is the name of the training job, the second is the name of the
 dataset. You will need to have uploaded some training data. The `--model-type`
 argument is optional -- if you have only a single model defined in `ml2p.yml`,
 ML2P will automatically select that one for you.
