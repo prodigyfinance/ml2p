@@ -20,6 +20,7 @@ def predict(env):
     predictor.setup()
     data = pd.read_csv("house-prices.csv")
     house = dict(data.iloc[0])
+    del house["target"]
     print("Making a prediction for:")
     print(house)
     result = predictor.invoke(house)
