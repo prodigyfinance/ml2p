@@ -1,0 +1,15 @@
+project: "ml2p-tutorial"
+s3folder: "s3://your-s3-bucket/"
+models:
+  boston: "models.BostonModel"
+defaults:
+  image: "XXXXX.dkr.ecr.REGION.amazonaws.com/your-docker-image:X.Y.Z"
+  role: "arn:aws:iam::XXXXX:role/your-role"
+train:
+  instance_type: "ml.m5.large"
+deploy:
+  instance_type: "ml.t2.medium"
+  record_invokes: true  # record predictions in the S3 bucket
+notebook:
+  instance_type: "ml.t2.medium"
+  volume_size: 8  # Size of the notebook server disk in GB
