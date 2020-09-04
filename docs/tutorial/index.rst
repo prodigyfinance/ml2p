@@ -180,7 +180,7 @@ you don't have to specify it here.
 The model is just an object in SageMaker -- it doesn't run any instances -- so it will be
 created immediately.
 
-Now its time to deploy your model by creating an endpoint for it!
+Now it's time to deploy your model by creating an endpoint for it!
 
 
 Deploying a model
