@@ -39,6 +39,36 @@ def endpoint_url_for_arn(endpoint_arn):
     )
 
 
+def mk_vpc_config(subcfg):
+    """ Parse VPC configuration for training job or model creation.
+    """
+    vpc_config = subcfg.get("vpc_config", None)
+    if vpc_config is None:
+        return None
+    if (
+        not isinstance(vpc_config, dict)
+        or not isinstance(vpc_config.get("security_groups"), list)
+        or not isinstance(vpc_config.get("subnets"), list)
+    ):
+        raise errors.ConfigError(
+            "The vpc_config requires a dictionary with keys 'security_groups'"
+            " and 'subnets'. Both the security_groups and subnets should contain lists"
+            " of IDs."
+        )
+    security_groups = vpc_config["security_groups"]
+    if not security_groups:
+        raise errors.ConfigError(
+            "The vpc_config must contain at least one security group id."
+        )
+    subnets = vpc_config["subnets"]
+    if not subnets:
+        raise errors.ConfigError("The vpc_config must contain at least one subnet id.")
+    return {
+        "SecurityGroupIds": security_groups,
+        "Subnets": subnets,
+    }
+
+
 def mk_training_job(prj, training_job, dataset, model_type=None):
     """ Return training job creation parameters. """
     model_path = prj.s3.url("/models/")
@@ -46,6 +76,10 @@ def mk_training_job(prj, training_job, dataset, model_type=None):
     extra_env = {}
     if model_type is not None:
         extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
+    extra_training_params = {}
+    vpc_config = mk_vpc_config(prj.train)
+    if vpc_config is not None:
+        extra_training_params["VpcConfig"] = vpc_config
     return {
         "TrainingJobName": prj.full_job_name(training_job),
         "AlgorithmSpecification": {
@@ -80,8 +114,7 @@ def mk_training_job(prj, training_job, dataset, model_type=None):
         "RoleArn": prj.train.role,
         "StoppingCondition": {"MaxRuntimeInSeconds": 60 * 60},
         "Tags": prj.tags(),
-        # TODO: specify security groups
-        # "VpcConfig": {"SecurityGroupIds": ["XXX"], "Subnets": ["XXX"]},
+        **extra_training_params,
     }
 
 
@@ -96,6 +129,10 @@ def mk_model(prj, model_name, training_job, model_type=None):
         extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
     if prj.deploy.get("record_invokes", False):
         extra_env["ML2P_RECORD_INVOKES"] = "true"
+    extra_model_params = {}
+    vpc_config = mk_vpc_config(prj.deploy)
+    if vpc_config is not None:
+        extra_model_params["VpcConfig"] = vpc_config
     return {
         "ModelName": prj.full_job_name(model_name),
         "PrimaryContainer": {
@@ -110,9 +147,8 @@ def mk_model(prj, model_name, training_job, model_type=None):
         },
         "ExecutionRoleArn": prj.deploy.role,
         "Tags": prj.tags(),
-        # TODO: specify security groups
-        # "VpcConfig": {"SecurityGroupIds": ["XXX"], "Subnets": ["XXX"]},
         "EnableNetworkIsolation": False,
+        **extra_model_params,
     }
 
 
