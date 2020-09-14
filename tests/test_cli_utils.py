@@ -184,6 +184,14 @@ class TestCliUtils:
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
         }
 
+    def test_mk_training_job_with_vpc_config(self, prj):
+        prj.train["vpc_config"] = {"security_groups": ["sg-1"], "subnets": ["net-2"]}
+        training_job_cfg = cli_utils.mk_training_job(prj, "training-job-1", "dataset-1")
+        assert training_job_cfg["VpcConfig"] == {
+            "SecurityGroupIds": ["sg-1"],
+            "Subnets": ["net-2"],
+        }
+
     def test_mk_training_job_with_model_type(self, prj):
         prj.models["model-type-1"] = "my.pkg.model"
         training_job_cfg = cli_utils.mk_training_job(
@@ -225,6 +233,14 @@ class TestCliUtils:
             "ExecutionRoleArn": "arn:aws:iam::111111111111:role/modelling-project",
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
             "EnableNetworkIsolation": False,
+        }
+
+    def test_mk_model_with_vpc_config(self, prj):
+        prj.deploy["vpc_config"] = {"security_groups": ["sg-1"], "subnets": ["net-2"]}
+        model_cfg = cli_utils.mk_model(prj, "model-1", "training-job-1")
+        assert model_cfg["VpcConfig"] == {
+            "SecurityGroupIds": ["sg-1"],
+            "Subnets": ["net-2"],
         }
 
     def test_mk_model_with_model_type(self, prj):
