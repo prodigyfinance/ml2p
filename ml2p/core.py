@@ -83,13 +83,38 @@ class S3URL:
         self._s3root = self._s3url.path.strip("/")
 
     def bucket(self):
+        """ Return the bucket of the S3 URL.
+
+            :rtype: str
+            :returns:
+                The bucket of the S3 URL.
+        """
         return self._s3url.netloc
 
     def path(self, suffix):
+        """ Return the base path of the S3 URL followed by a '/' and the
+            given suffix.
+
+            :param str suffix:
+                The suffix to append.
+
+            :rtype: str
+            :returns:
+                The path with the suffix appended.
+        """
         path = self._s3root + "/" + suffix.lstrip("/")
         return path.lstrip("/")  # handles empty s3root
 
     def url(self, suffix=""):
+        """ Return S3 URL followed by a '/' and the given suffix.
+
+            :param str suffix:
+                The suffix to append. Default: "".
+
+            :rtype: str
+            :returns:
+                The URL with the suffix appended.
+        """
         return "s3://{}/{}".format(self._s3url.netloc, self.path(suffix))
 
 

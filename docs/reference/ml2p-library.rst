@@ -3,6 +3,44 @@
 Library Reference
 =================
 
-.. todo::
-  Write the ml2p library reference. Most importantly, an ml2p.core reference
-  is needed for those writing model classes.
+ML2P Core
+---------
+
+.. automodule:: ml2p.core
+
+Models
+^^^^^^
+
+.. autoclass:: Model
+   :members:
+
+.. autoclass:: ModelTrainer
+   :members:
+
+.. autoclass:: ModelPredictor
+   :members:
+
+SageMakerEnv
+^^^^^^^^^^^^
+
+.. autoclass:: SageMakerEnv
+   :members:
+
+.. autoclass:: SageMakerEnvType
+  :members:
+
+  .. autoattribute:: TRAIN
+  .. autoattribute:: SERVE
+  .. autoattribute:: LOCAL
+
+LocalEnv
+^^^^^^^^
+
+.. autoclass:: LocalEnv
+   :members:
+
+S3URL
+^^^^^
+
+.. autoclass:: S3URL
+   :members:
