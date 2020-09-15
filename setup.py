@@ -23,7 +23,7 @@ setup(
             "isort",
             "pytest",
             "pytest-cov",
-            "radon",
+            "radon[flake8]",
             "tox",
             "moto",
         ]

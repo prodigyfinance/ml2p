@@ -241,6 +241,69 @@ You can make a test prediction using:
 Congratulations! You have trained and deployed your first model using ML2P!
 
 
+Security considerations
+-----------------------
+
+ML2P runs inside SageMaker, so authentication and authorization of prediction
+requests is managed using AWS IAM profiles and roles, but there are still
+some important things to consider:
+
+Roles
+^^^^^
+
+The `role` in `ml2p.yml` defines the permissions your training jobs and
+endpoints will assume while they run. Best practice is to have a role
+specific to each ML2P project and for that role to have only the permissions
+it requires.
+
+VPCs
+^^^^
+
+By default, SageMaker instances run outside of any AWS VPC. This means that
+the instances access other AWS services (e.g. downloading training data or a
+stored model from S3) via the public internet address of the service (the
+connection is encrypted and authenticated as usual) and that they have no
+special access to any other services you might be running inside a VPC.
+
+You can attach your SageMaker instances to a VPC by specifying a
+`vpc_config`:
+
+.. code-block:: yaml
+
+  vpc_config:
+    security_groups:
+      - "sg-XXXX"
+    subnets:
+      - "net-YYYY"
+
+This will do two things.
+
+Firstly, it will allow your SageMaker instances to
+access instances within the VPC (according to the subnet and security group
+rules).
+
+Secondly, it will prevent your SageMaker instances from accessing
+the public internet (unless allowed to by the security group or subnet rules).
+This second point means you may have to configure a VPC Endpoint to allow
+your SageMaker instances to access other AWS services such as S3.
+
+You can read more on how to `Give Endpoints Access to Resources in Your VPC`_
+and how to `Give Training Jobs Access to Resources in Your VPC`_ in the AWS
+SageMaker documentation.
+
+.. _Give Endpoints Access to Resources in Your VPC: https://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html
+.. _Give Training Jobs Access to Resources in Your VPC: https://docs.aws.amazon.com/sagemaker/latest/dg/train-vpc.html
+
+
+Prediction web requests
+^^^^^^^^^^^^^^^^^^^^^^^
+
+While your SageMaker instance is likely protected from unauthorised access,
+like any web API care should be taken when handling untrusted data. This
+includes any fields passed to the model that can be manipulated by an
+untrusted party (including, for example, emails or other text from customers).
+
+
 Working with models locally
 ---------------------------
 

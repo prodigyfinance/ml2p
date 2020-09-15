@@ -12,6 +12,11 @@ class NamingError(Exception):
     """
 
 
+class ConfigError(Exception):
+    """ Raised when the configuration in the ml2p project file is invalid.
+    """
+
+
 class LocalEnvError(Exception):
     """ Raised when an error specific to working with a local environment occurs.
     """

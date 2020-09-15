@@ -16,7 +16,7 @@ from ml2p.cli_utils import (
     training_job_name_for_model,
     validate_name,
 )
-from ml2p.errors import NamingError
+from ml2p.errors import ConfigError, NamingError
 
 
 @pytest.fixture
@@ -65,6 +65,81 @@ class TestCliUtils:
         )
         assert cli_utils.endpoint_url_for_arn("") is None
 
+    def test_mk_vpc_config_no_config(self, prj):
+        assert cli_utils.mk_vpc_config(prj.train) is None
+        assert cli_utils.mk_vpc_config(prj.deploy) is None
+
+    def test_mk_vpc_config_valid_config(self, prj):
+        prj.train["vpc_config"] = {"security_groups": ["a"], "subnets": ["b"]}
+        assert cli_utils.mk_vpc_config(prj.train) == {
+            "SecurityGroupIds": ["a"],
+            "Subnets": ["b"],
+        }
+
+    def test_mk_vpc_config_non_dict(self, prj):
+        prj.train["vpc_config"] = 5
+        with pytest.raises(ConfigError) as err:
+            cli_utils.mk_vpc_config(prj.train)
+        assert str(err.value) == (
+            "The vpc_config requires a dictionary with keys 'security_groups' and"
+            " 'subnets'. Both the security_groups and subnets should contain lists"
+            " of IDs."
+        )
+
+    def test_mk_vpc_config_missing_security_groups(self, prj):
+        prj.train["vpc_config"] = {"subnets": ["a"]}
+        with pytest.raises(ConfigError) as err:
+            cli_utils.mk_vpc_config(prj.train)
+        assert str(err.value) == (
+            "The vpc_config requires a dictionary with keys 'security_groups' and"
+            " 'subnets'. Both the security_groups and subnets should contain lists"
+            " of IDs."
+        )
+
+    def test_mk_vpc_config_non_list_security_groups(self, prj):
+        prj.train["vpc_config"] = {"security_groups": 5, "subnets": ["a"]}
+        with pytest.raises(ConfigError) as err:
+            cli_utils.mk_vpc_config(prj.train)
+        assert str(err.value) == (
+            "The vpc_config requires a dictionary with keys 'security_groups' and"
+            " 'subnets'. Both the security_groups and subnets should contain lists"
+            " of IDs."
+        )
+
+    def test_mk_vpc_config_empty_security_groups(self, prj):
+        prj.train["vpc_config"] = {"security_groups": [], "subnets": ["a"]}
+        with pytest.raises(ConfigError) as err:
+            cli_utils.mk_vpc_config(prj.train)
+        assert str(err.value) == (
+            "The vpc_config must contain at least one security group id."
+        )
+
+    def test_mk_vpc_config_missing_subnets(self, prj):
+        prj.train["vpc_config"] = {"security_groups": ["a"]}
+        with pytest.raises(ConfigError) as err:
+            cli_utils.mk_vpc_config(prj.train)
+        assert str(err.value) == (
+            "The vpc_config requires a dictionary with keys 'security_groups' and"
+            " 'subnets'. Both the security_groups and subnets should contain lists"
+            " of IDs."
+        )
+
+    def test_mk_vpc_config_non_list_subnets(self, prj):
+        prj.train["vpc_config"] = {"security_groups": ["a"], "subnets": 5}
+        with pytest.raises(ConfigError) as err:
+            cli_utils.mk_vpc_config(prj.train)
+        assert str(err.value) == (
+            "The vpc_config requires a dictionary with keys 'security_groups' and"
+            " 'subnets'. Both the security_groups and subnets should contain lists"
+            " of IDs."
+        )
+
+    def test_mk_vpc_config_empty_subnets(self, prj):
+        prj.train["vpc_config"] = {"security_groups": ["a"], "subnets": []}
+        with pytest.raises(ConfigError) as err:
+            cli_utils.mk_vpc_config(prj.train)
+        assert str(err.value) == ("The vpc_config must contain at least one subnet id.")
+
     def test_mk_training_job(self, prj):
         training_job_cfg = cli_utils.mk_training_job(prj, "training-job-1", "dataset-1")
         assert training_job_cfg == {
@@ -109,6 +184,14 @@ class TestCliUtils:
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
         }
 
+    def test_mk_training_job_with_vpc_config(self, prj):
+        prj.train["vpc_config"] = {"security_groups": ["sg-1"], "subnets": ["net-2"]}
+        training_job_cfg = cli_utils.mk_training_job(prj, "training-job-1", "dataset-1")
+        assert training_job_cfg["VpcConfig"] == {
+            "SecurityGroupIds": ["sg-1"],
+            "Subnets": ["net-2"],
+        }
+
     def test_mk_training_job_with_model_type(self, prj):
         prj.models["model-type-1"] = "my.pkg.model"
         training_job_cfg = cli_utils.mk_training_job(
@@ -150,6 +233,14 @@ class TestCliUtils:
             "ExecutionRoleArn": "arn:aws:iam::111111111111:role/modelling-project",
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
             "EnableNetworkIsolation": False,
+        }
+
+    def test_mk_model_with_vpc_config(self, prj):
+        prj.deploy["vpc_config"] = {"security_groups": ["sg-1"], "subnets": ["net-2"]}
+        model_cfg = cli_utils.mk_model(prj, "model-1", "training-job-1")
+        assert model_cfg["VpcConfig"] == {
+            "SecurityGroupIds": ["sg-1"],
+            "Subnets": ["net-2"],
         }
 
     def test_mk_model_with_model_type(self, prj):
