@@ -287,6 +287,14 @@ the public internet (unless allowed to by the security group or subnet rules).
 This second point means you may have to configure a VPC Endpoint to allow
 your SageMaker instances to access other AWS services such as S3.
 
+You can read more on how to `Give Endpoints Access to Resources in Your VPC`_
+and how to `Give Training Jobs Access to Resources in Your VPC`_ in the AWS
+SageMaker documentation.
+
+.. _Give Endpoints Access to Resources in Your VPC: https://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html
+.. _Give Training Jobs Access to Resources in Your VPC: https://docs.aws.amazon.com/sagemaker/latest/dg/train-vpc.html
+
+
 Prediction web requests
 ^^^^^^^^^^^^^^^^^^^^^^^
 
