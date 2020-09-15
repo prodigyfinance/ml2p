@@ -3,5 +3,6 @@
 ML2P Docker CLI Reference
 =========================
 
-.. todo::
-  Write the ml2p-docker CLI reference.
+.. click:: ml2p.docker:ml2p_docker
+   :prog: ml2p-docker
+   :nested: full
