@@ -27,11 +27,11 @@ SageMakerEnv
    :members:
 
 .. autoclass:: SageMakerEnvType
-  :members:
+   :members:
 
-  .. autoattribute:: TRAIN
-  .. autoattribute:: SERVE
-  .. autoattribute:: LOCAL
+   .. autoattribute:: TRAIN
+   .. autoattribute:: SERVE
+   .. autoattribute:: LOCAL
 
 LocalEnv
 ^^^^^^^^
