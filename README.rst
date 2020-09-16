@@ -57,27 +57,27 @@ by writing a small YAML file named `ml2p.yml`::
 
 This specifies:
 
-  * `project`: the name of your project
-  * `s3folder`: the S3 bucket that will hold the models and data sets for your
-    project
-  * `models`: a list of model names and the Python classes that will be used to
-    train the models and make predictions
-  * `defaults`:
+* `project`: the name of your project
+* `s3folder`: the S3 bucket that will hold the models and data sets for your
+  project
+* `models`: a list of model names and the Python classes that will be used to
+  train the models and make predictions
+* `defaults`:
 
-    * `image`: the docker image that your project will use for training and
-      prediction
-    * `role`: the AWS role your project will run under
+  * `image`: the docker image that your project will use for training and
+    prediction
+  * `role`: the AWS role your project will run under
 
-  * `train`:
+* `train`:
 
-    * `instance_type`: the AWS instance type that will be used when training
-      your model
+  * `instance_type`: the AWS instance type that will be used when training
+    your model
 
-  * `deploy`:
+* `deploy`:
 
-    * `instance_type`: the AWS instance type that will be used when deploying
-      your model
-    * `record_invokes`: whether to record prediction requests in S3
+  * `instance_type`: the AWS instance type that will be used when deploying
+    your model
+  * `record_invokes`: whether to record prediction requests in S3
 
 The name of your project functions as a prefix to the names of SageMaker training jobs,
 models and endpoints that ML2P creates (since these names are global within a SageMaker
@@ -89,4 +89,4 @@ ML2P also tags all of the AWS objects it creates with your project name.
 Tutorial
 ========
 
-See `./docs/tutorial/index.rst`_ for a step-by-step tutorial.
+See `<https://ml2p.readthedocs.io/en/latest/tutorial/>`_ for a step-by-step tutorial.
