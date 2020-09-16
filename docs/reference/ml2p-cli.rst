@@ -3,5 +3,6 @@
 ML2P CLI Reference
 ==================
 
-.. todo::
-  Write the ml2p CLI reference.
+.. click:: ml2p.cli:ml2p
+   :prog: ml2p
+   :nested: full
