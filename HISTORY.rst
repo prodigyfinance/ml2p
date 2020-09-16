@@ -1,6 +1,15 @@
 History
 =======
 
+0.2.0 (2020-09-16)
+------------------
+
+* Added reference documentation.
+* Added a tutorial.
+* Added tests for the ML2P command line utilities.
+* Added support for attaching training and deployment instances to VPCs.
+* Open sourced ML2P under the ISCL.
+
 0.1.5 (2020-06-12)
 ------------------
 

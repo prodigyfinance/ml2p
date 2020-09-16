@@ -4,7 +4,7 @@ setup(
     name="ml2p",
     version="0.1.5",
     url="http://github.com/prodigyfinance/ml2p",
-    license="Unknown",
+    license="ISCL",
     description=(
         "A minimum-lovable machine-learning pipeline, built on top of AWS SageMaker."
     ),
