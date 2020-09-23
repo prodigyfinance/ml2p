@@ -36,6 +36,14 @@ Install ML2P with::
   $ pip install ml2p
 
 
+Mailing list
+============
+
+If you have questions about ML2P, or would like to contribute or have
+suggestions for improvements, you are welcome to join the project mailing
+list at https://groups.google.com/g/ml2p and write us a letter there.
+
+
 Overview
 ========
 
