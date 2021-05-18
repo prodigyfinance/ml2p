@@ -13,7 +13,7 @@ setup(
     author_email="devops@prodigyfinance.com",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["boto3", "click<8", "Flask<2", "Flask-API<2", "PyYAML"],
+    install_requires=["boto3", "click<8", "Flask==1.1.4", "Flask-API<2", "PyYAML"],
     extras_require={
         "dev": [
             "black==19.10b0",
