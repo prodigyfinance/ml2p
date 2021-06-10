@@ -200,6 +200,11 @@ def mk_lifecycle_config(prj, notebook_name):
             on_start = f.read()
         on_start = base64.b64encode(on_start.encode("utf-8")).decode("utf-8")
         lifecycle_config["OnStart"] = [{"Content": on_start}]
+    if prj.notebook.get("on_create"):
+        with open(prj.notebook.on_create, "r") as f:
+            on_create = f.read()
+        on_create = base64.b64encode(on_create.encode("utf-8")).decode("utf-8")
+        lifecycle_config["OnCreate"] = [{"Content": on_create}]
     return lifecycle_config
 
 
