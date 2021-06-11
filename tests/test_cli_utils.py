@@ -40,6 +40,11 @@ def on_start_fixture():
         return f.read()
 
 
+def on_create_fixture():
+    with open(resource_filename("tests.fixture_files", "on_create.sh"), "rb") as f:
+        return f.read()
+
+
 class TestCliUtils:
     def test_date_to_string_serializer(self):
         value = datetime.datetime(1, 1, 1)
@@ -313,7 +318,7 @@ class TestCliUtils:
             "SecurityGroupIds": ["sg-1"],
         }
 
-    def test_mk_notebook_no_onstart(self, prj_no_vpc):
+    def test_mk_notebook_no_scripts(self, prj_no_vpc):
         notebook_cfg_no_vpc = cli_utils.mk_notebook(prj_no_vpc, "notebook-1")
         assert notebook_cfg_no_vpc == {
             "NotebookInstanceName": "modelling-project-notebook-1",
@@ -334,25 +339,38 @@ class TestCliUtils:
         notebook_cfg = cli_utils.mk_notebook(prj, "notebook-1")
         assert notebook_cfg["DirectInternetAccess"] == "Disabled"
 
-    def test_mk_lifecycle_config(self, prj):
+    def test_mk_lifecycle_config_on_start(self, prj):
         notebook_lifecycle_cfg = cli_utils.mk_lifecycle_config(prj, "notebook-1")
         assert (
             base64.b64decode(notebook_lifecycle_cfg["OnStart"][0]["Content"])
             == on_start_fixture()
         )
+
+    def test_mk_lifecycle_config_on_create(self, prj):
+        notebook_lifecycle_cfg = cli_utils.mk_lifecycle_config(prj, "notebook-1")
+        assert (
+            base64.b64decode(notebook_lifecycle_cfg["OnCreate"][0]["Content"])
+            == on_create_fixture()
+        )
+
+    def test_mk_lifecycle_config(self, prj):
+        notebook_lifecycle_cfg = cli_utils.mk_lifecycle_config(prj, "notebook-1")
         assert notebook_lifecycle_cfg == {
             "NotebookInstanceLifecycleConfigName": "modelling-project-"
             "notebook-1-lifecycle-config",
+            "OnCreate": [
+                {"Content": base64.b64encode(on_create_fixture()).decode("utf-8")}
+            ],
             "OnStart": [
-                {"Content": base64.b64encode(on_start_fixture()).decode("utf-8")}
+                {"Content": base64.b64encode(on_create_fixture()).decode("utf-8")}
             ],
         }
 
-    def test_mk_lifecycle_config_no_onstart(self, prj_no_vpc):
-        notebook_lifecycle_cfg_no_onstart = cli_utils.mk_lifecycle_config(
+    def test_mk_lifecycle_config_no_onstart_or_oncreate(self, prj_no_vpc):
+        notebook_lifecycle_cfg_no_scripts = cli_utils.mk_lifecycle_config(
             prj_no_vpc, "notebook-1"
         )
-        assert notebook_lifecycle_cfg_no_onstart == {
+        assert notebook_lifecycle_cfg_no_scripts == {
             "NotebookInstanceLifecycleConfigName": "modelling-project-"
             "notebook-1-lifecycle-config"
         }

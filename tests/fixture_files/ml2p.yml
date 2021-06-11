@@ -17,3 +17,4 @@ notebook:
     - "sg-1"
   subnet_id: "subnet-1"
   on_start: "./tests/fixture_files/on_start.sh"
+  on_create: "./tests/fixture_files/on_create.sh"
