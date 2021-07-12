@@ -1,6 +1,11 @@
 History
 =======
 
+0.2.3 (2021-07-12)
+------------------
+
+* Added the on-create feature to notebook servers.
+
 0.2.2 (2021-05-18)
 ------------------
 
