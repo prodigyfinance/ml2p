@@ -1,5 +1,9 @@
 History
 =======
+0.2.4 (2022-02-21)
+------------------
+
+* Unpin all dependencies to stay up to date with Pallets packages.
 
 0.2.3 (2021-07-12)
 ------------------
