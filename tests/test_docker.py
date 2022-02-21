@@ -169,6 +169,7 @@ class TestML2PDockerTrain:
         self.check_train(
             [
                 "Usage: ml2p-docker train [OPTIONS]",
+                "Try 'ml2p-docker train --help' for help.",
                 "",
                 "Error: The global parameter --model must either be given when calling"
                 " the train command or --model-type must be given when creating the"
@@ -258,11 +259,12 @@ class TestML2PDockerServe:
         )
         assert isinstance(docker_serve.app.predictor, HappyModelPredictor)
 
-    def test_serve_failure_no_model(self, docker_serve, sagemaker):
+    def test_serve_failure_no_model(self, sagemaker):
         sagemaker.serve()
         self.check_serve(
             [
                 "Usage: ml2p-docker serve [OPTIONS]",
+                "Try 'ml2p-docker serve --help' for help.",
                 "",
                 "Error: The global parameter --model must either be given when calling"
                 " the serve command or --model-type must be given when creating the"
