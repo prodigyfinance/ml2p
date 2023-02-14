@@ -9,7 +9,7 @@ import re
 
 import click
 
-from . import errors, hyperparameters
+from .. import errors, hyperparameters
 
 
 def date_to_string_serializer(value):
@@ -276,3 +276,20 @@ def model_name_for_endpoint(endpoint_name):
     grps = match.groupdict()
     grps["model_suffix"] = grps["model_suffix"] or ""
     return "{model}-{major}-{minor}-{patch}{model_suffix}".format(**grps)
+
+
+def validate_model_type(ctx, param, value):
+    """Custom validator for --model-type."""
+    model_types = ctx.obj.models.keys()
+    if value is not None:
+        if model_types and value not in model_types:
+            raise click.BadParameter("Unknown model type.")
+        return value
+    if len(model_types) == 0:
+        return None
+    if len(model_types) == 1:
+        return model_types[0]
+    raise click.BadParameter(
+        "Model type may only be omitted if zero or one models are listed in the ML2P"
+        " config YAML file."
+    )
