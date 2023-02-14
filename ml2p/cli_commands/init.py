@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" CLI for Minimal Lovable Machine Learning Pipeline. """
+""" CLI command for initializing ML2P projects. """
 
 import boto3
 import click

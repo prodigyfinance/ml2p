@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" CLI for Minimal Lovable Machine Learning Pipeline. """
+""" CLI commands for interating with SageMaker training jobs. """
 
 import click
 
