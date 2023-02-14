@@ -24,7 +24,7 @@ from .errors import LocalEnvError
 
 
 class ModellingProject:
-    """ Object for holding CLI context. """
+    """Object for holding CLI context."""
 
     def __init__(self, cfg):
         with open(cfg) as f:
@@ -44,7 +44,7 @@ class ModellingProject:
 
 
 class ModellingSubCfg:
-    """ Holder for training or deployment config. """
+    """Holder for training or deployment config."""
 
     def __init__(self, cfg, section, defaults="defaults"):
         self._cfg = cfg
@@ -76,51 +76,50 @@ class ModellingSubCfg:
 
 
 class S3URL:
-    """ A friendly interface to an S3 URL. """
+    """A friendly interface to an S3 URL."""
 
     def __init__(self, s3folder):
         self._s3url = urllib.parse.urlparse(s3folder)
         self._s3root = self._s3url.path.strip("/")
 
     def bucket(self):
-        """ Return the bucket of the S3 URL.
+        """Return the bucket of the S3 URL.
 
-            :rtype: str
-            :returns:
-                The bucket of the S3 URL.
+        :rtype: str
+        :returns:
+            The bucket of the S3 URL.
         """
         return self._s3url.netloc
 
     def path(self, suffix):
-        """ Return the base path of the S3 URL followed by a '/' and the
-            given suffix.
+        """Return the base path of the S3 URL followed by a '/' and the
+        given suffix.
 
-            :param str suffix:
-                The suffix to append.
+        :param str suffix:
+            The suffix to append.
 
-            :rtype: str
-            :returns:
-                The path with the suffix appended.
+        :rtype: str
+        :returns:
+            The path with the suffix appended.
         """
         path = self._s3root + "/" + suffix.lstrip("/")
         return path.lstrip("/")  # handles empty s3root
 
     def url(self, suffix=""):
-        """ Return S3 URL followed by a '/' and the given suffix.
+        """Return S3 URL followed by a '/' and the given suffix.
 
-            :param str suffix:
-                The suffix to append. Default: "".
+        :param str suffix:
+            The suffix to append. Default: "".
 
-            :rtype: str
-            :returns:
-                The URL with the suffix appended.
+        :rtype: str
+        :returns:
+            The URL with the suffix appended.
         """
         return "s3://{}/{}".format(self._s3url.netloc, self.path(suffix))
 
 
 class SageMakerEnvType(enum.Enum):
-    """ The type of SageMakerEnvironment.
-    """
+    """The type of SageMakerEnvironment."""
 
     TRAIN = "train"
     SERVE = "serve"
@@ -128,41 +127,41 @@ class SageMakerEnvType(enum.Enum):
 
 
 class SageMakerEnv:
-    """ An interface to the SageMaker docker environment.
+    """An interface to the SageMaker docker environment.
 
-        Attributes that are expected to be available in both training and serving
-        environments:
+    Attributes that are expected to be available in both training and serving
+    environments:
 
-        * `env_type` - Whether this is a training, serving or local environment
-          (type: ml2p.core.SageMakerEnvType).
+    * `env_type` - Whether this is a training, serving or local environment
+      (type: ml2p.core.SageMakerEnvType).
 
-        * `project` - The ML2P project name (type: str).
+    * `project` - The ML2P project name (type: str).
 
-        * `model_cls` - The fulled dotted Python name of the ml2p.core.Model class to
-          be used for training and prediction (type: str). This may be None if the
-          docker image itself specifies the name with `ml2p-docker --model ...`.
+    * `model_cls` - The fulled dotted Python name of the ml2p.core.Model class to
+      be used for training and prediction (type: str). This may be None if the
+      docker image itself specifies the name with `ml2p-docker --model ...`.
 
-        * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
+    * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
 
-        Attributes that are only expected to be available while training (and that will
-        be None when serving the model):
+    Attributes that are only expected to be available while training (and that will
+    be None when serving the model):
 
-        * `training_job_name` - The full job name of the training job (type: str).
+    * `training_job_name` - The full job name of the training job (type: str).
 
-        Attributes that are only expected to be available while serving the model (and
-        that will be None when serving the model):
+    Attributes that are only expected to be available while serving the model (and
+    that will be None when serving the model):
 
-        * `model_version` - The full job name of the deployed model, or None
-          during training (type: str).
+    * `model_version` - The full job name of the deployed model, or None
+      during training (type: str).
 
-        * `record_invokes` - Whether to store a record of each invocation of the
-          endpoint in S3 (type: bool).
+    * `record_invokes` - Whether to store a record of each invocation of the
+      endpoint in S3 (type: bool).
 
-        In the training environment settings are loaded from hyperparameters stored by
-        ML2P when the training job is created.
+    In the training environment settings are loaded from hyperparameters stored by
+    ML2P when the training job is created.
 
-        In the serving environment settings are loaded from environment variables stored
-        by ML2P when the model is created.
+    In the serving environment settings are loaded from environment variables stored
+    by ML2P when the model is created.
     """
 
     TRAIN = SageMakerEnvType.TRAIN
@@ -252,31 +251,31 @@ class SageMakerEnv:
 
 
 class LocalEnv(SageMakerEnv):
-    """ An interface to a local dummy of the SageMaker environment.
+    """An interface to a local dummy of the SageMaker environment.
 
-        :param str ml_folder:
-            The directory the environments files are stored in. An
-            error is raised if this directory does not exist. Files
-            and folders are created within this directory as needed.
-        :param str cfg:
-            The path to an ml2p.yml configuration file.
-        :param boto3.session.Session session:
-            A boto3 session object. Maybe be None if downloading files from
-            S3 is not required.
+    :param str ml_folder:
+        The directory the environments files are stored in. An
+        error is raised if this directory does not exist. Files
+        and folders are created within this directory as needed.
+    :param str cfg:
+        The path to an ml2p.yml configuration file.
+    :param boto3.session.Session session:
+        A boto3 session object. Maybe be None if downloading files from
+        S3 is not required.
 
-        Attributes that are expected to be available in the local environment:
+    Attributes that are expected to be available in the local environment:
 
-        * `env_type` - Whether this is a training, serving or local environment
-          (type: ml2p.core.SageMakerEnvType).
+    * `env_type` - Whether this is a training, serving or local environment
+      (type: ml2p.core.SageMakerEnvType).
 
-        * `project` - The ML2P project name (type: str).
+    * `project` - The ML2P project name (type: str).
 
-        * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
+    * `s3` - The URL of the project S3 bucket (type: ml2p.core.S3URL).
 
-        * `model_version` - The fixed value "local" (type: str).
+    * `model_version` - The fixed value "local" (type: str).
 
-        In the local environment settings are loaded directly from the ML2P
-        configuration file.
+    In the local environment settings are loaded directly from the ML2P
+    configuration file.
     """
 
     def __init__(self, ml_folder, cfg, session=None):
@@ -299,20 +298,20 @@ class LocalEnv(SageMakerEnv):
         }
 
     def clean_model_folder(self):
-        """ Remove and recreate the model folder.
+        """Remove and recreate the model folder.
 
-            This is useful to run before training a model if one wants to ensure
-            that the model folder is empty beforehand.
+        This is useful to run before training a model if one wants to ensure
+        that the model folder is empty beforehand.
         """
         model_folder = self.model_folder()
         shutil.rmtree(model_folder)
         model_folder.mkdir()
 
     def download_dataset(self, dataset):
-        """ Download the given dataset from S3 into the local environment.
+        """Download the given dataset from S3 into the local environment.
 
-            :param str dataset:
-                The name of the dataset in S3 to download.
+        :param str dataset:
+            The name of the dataset in S3 to download.
         """
         if self._session is None:
             raise LocalEnvError("Downloading datasets requires a boto session.")
@@ -334,10 +333,10 @@ class LocalEnv(SageMakerEnv):
                 bucket.download_fileobj(s3_object.key, f)
 
     def download_model(self, training_job):
-        """ Download the given trained model from S3 and unpack it into the local environment.
+        """Download the given trained model from S3 and unpack it into the local environment.
 
-            :param str training_job:
-                The name of the training job whose model should be downloaded.
+        :param str training_job:
+            The name of the training job whose model should be downloaded.
         """
         if self._session is None:
             raise LocalEnvError("Downloading models requires a boto session.")
@@ -361,10 +360,10 @@ class LocalEnv(SageMakerEnv):
 
 
 def import_string(name):
-    """ Import a class given its absolute name.
+    """Import a class given its absolute name.
 
-        :param str name:
-            The name of the model, e.g. mypackage.submodule.ModelTrainerClass.
+    :param str name:
+        The name of the model, e.g. mypackage.submodule.ModelTrainerClass.
     """
     modname, _, classname = name.rpartition(".")
     mod = importlib.import_module(modname)
@@ -372,29 +371,28 @@ def import_string(name):
 
 
 class ModelTrainer:
-    """ An interface that allows ml2p-docker to train models within SageMaker.
-    """
+    """An interface that allows ml2p-docker to train models within SageMaker."""
 
     def __init__(self, env):
         self.env = env
 
     def train(self):
-        """ Train the model.
+        """Train the model.
 
-            This method should:
+        This method should:
 
-            * Read training data (using self.env to determine where to read data from).
-            * Train the model.
-            * Write the model out (using self.env to determine where to write the model
-              to).
-            * Write out any validation or model analysis alongside the model.
+        * Read training data (using self.env to determine where to read data from).
+        * Train the model.
+        * Write the model out (using self.env to determine where to write the model
+          to).
+        * Write out any validation or model analysis alongside the model.
         """
         raise NotImplementedError("Sub-classes should implement .train()")
 
 
 class ModelPredictor:
-    """ An interface that allows ml2p-docker to make predictions from a model within
-        SageMaker.
+    """An interface that allows ml2p-docker to make predictions from a model within
+    SageMaker.
     """
 
     def __init__(self, env):
@@ -402,37 +400,37 @@ class ModelPredictor:
         self.s3_client = boto3.client("s3")
 
     def setup(self):
-        """ Called once before any calls to .predict(...) are made.
+        """Called once before any calls to .predict(...) are made.
 
-            This method should:
+        This method should:
 
-            * Load the model (using self.env to determine where to read the model from).
-            * Allocate any other resources needed in order to make predictions.
+        * Load the model (using self.env to determine where to read the model from).
+        * Allocate any other resources needed in order to make predictions.
         """
         pass
 
     def teardown(self):
-        """ Called once after all calls to .predict(...) have ended.
+        """Called once after all calls to .predict(...) have ended.
 
-            This method should:
+        This method should:
 
-            * Cleanup any resources acquired in .setup().
+        * Cleanup any resources acquired in .setup().
         """
         pass
 
     def invoke(self, data):
-        """ Invokes the model and returns the full result.
+        """Invokes the model and returns the full result.
 
-            :param dict data:
-                The input data the model is being invoked with.
-            :rtype: dict
-            :returns:
-                The result as a dictionary.
+        :param dict data:
+            The input data the model is being invoked with.
+        :rtype: dict
+        :returns:
+            The result as a dictionary.
 
-            By default this method results a dictionary containing:
+        By default this method results a dictionary containing:
 
-              * metadata: The result of calling .metadata().
-              * result: The result of calling .result(data).
+          * metadata: The result of calling .metadata().
+          * result: The result of calling .result(data).
         """
         prediction = {"metadata": self.metadata(), "result": self.result(data)}
         if self.env.record_invokes:
@@ -440,16 +438,16 @@ class ModelPredictor:
         return prediction
 
     def metadata(self):
-        """ Return metadata for a prediction that is about to be made.
+        """Return metadata for a prediction that is about to be made.
 
-            :rtype: dict
-            :returns:
-                The metadata as a dictionary.
+        :rtype: dict
+        :returns:
+            The metadata as a dictionary.
 
-            By default this method returns a dictionary containing:
+        By default this method returns a dictionary containing:
 
-              * model_version: The ML2P_MODEL_VERSION (str).
-              * timestamp: The UTC POSIX timestamp in seconds (float).
+          * model_version: The ML2P_MODEL_VERSION (str).
+          * timestamp: The UTC POSIX timestamp in seconds (float).
         """
         return {
             "model_version": self.env.model_version,
@@ -458,30 +456,30 @@ class ModelPredictor:
         }
 
     def result(self, data):
-        """ Make a prediction given the input data.
+        """Make a prediction given the input data.
 
-            :param dict data:
-                The input data to make a prediction from.
-            :rtype: dict
-            :returns:
-                The prediction result as a dictionary.
+        :param dict data:
+            The input data to make a prediction from.
+        :rtype: dict
+        :returns:
+            The prediction result as a dictionary.
         """
         raise NotImplementedError("Sub-classes should implement .result(...)")
 
     def batch_invoke(self, data):
-        """ Invokes the model on a batch of input data and returns the full result for
-            each instance.
+        """Invokes the model on a batch of input data and returns the full result for
+        each instance.
 
-            :param dict data:
-                The batch of input data the model is being invoked with.
-            :rtype: list
-            :returns:
-                The result as a list of dictionaries.
+        :param dict data:
+            The batch of input data the model is being invoked with.
+        :rtype: list
+        :returns:
+            The result as a list of dictionaries.
 
-            By default this method results a list of dictionaries containing:
+        By default this method results a list of dictionaries containing:
 
-              * metadata: The result of calling .metadata().
-              * result: The result of calling .batch_result(data).
+          * metadata: The result of calling .metadata().
+          * result: The result of calling .batch_result(data).
         """
         metadata = self.metadata()
         results = self.batch_result(data)
@@ -492,53 +490,53 @@ class ModelPredictor:
         return {"predictions": predictions}
 
     def batch_result(self, data):
-        """ Make a batch prediction given a batch of input data.
+        """Make a batch prediction given a batch of input data.
 
-            :param dict data:
-                The batch of input data to make a prediction from.
-            :rtype: list
-            :returns:
-                The list of predictions made for instance of the input data.
+        :param dict data:
+            The batch of input data to make a prediction from.
+        :rtype: list
+        :returns:
+            The list of predictions made for instance of the input data.
 
-            This method can be overrided for sub-classes in order to improve
-            performance of batch predictions.
+        This method can be overrided for sub-classes in order to improve
+        performance of batch predictions.
         """
         return [self.result(datum) for datum in data]
 
     def record_invoke_id(self, datum, prediction):
-        """ Return an id for an invocation record.
+        """Return an id for an invocation record.
 
-            :param dict datum:
-                The dictionary of input values passed when invoking the endpoint.
+        :param dict datum:
+            The dictionary of input values passed when invoking the endpoint.
 
-            :param dict result:
-                The prediction returned for datum by this predictor.
+        :param dict result:
+            The prediction returned for datum by this predictor.
 
-            :returns dict:
-                Returns an *ordered* dictionary of key-value pairs that make up
-                the unique identifier for the invocation request.
+        :returns dict:
+            Returns an *ordered* dictionary of key-value pairs that make up
+            the unique identifier for the invocation request.
 
-            By default this method returns a dictionary containing the following:
+        By default this method returns a dictionary containing the following:
 
-                * "ts": an ISO8601 formatted UTC timestamp.
-                * "uuid": a UUID4 unique identifier.
+            * "ts": an ISO8601 formatted UTC timestamp.
+            * "uuid": a UUID4 unique identifier.
 
-            Sub-classes may override this method to return their own identifiers,
-            but including these default identifiers is recommended.
+        Sub-classes may override this method to return their own identifiers,
+        but including these default identifiers is recommended.
 
-            The name of the record in S3 is determined by combining the key value pairs
-            with a dash ("-") and then separating each pair with a double dash ("--").
+        The name of the record in S3 is determined by combining the key value pairs
+        with a dash ("-") and then separating each pair with a double dash ("--").
         """
         return {"ts": datetime.datetime.utcnow().isoformat(), "uuid": str(uuid.uuid4())}
 
     def record_invoke(self, datum, prediction):
-        """ Store an invocation of the endpoint in the ML2P project S3 bucket.
+        """Store an invocation of the endpoint in the ML2P project S3 bucket.
 
-            :param dict datum:
-                The dictionary of input values passed when invoking the endpoint.
+        :param dict datum:
+            The dictionary of input values passed when invoking the endpoint.
 
-            :param dict result:
-                The prediction returned for datum by this predictor.
+        :param dict result:
+            The prediction returned for datum by this predictor.
         """
         invoke_id = self.record_invoke_id(datum, prediction)
         record_filename = (
@@ -555,12 +553,12 @@ class ModelPredictor:
 
 
 class Model:
-    """ A holder for a trainer and predictor.
+    """A holder for a trainer and predictor.
 
-        Sub-classes should:
+    Sub-classes should:
 
-        * Set the attribute TRAINER to a ModelTrainer sub-class.
-        * Set the attribute PREDICTOR to a ModelPredictor sub-class.
+    * Set the attribute TRAINER to a ModelTrainer sub-class.
+    * Set the attribute PREDICTOR to a ModelPredictor sub-class.
     """
 
     TRAINER = None

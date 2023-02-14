@@ -15,7 +15,7 @@ from .core import ModellingProject
 
 
 def validate_model_type(ctx, param, value):
-    """ Custom validator for --model-type. """
+    """Custom validator for --model-type."""
     model_types = ctx.obj.models.keys()
     if value is not None:
         if model_types and value not in model_types:
@@ -50,9 +50,9 @@ pass_prj = click.pass_obj
 @click.version_option(version=ml2p_version)
 @click.pass_context
 def ml2p(ctx, cfg):
-    """ Minimal Lovable Machine Learning Pipeline.
+    """Minimal Lovable Machine Learning Pipeline.
 
-        A friendlier interface to AWS SageMaker.
+    A friendlier interface to AWS SageMaker.
     """
     ctx.obj = ModellingProjectWithSagemakerClient(cfg=cfg)
 
@@ -60,7 +60,7 @@ def ml2p(ctx, cfg):
 @ml2p.command("init")
 @pass_prj
 def init(prj):
-    """ Initialize the project S3 bucket. """
+    """Initialize the project S3 bucket."""
     client = boto3.client("s3")
     client.put_object(
         Bucket=prj.s3.bucket(),
@@ -76,14 +76,13 @@ def init(prj):
 
 @ml2p.group("dataset")
 def dataset():
-    """ Create and manage datasets. """
+    """Create and manage datasets."""
 
 
 @dataset.command("list")
 @pass_prj
 def dataset_list(prj):
-    """ List datasets for this project.
-    """
+    """List datasets for this project."""
     client = boto3.client("s3")
     prefix = prj.s3.path("/datasets/")
     len_prefix = len(prefix)
@@ -99,8 +98,7 @@ def dataset_list(prj):
 @click.argument("dataset")
 @pass_prj
 def dataset_create(prj, dataset):
-    """ Create a dataset.
-    """
+    """Create a dataset."""
     validate_name(dataset, "dataset")
     client = boto3.client("s3")
     client.put_object(
@@ -116,15 +114,15 @@ def dataset_create(prj, dataset):
 @click.argument("dataset")
 @pass_prj
 def dataset_delete(prj, dataset):
-    """ Delete a dataset.
-    """
+    """Delete a dataset."""
     validate_name(dataset, "dataset")
     client = boto3.client("s3")
     prefix = prj.s3.path("/datasets/{}/".format(dataset))
     response = client.list_objects_v2(Bucket=prj.s3.bucket(), Prefix=prefix)
     objects_to_delete = [{"Key": item["Key"]} for item in response["Contents"]]
     client.delete_objects(
-        Bucket=prj.s3.bucket(), Delete={"Objects": objects_to_delete},
+        Bucket=prj.s3.bucket(),
+        Delete={"Objects": objects_to_delete},
     )
 
 
@@ -132,8 +130,7 @@ def dataset_delete(prj, dataset):
 @click.argument("dataset")
 @pass_prj
 def dataset_ls(prj, dataset):
-    """ List the contents of a dataset.
-    """
+    """List the contents of a dataset."""
     validate_name(dataset, "dataset")
     client = boto3.client("s3")
     prefix = prj.s3.path("/datasets/{}/".format(dataset))
@@ -151,9 +148,9 @@ def dataset_ls(prj, dataset):
 @click.argument("dst", required=False, default=None)
 @pass_prj
 def dataset_up(prj, dataset, src, dst):
-    """ Upload a file SRC to a dataset as DST.
+    """Upload a file SRC to a dataset as DST.
 
-        If DST is omitted, the source file is uploaded under its own name.
+    If DST is omitted, the source file is uploaded under its own name.
     """
     validate_name(dataset, "dataset")
     filepath = pathlib.Path(src)
@@ -179,9 +176,9 @@ def dataset_up(prj, dataset, src, dst):
 )
 @pass_prj
 def dataset_dn(prj, dataset, src, dst):
-    """ Download a file SRC from the dataset and save it in DST.
+    """Download a file SRC from the dataset and save it in DST.
 
-        If DST is omitted, the source file is downloaded as its own name.
+    If DST is omitted, the source file is downloaded as its own name.
     """
     validate_name(dataset, "dataset")
     if dst is None:
@@ -201,8 +198,7 @@ def dataset_dn(prj, dataset, src, dst):
 @click.argument("filename")
 @pass_prj
 def dataset_rm(prj, dataset, filename):
-    """ Delete a file from a dataset.
-    """
+    """Delete a file from a dataset."""
     validate_name(dataset, "dataset")
     client = boto3.client("s3")
     client.delete_object(
@@ -213,14 +209,13 @@ def dataset_rm(prj, dataset, filename):
 
 @ml2p.group("training-job")
 def training_job():
-    """ Create and inspect training jobs. """
+    """Create and inspect training jobs."""
 
 
 @training_job.command("list")
 @pass_prj
 def training_job_list(prj):
-    """ List training jobs for this project.
-    """
+    """List training jobs for this project."""
     paginator = prj.client.get_paginator("list_training_jobs")
     for page in paginator.paginate():
         for job in page["TrainingJobSummaries"]:
@@ -240,8 +235,7 @@ def training_job_list(prj):
 )
 @pass_prj
 def training_job_create(prj, training_job, dataset, model_type):
-    """ Create a training job.
-    """
+    """Create a training job."""
     validate_name(training_job, "training-job")
     training_job_params = cli_utils.mk_training_job(
         prj, training_job, dataset, model_type
@@ -254,8 +248,7 @@ def training_job_create(prj, training_job, dataset, model_type):
 @click.argument("training-job")
 @pass_prj
 def training_job_describe(prj, training_job):
-    """ Describe a training job.
-    """
+    """Describe a training job."""
     response = prj.client.describe_training_job(
         TrainingJobName=prj.full_job_name(training_job)
     )
@@ -266,8 +259,7 @@ def training_job_describe(prj, training_job):
 @click.argument("training-job")
 @pass_prj
 def training_job_wait(prj, training_job):
-    """ Wait for a training job to complete or stop.
-    """
+    """Wait for a training job to complete or stop."""
     waiter = prj.client.get_waiter("training_job_completed_or_stopped")
     waiter.wait(
         TrainingJobName=prj.full_job_name(training_job),
@@ -277,14 +269,13 @@ def training_job_wait(prj, training_job):
 
 @ml2p.group("model")
 def model():
-    """ Create and inspect models. """
+    """Create and inspect models."""
 
 
 @model.command("list")
 @pass_prj
 def model_list(prj):
-    """ List models for this project.
-    """
+    """List models for this project."""
     paginator = prj.client.get_paginator("list_models")
     for page in paginator.paginate():
         for job in page["Models"]:
@@ -312,8 +303,7 @@ def model_list(prj):
 )
 @pass_prj
 def model_create(prj, model_name, training_job, model_type):
-    """ Create a model.
-    """
+    """Create a model."""
     validate_name(model_name, "model")
     if training_job is None:
         training_job = cli_utils.training_job_name_for_model(model_name)
@@ -326,8 +316,7 @@ def model_create(prj, model_name, training_job, model_type):
 @click.argument("model-name")
 @pass_prj
 def model_delete(prj, model_name):
-    """ Delete a model.
-    """
+    """Delete a model."""
     full_model_name = prj.full_job_name(model_name)
     response = prj.client.delete_model(ModelName=full_model_name)
     click_echo_json(response)
@@ -337,22 +326,20 @@ def model_delete(prj, model_name):
 @click.argument("model-name")
 @pass_prj
 def model_describe(prj, model_name):
-    """ Describe a model.
-    """
+    """Describe a model."""
     response = prj.client.describe_model(ModelName=prj.full_job_name(model_name))
     click_echo_json(response)
 
 
 @ml2p.group("endpoint")
 def endpoint():
-    """ Create and inspect endpoints. """
+    """Create and inspect endpoints."""
 
 
 @endpoint.command("list")
 @pass_prj
 def endpoint_list(prj):
-    """ List endpoints for this project.
-    """
+    """List endpoints for this project."""
     paginator = prj.client.get_paginator("list_endpoints")
     for page in paginator.paginate():
         for job in page["Endpoints"]:
@@ -373,8 +360,7 @@ def endpoint_list(prj):
 )
 @pass_prj
 def endpoint_create(prj, endpoint_name, model_name):
-    """ Create an endpoint for a model.
-    """
+    """Create an endpoint for a model."""
     validate_name(endpoint_name, "endpoint")
     if model_name is None:
         model_name = cli_utils.model_name_for_endpoint(endpoint_name)
@@ -394,8 +380,7 @@ def endpoint_create(prj, endpoint_name, model_name):
 @click.argument("endpoint-name")
 @pass_prj
 def endpoint_delete(prj, endpoint_name):
-    """ Delete an endpoint.
-    """
+    """Delete an endpoint."""
     full_endpoint_name = prj.full_job_name(endpoint_name)
     full_endpoint_config_name = prj.full_job_name(endpoint_name) + "-config"
     response = prj.client.delete_endpoint(EndpointName=full_endpoint_name)
@@ -410,8 +395,7 @@ def endpoint_delete(prj, endpoint_name):
 @click.argument("endpoint-name")
 @pass_prj
 def endpoint_describe(prj, endpoint_name):
-    """ Describe an endpoint.
-    """
+    """Describe an endpoint."""
     response = prj.client.describe_endpoint(
         EndpointName=prj.full_job_name(endpoint_name)
     )
@@ -423,8 +407,7 @@ def endpoint_describe(prj, endpoint_name):
 @click.argument("endpoint-name")
 @pass_prj
 def endpoint_wait(prj, endpoint_name):
-    """ Wait for an endpoint to be ready or dead.
-    """
+    """Wait for an endpoint to be ready or dead."""
     waiter = prj.client.get_waiter("endpoint_in_service")
     waiter.wait(
         EndpointName=prj.full_job_name(endpoint_name),
@@ -437,8 +420,7 @@ def endpoint_wait(prj, endpoint_name):
 @click.argument("json-data")
 @pass_prj
 def endpoint_invoke(prj, endpoint_name, json_data):
-    """ Invoke an endpoint (i.e. make a prediction).
-    """
+    """Invoke an endpoint (i.e. make a prediction)."""
     client = boto3.client("sagemaker-runtime")
     response = client.invoke_endpoint(
         EndpointName=prj.full_job_name(endpoint_name),
@@ -452,7 +434,7 @@ def endpoint_invoke(prj, endpoint_name, json_data):
 
 @ml2p.group("notebook")
 def notebook():
-    """ Create and manage notebooks. """
+    """Create and manage notebooks."""
 
 
 @notebook.command("list")
@@ -469,8 +451,7 @@ def notebook_list(prj):
 @click.argument("notebook-name")
 @pass_prj
 def notebook_create(prj, notebook_name):
-    """ Create a notebook instance.
-    """
+    """Create a notebook instance."""
     notebook_instance_lifecycle_config = cli_utils.mk_lifecycle_config(
         prj, notebook_name
     )
@@ -491,8 +472,7 @@ def notebook_create(prj, notebook_name):
 @click.argument("notebook-name")
 @pass_prj
 def notebook_presigned_url(prj, notebook_name):
-    """ Create a URL to connect to the Jupyter server from a notebook instance.
-    """
+    """Create a URL to connect to the Jupyter server from a notebook instance."""
     response = prj.client.create_presigned_notebook_instance_url(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
@@ -503,8 +483,7 @@ def notebook_presigned_url(prj, notebook_name):
 @click.argument("notebook-name")
 @pass_prj
 def notebook_describe(prj, notebook_name):
-    """ Describe a notebook instance.
-    """
+    """Describe a notebook instance."""
     response = prj.client.describe_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
@@ -515,8 +494,7 @@ def notebook_describe(prj, notebook_name):
 @click.argument("notebook-name")
 @pass_prj
 def notebook_delete(prj, notebook_name):
-    """ Delete a notebook instance.
-    """
+    """Delete a notebook instance."""
     describe_response = prj.client.describe_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
@@ -546,8 +524,7 @@ def notebook_delete(prj, notebook_name):
 @click.argument("notebook-name")
 @pass_prj
 def notebook_stop(prj, notebook_name):
-    """ Stop a notebook instance.
-    """
+    """Stop a notebook instance."""
     prj.client.stop_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
@@ -557,8 +534,7 @@ def notebook_stop(prj, notebook_name):
 @click.argument("notebook-name")
 @pass_prj
 def notebook_start(prj, notebook_name):
-    """ Start a notebook instance.
-    """
+    """Start a notebook instance."""
     prj.client.start_notebook_instance(
         NotebookInstanceName=prj.full_job_name(notebook_name)
     )
@@ -566,13 +542,13 @@ def notebook_start(prj, notebook_name):
 
 @ml2p.group("repo")
 def repo():
-    """ Describe and list code repositories. """
+    """Describe and list code repositories."""
 
 
 @repo.command("list")
 @pass_prj
 def repo_list(prj):
-    """ List code repositories. """
+    """List code repositories."""
     paginator = prj.client.get_paginator("list_code_repositories")
     for page in paginator.paginate():
         for repo in page["CodeRepositorySummaryList"]:
@@ -584,8 +560,7 @@ def repo_list(prj):
 @click.argument("repo-name")
 @pass_prj
 def repo_describe(prj, repo_name):
-    """ Describe a code repository SageMaker resource.
-    """
+    """Describe a code repository SageMaker resource."""
     response = prj.client.describe_code_repository(
         CodeRepositoryName=prj.full_job_name(repo_name)
     )

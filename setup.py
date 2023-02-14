@@ -1,5 +1,20 @@
 from setuptools import find_packages, setup
 
+requirements = ["boto3", "click", "Flask", "Flask-API", "PyYAML"]
+
+def_requirements = [
+    "black",
+    "bumpversion",
+    "coverage",
+    "flake8",
+    "isort",
+    "pytest",
+    "pytest-cov",
+    "radon[flake8]",
+    "tox",
+    "moto",
+]
+
 setup(
     name="ml2p",
     version="0.2.4",
@@ -13,21 +28,8 @@ setup(
     author_email="devops@prodigyfinance.com",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["boto3", "click", "Flask", "Flask-API", "PyYAML"],
-    extras_require={
-        "dev": [
-            "black==19.10b0",
-            "bumpversion",
-            "coverage",
-            "flake8",
-            "isort",
-            "pytest",
-            "pytest-cov",
-            "radon[flake8]",
-            "tox",
-            "moto",
-        ]
-    },
+    install_requires=requirements,
+    extras_require={"dev": def_requirements},
     entry_points={
         "console_scripts": ["ml2p=ml2p.cli:ml2p", "ml2p-docker=ml2p.docker:ml2p_docker"]
     },
