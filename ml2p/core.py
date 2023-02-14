@@ -333,7 +333,8 @@ class LocalEnv(SageMakerEnv):
                 bucket.download_fileobj(s3_object.key, f)
 
     def download_model(self, training_job):
-        """Download the given trained model from S3 and unpack it into the local environment.
+        """Download the given trained model from S3 and unpack it into the local
+        environment.
 
         :param str training_job:
             The name of the training job whose model should be downloaded.
