@@ -2,13 +2,8 @@
 
 """ CLI for Minimal Lovable Machine Learning Pipeline. """
 
-import json
-import pathlib
-
-import boto3
 import click
 
-from ..core import ModellingProject
 from .utils import (
     click_echo_json,
     mk_model,
