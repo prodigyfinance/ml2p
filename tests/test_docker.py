@@ -74,7 +74,6 @@ class UnhappyModelTrainer(ModelTrainer):
 
 
 class HappyModelPredictor(ModelPredictor):
-
     setup_called = False
 
     def setup(self):
