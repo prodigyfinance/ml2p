@@ -7,7 +7,7 @@ import click
 
 
 @click.command("init")
-@click.pass_context
+@click.pass_obj
 def init(prj):
     """Initialize the project S3 bucket."""
     client = boto3.client("s3")
