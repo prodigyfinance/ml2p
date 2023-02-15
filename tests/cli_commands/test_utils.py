@@ -6,6 +6,7 @@ import base64
 import datetime
 from unittest.mock import patch
 
+import click
 import pytest
 from pkg_resources import resource_filename
 
@@ -449,3 +450,37 @@ class TestModelNameForEndpoint:
         with pytest.raises(NamingError) as err:
             utils.model_name_for_endpoint("not a valid endpoint name")
         assert str(err.value) == "Invalid endpoint name 'not a valid endpoint name'"
+
+
+class TestValidateModelType:
+    def test_value_in_model_types(self, cli_helper):
+        ctx = cli_helper.ctx(models={"model-1": "my_models.ml2p.Model1"})
+        assert utils.validate_model_type(ctx, "model_type", "model-1") == "model-1"
+
+    def test_value_not_in_model_types(self, cli_helper):
+        ctx = cli_helper.ctx(models={"model-1": "my_models.ml2p.Model1"})
+        with pytest.raises(click.BadParameter) as err:
+            utils.validate_model_type(ctx, "model_type", "model-2")
+        assert str(err.value) == "Unknown model type."
+
+    def test_value_is_none_no_model_types(self, cli_helper):
+        ctx = cli_helper.ctx(models={})
+        assert utils.validate_model_type(ctx, "model_type", None) is None
+
+    def test_value_is_none_single_model_type(self, cli_helper):
+        ctx = cli_helper.ctx(models={"model-1": "my_models.ml2p.Model1"})
+        assert utils.validate_model_type(ctx, "model_type", None) == "model-1"
+
+    def test_value_is_none_multiple_model_types(self, cli_helper):
+        ctx = cli_helper.ctx(
+            models={
+                "model-1": "my_models.ml2p.Model1",
+                "model-2": "my_models.ml2p.Model2",
+            }
+        )
+        with pytest.raises(click.BadParameter) as err:
+            utils.validate_model_type(ctx, "model_type", None)
+        assert str(err.value) == (
+            "Model type may only be omitted if zero or one models are listed"
+            " in the ML2P config YAML file."
+        )
