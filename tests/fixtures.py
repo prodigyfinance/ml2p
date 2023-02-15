@@ -2,7 +2,6 @@
 
 """ Pytest fixtures for tests. """
 
-import contextlib
 import datetime
 import json
 import os

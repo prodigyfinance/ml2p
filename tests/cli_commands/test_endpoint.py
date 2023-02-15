@@ -29,7 +29,7 @@ class TestEndpoint:
         )
 
     def test_list_empty(self, cli_helper):
-        with pytest.raises(RuntimeError) as err:
+        with pytest.raises(NotImplementedError) as err:
             cli_helper.invoke(["endpoint", "list"], output_jsonl=[])
         assert str(err.value) == "The list_endpoints action has not been implemented"
 
@@ -40,9 +40,10 @@ class TestEndpoint:
             cli_helper.invoke(["endpoint", "create", "endpoint-0-1-12"], cfg=cfg)
         )
         assert create_output["EndpointArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:endpoint/my-models-endpoint-0-1-12"
+            "arn:aws:sagemaker:eu-west-1:123456789012:"
+            "endpoint/my-models-endpoint-0-1-12"
         )
-        with pytest.raises(RuntimeError) as err:
+        with pytest.raises(NotImplementedError) as err:
             cli_helper.invoke(["endpoint", "list"], output_jsonl=[])
         assert str(err.value) == "The list_endpoints action has not been implemented"
 
@@ -55,7 +56,8 @@ class TestEndpoint:
         )
         assert describe_output["EndpointName"] == "my-models-endpoint-0-1-12"
         assert describe_output["EndpointArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:endpoint/my-models-endpoint-0-1-12"
+            "arn:aws:sagemaker:eu-west-1:123456789012:"
+            "endpoint/my-models-endpoint-0-1-12"
         )
         assert describe_output["EndpointConfigName"] == (
             "my-models-endpoint-0-1-12-config"
