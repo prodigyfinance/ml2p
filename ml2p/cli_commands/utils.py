@@ -314,7 +314,7 @@ def mk_processing_job(prj, dataset, model_type=None):
             }
         },
         "AppSpecification": {
-            "ImageUri": prj.train.image,
+            "ImageUri": prj.dataset.image,
             "ContainerArguments": ["generate-dataset"],
         },
         "Environment": {
@@ -324,7 +324,7 @@ def mk_processing_job(prj, dataset, model_type=None):
             **extra_env,
         },
         "NetworkConfig": {
-            "EnableInterContainerTrafficEncryption": True,
+            "EnableInterContainerTrafficEncryption": False,
             "EnableNetworkIsolation": True,
             **extra_network_params,
         },
