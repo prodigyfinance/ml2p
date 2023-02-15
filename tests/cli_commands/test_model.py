@@ -4,8 +4,6 @@
 
 import json
 
-import pytest
-
 
 class TestModel:
     def cfg(self):

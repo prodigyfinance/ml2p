@@ -4,15 +4,6 @@
 
 import json
 
-import click
-import pytest
-from click.testing import CliRunner
-
-from ml2p import __version__ as ml2p_version
-from ml2p import cli
-from ml2p.cli_commands import utils
-from ml2p.core import ModellingProject
-
 
 class TestTrainingJob:
     def cfg(self):
