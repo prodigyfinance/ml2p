@@ -7,7 +7,12 @@ import pathlib
 import boto3
 import click
 
-from .utils import click_echo_json, validate_name
+from .utils import (
+    click_echo_json,
+    mk_processing_job,
+    validate_model_type,
+    validate_name,
+)
 
 
 @click.group("dataset")
@@ -141,3 +146,21 @@ def dataset_rm(prj, dataset, filename):
         Bucket=prj.s3.bucket(),
         Key=prj.s3.path("/datasets/{}/{}".format(dataset, filename)),
     )
+
+
+@dataset.command("generate")
+@click.argument("dataset")
+@click.option(
+    "--model-type",
+    "-m",
+    default=None,
+    callback=validate_model_type,
+    help="The name of the type of model.",
+)
+@click.pass_obj
+def dataset_generate(prj, dataset, model_type):
+    """Delete a file from a dataset."""
+    validate_name(dataset, "dataset")
+    processing_job_params = mk_processing_job(prj, dataset, model_type)
+    response = prj.client.create_processing_job(**processing_job_params)
+    click_echo_json(response)
