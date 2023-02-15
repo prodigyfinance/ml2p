@@ -119,32 +119,6 @@ def sagemaker(tmpdir, monkeypatch, moto_session):
     )
 
 
-class MotoSageMakerFixture:
-    def __init__(self, monkeypatch):
-        self._monkeypatch = monkeypatch
-        self._orig_boto_client = boto3.client
-        self._sagefaker_client = SageFakerClient(aws_region=MOTO_TEST_REGION)
-        self._sagefaker_runtime_client = SageFakerRuntimeClient(self._sagefaker_client)
-
-    def mocked_client(self, service):
-        if service == "sagemaker":
-            return self._sagefaker_client
-        elif service == "sagemaker-runtime":
-            return self._sagefaker_runtime_client
-        return self._orig_boto_client(service)
-
-    @contextlib.contextmanager
-    def mock_sagemaker(self):
-        with self._monkeypatch.context() as mp:
-            mp.setattr(boto3, "client", self.mocked_client)
-            yield
-
-
-@pytest.fixture
-def moto_sagemaker(monkeypatch):
-    return MotoSageMakerFixture(monkeypatch)
-
-
 @pytest.fixture
 def moto_session(monkeypatch):
     for k in list(os.environ):
