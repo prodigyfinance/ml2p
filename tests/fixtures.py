@@ -17,8 +17,6 @@ import yaml
 from ml2p import hyperparameters
 from ml2p.core import LocalEnv, SageMakerEnv
 
-from .sagefaker import SageFakerClient, SageFakerRuntimeClient
-
 MOTO_TEST_REGION = "us-east-1"
 
 
