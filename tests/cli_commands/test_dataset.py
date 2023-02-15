@@ -2,8 +2,20 @@
 
 """ Tests for ml2p.cli_commands.dataset. """
 
+import json
+
 
 class TestDataset:
+    def cfg(self):
+        cfg = {
+            "defaults": {
+                "image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2",
+                "role": "arn:aws:iam::12345:role/role-name",
+            },
+            "dataset": {"instance_type": "ml.t2.medium", "volume_size": 8},
+        }
+        return cfg
+
     def test_help(self, cli_helper):
         cli_helper.invoke(
             ["dataset", "--help"],
@@ -80,3 +92,15 @@ class TestDataset:
         cli_helper.s3_put_object("my-models/datasets/ds-20201012/b.txt", b"bbb")
         cli_helper.invoke(["dataset", "rm", "ds-20201012", "a.txt"])
         assert cli_helper.s3_list_objects() == ["my-models/datasets/ds-20201012/b.txt"]
+
+    def test_generate(self, cli_helper):
+        cfg = self.cfg()
+        cli_helper.s3_create_bucket()
+        generate_output = json.loads(
+            cli_helper.invoke(["dataset", "generate", "ds-20201012"], cfg=cfg)
+        )
+        assert generate_output["ProcessingJobArn"] == (
+            "arn:aws:sagemaker:us-east-1:123456789012"
+            ":processing-job/my-models-ds-20201012"
+        )
+        assert generate_output["ResponseMetadata"]["HTTPStatusCode"] == 200
