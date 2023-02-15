@@ -18,7 +18,7 @@ from ml2p.errors import ClientError, ServerError
 
 
 def assert_cli_result(result, output, exit_code=0, exception=None):
-    """ Assert that a CliRunner invocation returned the expected results. """
+    """Assert that a CliRunner invocation returned the expected results."""
     assert result.exit_code == exit_code
     assert result.output.splitlines()[: len(output)] == output
     if exception is not None:
@@ -29,14 +29,14 @@ def assert_cli_result(result, output, exit_code=0, exception=None):
 
 
 def model_cls_path(model):
-    """ Return the dotted path name of a class. """
+    """Return the dotted path name of a class."""
     return "{}.{}".format(model.__module__, model.__qualname__)
 
 
 def check_train_or_serve(
     cmd, output, args=None, sagemaker=None, model=None, exit_code=0, exception=None
 ):
-    """ Invoke the train or serve command of ml2p_docker and check the result. """
+    """Invoke the train or serve command of ml2p_docker and check the result."""
     runner = CliRunner()
     cmd_args = []
     if sagemaker:
@@ -52,7 +52,7 @@ def check_train_or_serve(
 
 
 def assert_traceback(tb, expected):
-    """ Assert that a traceback matches a given pattern. """
+    """Assert that a traceback matches a given pattern."""
     pattern = re.escape(expected)
     pattern = pattern.replace(r"\.\.\.", '[^"]*')
     pattern = pattern.replace(r"XX", "[0-9]+")
@@ -74,7 +74,6 @@ class UnhappyModelTrainer(ModelTrainer):
 
 
 class HappyModelPredictor(ModelPredictor):
-
     setup_called = False
 
     def setup(self):
@@ -103,7 +102,7 @@ class UnhappyModel(Model):
 
 
 class DummyApp:
-    """ A dummy flask app. """
+    """A dummy flask app."""
 
     def __init__(self, runs):
         self._runs = runs

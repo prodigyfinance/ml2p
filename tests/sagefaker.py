@@ -8,15 +8,15 @@ import json
 
 
 class Paginator:
-    """ A fake paginator.
+    """A fake paginator.
 
-        :param str summary_title:
-            The key to store the list of items under in the page dictionary.
-        :param list items:
-            The list of items to paginate. Individual items are usually
-            dictionaries.
-        :param int per_page:
-            How many items to include in each page. Default: 2.
+    :param str summary_title:
+        The key to store the list of items under in the page dictionary.
+    :param list items:
+        The list of items to paginate. Individual items are usually
+        dictionaries.
+    :param int per_page:
+        How many items to include in each page. Default: 2.
     """
 
     def __init__(self, summary_title, items, per_page=2):
@@ -33,15 +33,15 @@ class Paginator:
 
 
 class Waiter:
-    """ A fake waiter.
+    """A fake waiter.
 
-        :param str selector_name:
-            The name of the keyword argument passed to .wait() that
-            will select the item to wait on.
-        :param function selector:
-            The function to retrieve the item to wait on. It should accept
-            a single argument (the value passed as selector_name) and return
-            the item or None if the item does not exist.
+    :param str selector_name:
+        The name of the keyword argument passed to .wait() that
+        will select the item to wait on.
+    :param function selector:
+        The function to retrieve the item to wait on. It should accept
+        a single argument (the value passed as selector_name) and return
+        the item or None if the item does not exist.
     """
 
     def __init__(self, selector_name, selector):
@@ -58,7 +58,7 @@ class Waiter:
 
 
 class SageFakerClient:
-    """ A fake SageMaker client. """
+    """A fake SageMaker client."""
 
     def __init__(self, aws_region):
         self._aws_region = aws_region
@@ -402,7 +402,7 @@ class SageFakerClient:
 
 
 class SageFakerRuntimeClient:
-    """ A fake SageMaker Runtime client. """
+    """A fake SageMaker Runtime client."""
 
     def __init__(self, sagefaker):
         self._sagefaker = sagefaker

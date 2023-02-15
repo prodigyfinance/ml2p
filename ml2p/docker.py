@@ -19,7 +19,7 @@ from .errors import APIError
 
 
 class ML2PAPI(FlaskAPI):
-    """ Improved error handling for ML2P API. """
+    """Improved error handling for ML2P API."""
 
     def __init__(self, *args, **kw):
         super(ML2PAPI, self).__init__(*args, **kw)
@@ -65,7 +65,7 @@ def ping():
 
 
 def pass_sagemaker_env(f):
-    """ Pass the current SageMakerEnv into a click command. """
+    """Pass the current SageMakerEnv into a click command."""
 
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
@@ -78,7 +78,7 @@ ML2POptions = collections.namedtuple("ML2POptions", ["model"])
 
 
 def pass_ml2p_docker_options(f):
-    """ Pass the group options into a click command. """
+    """Pass the group options into a click command."""
 
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
@@ -101,7 +101,7 @@ def pass_ml2p_docker_options(f):
 @click.version_option(version=ml2p_version)
 @click.pass_context
 def ml2p_docker(ctx, ml_folder, model):
-    """ ML2P Sagemaker Docker container helper CLI. """
+    """ML2P Sagemaker Docker container helper CLI."""
     ctx.ensure_object(dict)
     ctx.obj["env"] = env = SageMakerEnv(ml_folder)
     if model is None:
@@ -115,8 +115,7 @@ def ml2p_docker(ctx, ml_folder, model):
 @pass_sagemaker_env
 @pass_ml2p_docker_options
 def train(opt, env):
-    """ Train the model.
-    """
+    """Train the model."""
     if opt.model is None:
         raise click.UsageError(
             "The global parameter --model must either be given when calling the train"
@@ -137,8 +136,7 @@ def train(opt, env):
 @pass_sagemaker_env
 @pass_ml2p_docker_options
 def serve(opt, env, debug):
-    """ Serve the model and make predictions.
-    """
+    """Serve the model and make predictions."""
     if opt.model is None:
         raise click.UsageError(
             "The global parameter --model must either be given when calling the serve"

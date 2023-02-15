@@ -70,7 +70,9 @@ class CLIHelper:
             cfg = {}
         runner = CliRunner()
         result = runner.invoke(
-            cli.ml2p, ["--cfg", self.cfg(**cfg)] + args, catch_exceptions=False,
+            cli.ml2p,
+            ["--cfg", self.cfg(**cfg)] + args,
+            catch_exceptions=False,
         )
         if result.exception is not None:
             raise result.exception.with_traceback(result.exc_info[2])
@@ -322,7 +324,8 @@ class TestTrainingJob:
 
     def test_list_empty(self, cli_helper):
         cli_helper.invoke(
-            ["training-job", "list"], output_jsonl=[],
+            ["training-job", "list"],
+            output_jsonl=[],
         )
 
     def test_create_and_list(self, cli_helper):
@@ -333,7 +336,8 @@ class TestTrainingJob:
             cfg=cfg,
         )
         cli_helper.invoke(
-            ["training-job", "list"], output_jsonl=[training_job],
+            ["training-job", "list"],
+            output_jsonl=[training_job],
         )
 
     def test_create_and_describe(self, cli_helper):
@@ -344,7 +348,8 @@ class TestTrainingJob:
             cfg=cfg,
         )
         cli_helper.invoke(
-            ["training-job", "describe", "tj-0-1-11"], output_jsonl=[training_job],
+            ["training-job", "describe", "tj-0-1-11"],
+            output_jsonl=[training_job],
         )
 
     def test_create_and_wait(self, cli_helper):
@@ -355,7 +360,8 @@ class TestTrainingJob:
             cfg=cfg,
         )
         cli_helper.invoke(
-            ["training-job", "wait", "tj-0-1-11"], output=[],
+            ["training-job", "wait", "tj-0-1-11"],
+            output=[],
         )
 
 
@@ -399,34 +405,45 @@ class TestModel:
 
     def test_list_empty(self, cli_helper):
         cli_helper.invoke(
-            ["model", "list"], output_jsonl=[],
+            ["model", "list"],
+            output_jsonl=[],
         )
 
     def test_create_and_list(self, cli_helper):
         model, cfg = self.example_1()
         cli_helper.invoke(
-            ["model", "create", "mdl-0-1-12"], output_jsonl=[model], cfg=cfg,
+            ["model", "create", "mdl-0-1-12"],
+            output_jsonl=[model],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["model", "list"], output_jsonl=[model],
+            ["model", "list"],
+            output_jsonl=[model],
         )
 
     def test_create_and_describe(self, cli_helper):
         model, cfg = self.example_1()
         cli_helper.invoke(
-            ["model", "create", "mdl-0-1-12"], output_jsonl=[model], cfg=cfg,
+            ["model", "create", "mdl-0-1-12"],
+            output_jsonl=[model],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["model", "describe", "mdl-0-1-12"], output_jsonl=[model],
+            ["model", "describe", "mdl-0-1-12"],
+            output_jsonl=[model],
         )
 
     def test_create_and_delete(self, cli_helper):
         model, cfg = self.example_1()
         cli_helper.invoke(
-            ["model", "create", "mdl-0-1-12"], output_jsonl=[model], cfg=cfg,
+            ["model", "create", "mdl-0-1-12"],
+            output_jsonl=[model],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["model", "delete", "mdl-0-1-12"], output_jsonl=[model], cfg=cfg,
+            ["model", "delete", "mdl-0-1-12"],
+            output_jsonl=[model],
+            cfg=cfg,
         )
 
 
@@ -479,10 +496,13 @@ class TestEndpoint:
     def test_create_and_list(self, cli_helper):
         endpoint, endpoint_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+            ["endpoint", "create", "endpoint-0-1-12"],
+            output_jsonl=[endpoint],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["endpoint", "list"], output_jsonl=[endpoint],
+            ["endpoint", "list"],
+            output_jsonl=[endpoint],
         )
         pages = list(
             cli_helper.sagefaker.get_paginator("list_endpoint_configs").paginate()
@@ -492,7 +512,9 @@ class TestEndpoint:
     def test_create_and_describe(self, cli_helper):
         endpoint, endpoint_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+            ["endpoint", "create", "endpoint-0-1-12"],
+            output_jsonl=[endpoint],
+            cfg=cfg,
         )
         endpoint_with_url = dict(
             **endpoint,
@@ -515,7 +537,9 @@ class TestEndpoint:
     def test_create_and_delete(self, cli_helper):
         endpoint, endpoint_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+            ["endpoint", "create", "endpoint-0-1-12"],
+            output_jsonl=[endpoint],
+            cfg=cfg,
         )
         cli_helper.invoke(
             ["endpoint", "delete", "endpoint-0-1-12"],
@@ -526,7 +550,9 @@ class TestEndpoint:
     def test_create_and_invoke(self, cli_helper):
         endpoint, endpoint_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+            ["endpoint", "create", "endpoint-0-1-12"],
+            output_jsonl=[endpoint],
+            cfg=cfg,
         )
         cli_helper.invoke(
             ["endpoint", "invoke", "endpoint-0-1-12", json.dumps({"j": "son"})],
@@ -537,10 +563,14 @@ class TestEndpoint:
     def test_create_and_wait(self, cli_helper):
         endpoint, endpoint_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["endpoint", "create", "endpoint-0-1-12"], output_jsonl=[endpoint], cfg=cfg,
+            ["endpoint", "create", "endpoint-0-1-12"],
+            output_jsonl=[endpoint],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["endpoint", "wait", "endpoint-0-1-12"], output=[], cfg=cfg,
+            ["endpoint", "wait", "endpoint-0-1-12"],
+            output=[],
+            cfg=cfg,
         )
 
 
@@ -599,10 +629,13 @@ class TestNotebook:
     def test_create_and_list(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["notebook", "list"], output_jsonl=[notebook],
+            ["notebook", "list"],
+            output_jsonl=[notebook],
         )
         pages = list(
             cli_helper.sagefaker.get_paginator(
@@ -614,10 +647,13 @@ class TestNotebook:
     def test_create_and_list_with_repo_url(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_2_repo_url()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["notebook", "list"], output_jsonl=[notebook],
+            ["notebook", "list"],
+            output_jsonl=[notebook],
         )
         pages = list(
             cli_helper.sagefaker.get_paginator(
@@ -629,10 +665,13 @@ class TestNotebook:
     def test_create_and_describe(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+            ["notebook", "describe", "notebook-test"],
+            output_jsonl=[notebook],
         )
         assert (
             cli_helper.sagefaker.describe_notebook_instance_lifecycle_config(
@@ -646,10 +685,14 @@ class TestNotebook:
     def test_create_and_delete(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "delete", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         pages = list(
             cli_helper.sagefaker.get_paginator(
@@ -661,14 +704,20 @@ class TestNotebook:
     def test_create_and_delete_while_in_service(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["notebook", "start", "notebook-test"], output_jsonl=[], cfg=cfg,
+            ["notebook", "start", "notebook-test"],
+            output_jsonl=[],
+            cfg=cfg,
         )
         notebook["NotebookInstanceStatus"] = "Stopped"
         cli_helper.invoke(
-            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "delete", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         pages = list(
             cli_helper.sagefaker.get_paginator(
@@ -680,10 +729,14 @@ class TestNotebook:
     def test_create_and_delete_with_repo(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_2_repo_url()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["notebook", "delete", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "delete", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         lifecycle_pages = list(
             cli_helper.sagefaker.get_paginator(
@@ -699,7 +752,9 @@ class TestNotebook:
     def test_presigned_url(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
             ["notebook", "presigned-url", "notebook-test"],
@@ -712,27 +767,37 @@ class TestNotebook:
     def test_stop(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["notebook", "stop", "notebook-test"], output_jsonl=[], cfg=cfg,
+            ["notebook", "stop", "notebook-test"],
+            output_jsonl=[],
+            cfg=cfg,
         )
         notebook["NotebookInstanceStatus"] = "Stopped"
         cli_helper.invoke(
-            ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+            ["notebook", "describe", "notebook-test"],
+            output_jsonl=[notebook],
         )
 
     def test_start(self, cli_helper):
         notebook, lifecycle_cfg, cfg = self.example_1()
         cli_helper.invoke(
-            ["notebook", "create", "notebook-test"], output_jsonl=[notebook], cfg=cfg,
+            ["notebook", "create", "notebook-test"],
+            output_jsonl=[notebook],
+            cfg=cfg,
         )
         cli_helper.invoke(
-            ["notebook", "start", "notebook-test"], output_jsonl=[], cfg=cfg,
+            ["notebook", "start", "notebook-test"],
+            output_jsonl=[],
+            cfg=cfg,
         )
         notebook["NotebookInstanceStatus"] = "InService"
         cli_helper.invoke(
-            ["notebook", "describe", "notebook-test"], output_jsonl=[notebook],
+            ["notebook", "describe", "notebook-test"],
+            output_jsonl=[notebook],
         )
 
 
@@ -760,19 +825,22 @@ class TestRepo:
 
     def test_list_empty(self, cli_helper):
         cli_helper.invoke(
-            ["repo", "list"], output_jsonl=[],
+            ["repo", "list"],
+            output_jsonl=[],
         )
 
     def test_list(self, cli_helper):
         repo = self.example_1()
         cli_helper.sagefaker.create_code_repository(**repo)
         cli_helper.invoke(
-            ["repo", "list"], output_jsonl=[repo],
+            ["repo", "list"],
+            output_jsonl=[repo],
         )
 
     def test_describe(self, cli_helper):
         repo = self.example_1()
         cli_helper.sagefaker.create_code_repository(**repo)
         cli_helper.invoke(
-            ["repo", "describe", "repo-1234"], output_jsonl=[repo],
+            ["repo", "describe", "repo-1234"],
+            output_jsonl=[repo],
         )

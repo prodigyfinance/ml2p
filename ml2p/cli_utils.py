@@ -13,19 +13,19 @@ from . import errors, hyperparameters
 
 
 def date_to_string_serializer(value):
-    """ JSON serializer for datetime objects. """
+    """JSON serializer for datetime objects."""
     if isinstance(value, datetime.datetime):
         return str(value)
     raise TypeError("Serializing {!r} to JSON not supported.".format(value))
 
 
 def click_echo_json(response):
-    """ Echo JSON via click.echo. """
+    """Echo JSON via click.echo."""
     click.echo(json.dumps(response, indent=2, default=date_to_string_serializer))
 
 
 def endpoint_url_for_arn(endpoint_arn):
-    """ Return the URL for an endpoint ARN. """
+    """Return the URL for an endpoint ARN."""
     match = re.match(
         r"^arn:aws:sagemaker:(?P<region>[^:]*):(?P<account>[^:]*):"
         r"endpoint/(?P<endpoint>.*)$",
@@ -40,8 +40,7 @@ def endpoint_url_for_arn(endpoint_arn):
 
 
 def mk_vpc_config(subcfg):
-    """ Parse VPC configuration for training job or model creation.
-    """
+    """Parse VPC configuration for training job or model creation."""
     vpc_config = subcfg.get("vpc_config", None)
     if vpc_config is None:
         return None
@@ -70,7 +69,7 @@ def mk_vpc_config(subcfg):
 
 
 def mk_training_job(prj, training_job, dataset, model_type=None):
-    """ Return training job creation parameters. """
+    """Return training job creation parameters."""
     model_path = prj.s3.url("/models/")
     train_path = prj.s3.url("/datasets/" + dataset)
     extra_env = {}
@@ -119,7 +118,7 @@ def mk_training_job(prj, training_job, dataset, model_type=None):
 
 
 def mk_model(prj, model_name, training_job, model_type=None):
-    """ Return model creation parameters. """
+    """Return model creation parameters."""
     model_path = prj.s3.url("/models")
     model_tgz_path = (
         model_path + "/" + prj.full_job_name(training_job) + "/output/model.tar.gz"
@@ -153,7 +152,7 @@ def mk_model(prj, model_name, training_job, model_type=None):
 
 
 def mk_endpoint_config(prj, endpoint_name, model_name):
-    """ Return endpoint config creation parameters. """
+    """Return endpoint config creation parameters."""
     return {
         "EndpointConfigName": prj.full_job_name(endpoint_name) + "-config",
         "ProductionVariants": [
@@ -170,7 +169,7 @@ def mk_endpoint_config(prj, endpoint_name, model_name):
 
 
 def mk_notebook(prj, notebook_name, repo_name=None):
-    """ Return a notebook configuration. """
+    """Return a notebook configuration."""
     notebook_params = {
         "NotebookInstanceName": prj.full_job_name(notebook_name),
         "InstanceType": prj.notebook.instance_type,
@@ -190,7 +189,7 @@ def mk_notebook(prj, notebook_name, repo_name=None):
 
 
 def mk_lifecycle_config(prj, notebook_name):
-    """ Return a notebook instance lifecycle configuration. """
+    """Return a notebook instance lifecycle configuration."""
     lifecycle_config = {
         "NotebookInstanceLifecycleConfigName": prj.full_job_name(notebook_name)
         + "-lifecycle-config"
@@ -209,7 +208,7 @@ def mk_lifecycle_config(prj, notebook_name):
 
 
 def mk_repo(prj, repo_name):
-    """ Return parameters for creating a repo. """
+    """Return parameters for creating a repo."""
     return {
         "CodeRepositoryName": prj.full_job_name(repo_name),
         "GitConfig": {
@@ -239,14 +238,14 @@ VALIDATION_REGEXES = {
 
 
 def validate_name(name, resource):
-    """ Validate that the name of the SageMaker resource complies with
-        convention.
+    """Validate that the name of the SageMaker resource complies with
+    convention.
 
-        :param str name:
-            The name of the SageMaker resource to validate.
-        :param str resource:
-            The type of SageMaker resource to validate. One of "dataset",
-            "training-job", "model", "endpoint".
+    :param str name:
+        The name of the SageMaker resource to validate.
+    :param str resource:
+        The type of SageMaker resource to validate. One of "dataset",
+        "training-job", "model", "endpoint".
     """
     message_dict = {
         "dataset": "Dataset names should be in the format <model-name>-YYYYMMDD",
@@ -261,7 +260,7 @@ def validate_name(name, resource):
 
 
 def training_job_name_for_model(model_name):
-    """ Return a default training job name for the given model. """
+    """Return a default training job name for the given model."""
     match = re.match(VALIDATION_REGEXES["model"], model_name)
     if match is None:
         raise errors.NamingError("Invalid model name {!r}".format(model_name))
@@ -270,7 +269,7 @@ def training_job_name_for_model(model_name):
 
 
 def model_name_for_endpoint(endpoint_name):
-    """ Return a default model name for the given endpoint. """
+    """Return a default model name for the given endpoint."""
     match = re.match(VALIDATION_REGEXES["endpoint"], endpoint_name)
     if match is None:
         raise errors.NamingError("Invalid endpoint name {!r}".format(endpoint_name))
