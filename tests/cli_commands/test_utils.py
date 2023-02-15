@@ -381,6 +381,37 @@ class TestCliUtils:
             },
         }
 
+    def test_mk_processing_job(self, prj):
+        processing_job_cfg = utils.mk_processing_job(prj, "my-dataset-2022-12-25")
+        assert processing_job_cfg == {
+            "ProcessingJobName": "modelling-project-my-dataset-2022-12-25",
+            "ProcessingResources": {
+                "ClusterConfig": {
+                    "InstanceCount": 1,
+                    "InstanceType": "ml.m5.2xlarge",
+                    "VolumeSizeInGB": 20,
+                }
+            },
+            "AppSpecification": {
+                "ImageUri": "123456789012.dkr.ecr.eu-west-1.amazonaws.com"
+                "/modelling-project-sagemaker:latest",
+                "ContainerArguments": ["generate-dataset"],
+            },
+            "Environment": {
+                "ML2P_DATASET": "modelling-project-my-dataset-2022-12-25",
+                "ML2P_PROJECT": "modelling-project",
+                "ML2P_S3_URL": "s3://prodigyfinance-modelling-"
+                "project-sagemaker-production/",
+            },
+            "NetworkConfig": {
+                "EnableInterContainerTrafficEncryption": False,
+                "EnableNetworkIsolation": True,
+            },
+            "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
+            "StoppingCondition": {"MaxRuntimeInSeconds": 36000},
+            "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
+        }
+
 
 class TestNamingValidation:
     def test_naming_validation_noncompliance(self):
