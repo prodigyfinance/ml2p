@@ -10,3 +10,4 @@ from .fixtures import (  # noqa: imported so that pytest can find the fixtures
     moto_session,
     sagemaker,
 )
+from .test_cli import cli_helper  # noqa
