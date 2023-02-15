@@ -146,7 +146,7 @@ def moto_sagemaker(monkeypatch):
 
 
 @pytest.fixture
-def moto_session(monkeypatch, moto_sagemaker):
+def moto_session(monkeypatch):
     for k in list(os.environ):
         if k.startswith("AWS_"):
             monkeypatch.delitem(os.environ, k)
@@ -158,7 +158,7 @@ def moto_session(monkeypatch, moto_sagemaker):
     monkeypatch.setitem(os.environ, "AWS_SECURITY_TOKEN", "dummy-security-token")
     monkeypatch.setitem(os.environ, "AWS_SESSION_TOKEN", "dummy-session-token")
     monkeypatch.setitem(os.environ, "AWS_REGION", MOTO_TEST_REGION)
-    with moto.mock_s3(), moto.mock_ssm(), moto_sagemaker.mock_sagemaker():
+    with moto.mock_s3(), moto.mock_ssm(), moto.mock_sagemaker():
         yield boto3.Session(region_name=MOTO_TEST_REGION)
 
 
