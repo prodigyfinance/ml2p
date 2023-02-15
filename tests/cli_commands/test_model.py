@@ -9,7 +9,7 @@ class TestModel:
     def cfg(self):
         cfg = {
             "defaults": {
-                "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2",
                 "role": "arn:aws:iam::12345:role/role-name",
             }
         }
@@ -35,7 +35,7 @@ class TestModel:
         )
         assert model_output == {
             "ModelArn": (
-                "arn:aws:sagemaker:eu-west-1:123456789012:model/my-models-mdl-0-1-12"
+                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-mdl-0-1-12"
             ),
             "ResponseMetadata": {
                 "HTTPStatusCode": 200,
@@ -46,7 +46,7 @@ class TestModel:
         list_output = json.loads(cli_helper.invoke(["model", "list"]))
         assert list_output["ModelName"] == "my-models-mdl-0-1-12"
         assert list_output["ModelArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:model/my-models-mdl-0-1-12"
+            "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-mdl-0-1-12"
         )
 
     def test_create_and_describe(self, cli_helper):
@@ -57,7 +57,7 @@ class TestModel:
         )
         assert describe_output["ModelName"] == "my-models-mdl-0-1-12"
         assert describe_output["PrimaryContainer"]["Image"] == (
-            "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2"
+            "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2"
         )
         assert (
             describe_output["ExecutionRoleArn"] == "arn:aws:iam::12345:role/role-name"

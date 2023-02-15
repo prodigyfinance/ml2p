@@ -9,7 +9,7 @@ class TestTrainingJob:
     def cfg(self):
         cfg = {
             "defaults": {
-                "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2",
                 "role": "arn:aws:iam::12345:role/role-name",
             },
             "train": {"instance_type": "ml.m5.large"},
@@ -40,7 +40,7 @@ class TestTrainingJob:
             )
         )
         assert create_output["TrainingJobArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:training-job/my-models-tj-0-1-11"
+            "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-models-tj-0-1-11"
         )
         list_output = json.loads(cli_helper.invoke(["training-job", "list"]))
         assert list_output["TrainingJobName"] == "my-models-tj-0-1-11"
@@ -56,7 +56,7 @@ class TestTrainingJob:
         )
         assert describe_output["TrainingJobName"] == "my-models-tj-0-1-11"
         assert describe_output["TrainingJobArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:training-job/my-models-tj-0-1-11"
+            "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-models-tj-0-1-11"
         )
         assert describe_output["RoleArn"] == "arn:aws:iam::12345:role/role-name"
 

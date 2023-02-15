@@ -128,7 +128,7 @@ def moto_session(monkeypatch):
     monkeypatch.setitem(os.environ, "AWS_SECRET_ACCESS_KEY", "dummy-access-key-secret")
     monkeypatch.setitem(os.environ, "AWS_SECURITY_TOKEN", "dummy-security-token")
     monkeypatch.setitem(os.environ, "AWS_SESSION_TOKEN", "dummy-session-token")
-    monkeypatch.setitem(os.environ, "AWS_REGION", MOTO_TEST_REGION)
+    monkeypatch.setitem(os.environ, "AWS_DEFAULT_REGION", MOTO_TEST_REGION)
     with moto.mock_s3(), moto.mock_ssm(), moto.mock_sagemaker():
         yield boto3.Session(region_name=MOTO_TEST_REGION)
 

@@ -11,7 +11,7 @@ class TestNotebook:
     def cfg(self):
         cfg = {
             "defaults": {
-                "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2",
                 "role": "arn:aws:iam::12345:role/role-name",
             },
             "notebook": {"instance_type": "ml.t2.medium", "volume_size": 8},
@@ -53,7 +53,7 @@ class TestNotebook:
             cli_helper.invoke(["notebook", "create", "notebook-test"], cfg=cfg)
         )
         assert create_output["NotebookInstanceArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:"
+            "arn:aws:sagemaker:us-east-1:123456789012:"
             "notebook-instance/my-models-notebook-test"
         )
         assert create_output["ResponseMetadata"]["HTTPStatusCode"] == 200
@@ -86,7 +86,7 @@ class TestNotebook:
             cli_helper.invoke(["notebook", "describe", "notebook-test"])
         )
         assert describe_output["NotebookInstanceArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:"
+            "arn:aws:sagemaker:us-east-1:123456789012:"
             "notebook-instance/my-models-notebook-test"
         )
         assert describe_output["NotebookInstanceName"] == "my-models-notebook-test"
@@ -142,7 +142,7 @@ class TestNotebook:
             cli_helper.invoke(["notebook", "describe", "notebook-test"])
         )
         assert describe_output["NotebookInstanceArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:"
+            "arn:aws:sagemaker:us-east-1:123456789012:"
             "notebook-instance/my-models-notebook-test"
         )
         assert describe_output["NotebookInstanceName"] == "my-models-notebook-test"
@@ -165,7 +165,7 @@ class TestNotebook:
             cli_helper.invoke(["notebook", "describe", "notebook-test"])
         )
         assert describe_output["NotebookInstanceArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:"
+            "arn:aws:sagemaker:us-east-1:123456789012:"
             "notebook-instance/my-models-notebook-test"
         )
         assert describe_output["NotebookInstanceName"] == "my-models-notebook-test"

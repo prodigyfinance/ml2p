@@ -11,7 +11,7 @@ class TestEndpoint:
     def cfg(self):
         cfg = {
             "defaults": {
-                "image": "12345.dkr.ecr.eu-west-1.amazonaws.com/docker-image:0.0.2",
+                "image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2",
                 "role": "arn:aws:iam::12345:role/role-name",
             },
             "deploy": {"instance_type": "ml.t2.medium"},
@@ -40,7 +40,7 @@ class TestEndpoint:
             cli_helper.invoke(["endpoint", "create", "endpoint-0-1-12"], cfg=cfg)
         )
         assert create_output["EndpointArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:"
+            "arn:aws:sagemaker:us-east-1:123456789012:"
             "endpoint/my-models-endpoint-0-1-12"
         )
         with pytest.raises(NotImplementedError) as err:
@@ -56,7 +56,7 @@ class TestEndpoint:
         )
         assert describe_output["EndpointName"] == "my-models-endpoint-0-1-12"
         assert describe_output["EndpointArn"] == (
-            "arn:aws:sagemaker:eu-west-1:123456789012:"
+            "arn:aws:sagemaker:us-east-1:123456789012:"
             "endpoint/my-models-endpoint-0-1-12"
         )
         assert describe_output["EndpointConfigName"] == (
