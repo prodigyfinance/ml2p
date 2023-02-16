@@ -20,6 +20,9 @@ Models
 .. autoclass:: ModelPredictor
    :members:
 
+.. autoclass:: ModelDatasetGenerator
+   :members:
+
 SageMakerEnv
 ^^^^^^^^^^^^
 
@@ -29,6 +32,7 @@ SageMakerEnv
 .. autoclass:: SageMakerEnvType
    :members:
 
+   .. autoattribute:: DATASET
    .. autoattribute:: TRAIN
    .. autoattribute:: SERVE
    .. autoattribute:: LOCAL
