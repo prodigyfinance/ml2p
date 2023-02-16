@@ -63,7 +63,7 @@ def assert_traceback(tb, expected):
 
 class HappyModelDatasetGenerator(ModelDatasetGenerator):
     def generate(self):
-        output = self.env.model_folder() / "output.txt"
+        output = self.env.dataset_folder() / "output.txt"
         with output.open("w") as f:
             f.write("Yess!!")
 
