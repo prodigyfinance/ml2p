@@ -445,7 +445,6 @@ class TestML2PDockerGenerateDataset:
             sagemaker=sagemaker,
             model=UnhappyModel,
         )
-        breakpoint()
         assert_traceback(
             output_folder.join("failure").read(),
             "\n".join(
