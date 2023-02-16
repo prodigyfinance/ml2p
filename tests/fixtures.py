@@ -2,7 +2,6 @@
 
 """ Pytest fixtures for tests. """
 
-import contextlib
 import datetime
 import json
 import os
@@ -16,8 +15,6 @@ import yaml
 
 from ml2p import hyperparameters
 from ml2p.core import LocalEnv, SageMakerEnv
-
-from .sagefaker import SageFakerClient, SageFakerRuntimeClient
 
 MOTO_TEST_REGION = "us-east-1"
 
@@ -119,34 +116,8 @@ def sagemaker(tmpdir, monkeypatch, moto_session):
     )
 
 
-class MotoSageMakerFixture:
-    def __init__(self, monkeypatch):
-        self._monkeypatch = monkeypatch
-        self._orig_boto_client = boto3.client
-        self._sagefaker_client = SageFakerClient(aws_region=MOTO_TEST_REGION)
-        self._sagefaker_runtime_client = SageFakerRuntimeClient(self._sagefaker_client)
-
-    def mocked_client(self, service):
-        if service == "sagemaker":
-            return self._sagefaker_client
-        elif service == "sagemaker-runtime":
-            return self._sagefaker_runtime_client
-        return self._orig_boto_client(service)
-
-    @contextlib.contextmanager
-    def mock_sagemaker(self):
-        with self._monkeypatch.context() as mp:
-            mp.setattr(boto3, "client", self.mocked_client)
-            yield
-
-
 @pytest.fixture
-def moto_sagemaker(monkeypatch):
-    return MotoSageMakerFixture(monkeypatch)
-
-
-@pytest.fixture
-def moto_session(monkeypatch, moto_sagemaker):
+def moto_session(monkeypatch):
     for k in list(os.environ):
         if k.startswith("AWS_"):
             monkeypatch.delitem(os.environ, k)
@@ -157,8 +128,8 @@ def moto_session(monkeypatch, moto_sagemaker):
     monkeypatch.setitem(os.environ, "AWS_SECRET_ACCESS_KEY", "dummy-access-key-secret")
     monkeypatch.setitem(os.environ, "AWS_SECURITY_TOKEN", "dummy-security-token")
     monkeypatch.setitem(os.environ, "AWS_SESSION_TOKEN", "dummy-session-token")
-    monkeypatch.setitem(os.environ, "AWS_REGION", MOTO_TEST_REGION)
-    with moto.mock_s3(), moto.mock_ssm(), moto_sagemaker.mock_sagemaker():
+    monkeypatch.setitem(os.environ, "AWS_DEFAULT_REGION", MOTO_TEST_REGION)
+    with moto.mock_s3(), moto.mock_ssm(), moto.mock_sagemaker():
         yield boto3.Session(region_name=MOTO_TEST_REGION)
 
 
