@@ -98,6 +98,21 @@ class SageMakerFixture:
                 self.monkeypatch.setenv(k, v)
         return SageMakerEnv(str(self.ml_folder))
 
+    def dataset(self, **kw):
+        self.s3_create_bucket("foo")
+        envvars = {
+            "ML2P_DATASET": "test-dataset-2022-01-01",
+            "ML2P_PROJECT": "test-project",
+            "ML2P_S3_URL": "s3://foo/bar",
+        }
+        envvars.update(kw)
+        for k, v in envvars.items():
+            if v is None:
+                self.monkeypatch.delenv(k, raising=False)
+            else:
+                self.monkeypatch.setenv(k, v)
+        return SageMakerEnv(str(self.ml_folder))
+
     def local(self, **kw):
         self.s3_create_bucket("foo")
         cfg_file = self.ml_folder / "ml2p.yaml"
