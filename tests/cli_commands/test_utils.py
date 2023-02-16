@@ -146,19 +146,11 @@ class TestCliUtils:
         assert training_job_cfg == {
             "TrainingJobName": "modelling-project-training-job-1",
             "AlgorithmSpecification": {
-                "TrainingImage": (
-                    "123456789012.dkr.ecr.eu-west-1"
-                    ".amazonaws.com/modelling-project-sagemaker:latest"
-                ),
+                "TrainingImage": "123456789012.dkr.ecr.eu-west-1.amazonaws.com"
+                "/modelling-project-sagemaker:latest",
                 "TrainingInputMode": "File",
             },
             "EnableNetworkIsolation": True,
-            "HyperParameters": {
-                "ML2P_ENV.ML2P_PROJECT": '"modelling-project"',
-                "ML2P_ENV.ML2P_S3_URL": (
-                    '"s3://prodigyfinance-modelling-project-sagemaker-production/"'
-                ),
-            },
             "InputDataConfig": [
                 {
                     "ChannelName": "training",
@@ -171,9 +163,15 @@ class TestCliUtils:
                     },
                 }
             ],
+            "Environment": {
+                "ML2P_TRAINING_JOB": "modelling-project-training-job-1",
+                "ML2P_PROJECT": "modelling-project",
+                "ML2P_S3_URL": "s3://prodigyfinance-modelling-project-"
+                "sagemaker-production/",
+            },
             "OutputDataConfig": {
-                "S3OutputPath": "s3://prodigyfinance-modelling-project"
-                "-sagemaker-production/models/"
+                "S3OutputPath": "s3://prodigyfinance-modelling-project-"
+                "sagemaker-production/models/"
             },
             "ResourceConfig": {
                 "InstanceCount": 1,
@@ -181,7 +179,7 @@ class TestCliUtils:
                 "VolumeSizeInGB": 20,
             },
             "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
-            "StoppingCondition": {"MaxRuntimeInSeconds": 60 * 60},
+            "StoppingCondition": {"MaxRuntimeInSeconds": 3600},
             "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
         }
 
@@ -198,11 +196,12 @@ class TestCliUtils:
         training_job_cfg = utils.mk_training_job(
             prj, "training-job-1", "dataset-1", "model-type-1"
         )
-        assert training_job_cfg["HyperParameters"] == {
-            "ML2P_ENV.ML2P_MODEL_CLS": '"my.pkg.model"',
-            "ML2P_ENV.ML2P_PROJECT": '"modelling-project"',
-            "ML2P_ENV.ML2P_S3_URL": (
-                '"s3://prodigyfinance-modelling-project-sagemaker-production/"'
+        assert training_job_cfg["Environment"] == {
+            "ML2P_TRAINING_JOB": "modelling-project-training-job-1",
+            "ML2P_MODEL_CLS": "my.pkg.model",
+            "ML2P_PROJECT": "modelling-project",
+            "ML2P_S3_URL": (
+                "s3://prodigyfinance-modelling-project-sagemaker-production/"
             ),
         }
 
