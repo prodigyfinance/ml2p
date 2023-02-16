@@ -141,7 +141,7 @@ class TestSageMakerEnvServe:
         def test_basic_env(self, sagemaker):
             env = sagemaker.dataset()
             assert env.env_type == env.DATASET
-            assert env.dataset_name == "test-dataset-2022-01-01"
+            assert env.dataset_name == "test-dataset-20220112"
             assert env.model_version is None
             assert env.record_invokes is False
             assert env.training_job_name is None
@@ -428,7 +428,7 @@ class TestModelDatasetGenerator:
                 f.write("This is my dataset!")
             dataset_generator.upload_to_s3("dataset.txt")
         s3_file = sagemaker.s3.get_object(
-            Bucket="foo", Key="bar/datasets/test-dataset-2022-01-01/dataset.txt"
+            Bucket="foo", Key="bar/datasets/test-dataset-20220112/dataset.txt"
         )
         assert s3_file["Body"].read().decode() == "This is my dataset!"
 
@@ -442,7 +442,7 @@ class TestModelDatasetGenerator:
             dataset_generator.upload_to_s3("./my_directory/my_other_dataset.txt")
         s3_file = sagemaker.s3.get_object(
             Bucket="foo",
-            Key="bar/datasets/test-dataset-2022-01-01/my_other_dataset.txt",
+            Key="bar/datasets/test-dataset-20220112/my_other_dataset.txt",
         )
         assert s3_file["Body"].read().decode() == "This is my other dataset!"
 
