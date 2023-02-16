@@ -102,7 +102,7 @@ class SageMakerFixture:
     def dataset(self, **kw):
         self.s3_create_bucket("foo")
         envvars = {
-            "ML2P_DATASET": "test-dataset-2022-01-01",
+            "ML2P_DATASET": "test-dataset-20220112",
             "ML2P_PROJECT": "test-project",
             "ML2P_S3_URL": "s3://foo/bar",
         }
