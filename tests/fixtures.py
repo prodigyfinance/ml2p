@@ -13,7 +13,6 @@ import moto
 import pytest
 import yaml
 
-from ml2p import hyperparameters
 from ml2p.core import LocalEnv, SageMakerEnv
 
 MOTO_TEST_REGION = "us-east-1"

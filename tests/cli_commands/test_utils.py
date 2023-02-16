@@ -146,7 +146,8 @@ class TestCliUtils:
         assert training_job_cfg == {
             "TrainingJobName": "modelling-project-training-job-1",
             "AlgorithmSpecification": {
-                "TrainingImage": "123456789012.dkr.ecr.eu-west-1.amazonaws.com/modelling-project-sagemaker:latest",
+                "TrainingImage": "123456789012.dkr.ecr.eu-west-1.amazonaws.com"
+                "/modelling-project-sagemaker:latest",
                 "TrainingInputMode": "File",
             },
             "EnableNetworkIsolation": True,
@@ -156,7 +157,8 @@ class TestCliUtils:
                     "DataSource": {
                         "S3DataSource": {
                             "S3DataType": "S3Prefix",
-                            "S3Uri": "s3://prodigyfinance-modelling-project-sagemaker-production/datasets/dataset-1",
+                            "S3Uri": "s3://prodigyfinance-modelling-project-"
+                            "sagemaker-production/datasets/dataset-1",
                         }
                     },
                 }
@@ -164,10 +166,12 @@ class TestCliUtils:
             "Environment": {
                 "ML2P_TRAINING_JOB": "modelling-project-training-job-1",
                 "ML2P_PROJECT": "modelling-project",
-                "ML2P_S3_URL": "s3://prodigyfinance-modelling-project-sagemaker-production/",
+                "ML2P_S3_URL": "s3://prodigyfinance-modelling-project-"
+                "sagemaker-production/",
             },
             "OutputDataConfig": {
-                "S3OutputPath": "s3://prodigyfinance-modelling-project-sagemaker-production/models/"
+                "S3OutputPath": "s3://prodigyfinance-modelling-project-"
+                "sagemaker-production/models/"
             },
             "ResourceConfig": {
                 "InstanceCount": 1,

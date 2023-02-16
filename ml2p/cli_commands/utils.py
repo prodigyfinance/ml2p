@@ -9,7 +9,7 @@ import re
 
 import click
 
-from .. import errors, hyperparameters
+from .. import errors
 
 
 def date_to_string_serializer(value):

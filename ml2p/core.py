@@ -19,7 +19,6 @@ import boto3
 import yaml
 
 from . import __version__ as ml2p_version
-from . import hyperparameters
 from .errors import LocalEnvError
 
 
