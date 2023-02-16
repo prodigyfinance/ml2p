@@ -12,6 +12,7 @@ from ml2p import __version__ as ml2p_version
 from ml2p.core import (
     S3URL,
     Model,
+    ModelDatasetGenerator,
     ModellingSubCfg,
     ModelPredictor,
     ModelTrainer,
@@ -135,6 +136,16 @@ class TestSageMakerEnvServe:
     def test_create_env_with_record_invokes(self, sagemaker):
         env = sagemaker.serve(ML2P_RECORD_INVOKES="true")
         assert env.record_invokes is True
+
+    class TestSageMakerEnvGenerateDataset:
+        def test_basic_env(self, sagemaker):
+            env = sagemaker.dataset()
+            assert env.env_type == env.DATASET
+            assert env.dataset_name == "test-dataset-2022-01-01"
+            assert env.model_version is None
+            assert env.record_invokes is False
+            assert env.training_job_name is None
+            assert env.project == "test-project"
 
 
 class TestSageMakerEnvLocal:
@@ -403,6 +414,39 @@ class TestModelPredictor:
         }
 
 
+class TestModelDatasetGenerator:
+    def test_create(self, sagemaker):
+        env = sagemaker.dataset()
+        dataset_generator = ModelDatasetGenerator(env)
+        assert dataset_generator.env is env
+
+    def test_upload_to_s3(self, sagemaker, tmpdir):
+        dataset_generator = ModelDatasetGenerator(sagemaker.dataset())
+        my_file = tmpdir / "dataset.txt"
+        with tmpdir.as_cwd():
+            with my_file.open("w") as f:
+                f.write("This is my dataset!")
+            dataset_generator.upload_to_s3("dataset.txt")
+        s3_file = sagemaker.s3.get_object(
+            Bucket="foo", Key="bar/datasets/test-dataset-2022-01-01/dataset.txt"
+        )
+        assert s3_file["Body"].read().decode() == "This is my dataset!"
+
+    def test_upload_to_s3_custom_directory(self, sagemaker, tmpdir):
+        dataset_generator = ModelDatasetGenerator(sagemaker.dataset())
+        my_directory = tmpdir.join("my_directory").mkdir()
+        my_file = my_directory / "my_other_dataset.txt"
+        with tmpdir.as_cwd():
+            with my_file.open("w") as f:
+                f.write("This is my other dataset!")
+            dataset_generator.upload_to_s3("./my_directory/my_other_dataset.txt")
+        s3_file = sagemaker.s3.get_object(
+            Bucket="foo",
+            Key="bar/datasets/test-dataset-2022-01-01/my_other_dataset.txt",
+        )
+        assert s3_file["Body"].read().decode() == "This is my other dataset!"
+
+
 class TestModel:
     def test_trainer_not_set(self, sagemaker):
         with pytest.raises(ValueError) as exc_info:
@@ -433,3 +477,20 @@ class TestModel:
         predictor = MyModel().predictor(env)
         assert predictor.__class__ is ModelPredictor
         assert predictor.env is env
+
+    def test_datatest_generator_not_set(self, sagemaker):
+        with pytest.raises(ValueError) as exc_info:
+            Model().dataset_generator(sagemaker.dataset())
+        assert (
+            str(exc_info.value)
+            == ".DATASET_GENERATOR should be an instance of ModelDatasetGenerator"
+        )
+
+    def test_datatest_generator_set(self, sagemaker):
+        class MyModel(Model):
+            DATASET_GENERATOR = ModelDatasetGenerator
+
+        env = sagemaker.dataset()
+        dataset_generator = MyModel().dataset_generator(env)
+        assert dataset_generator.__class__ is ModelDatasetGenerator
+        assert dataset_generator.env is env
