@@ -12,6 +12,7 @@ from ml2p import __version__ as ml2p_version
 from ml2p.core import (
     S3URL,
     Model,
+    ModelDatasetGenerator,
     ModellingSubCfg,
     ModelPredictor,
     ModelTrainer,
@@ -135,6 +136,16 @@ class TestSageMakerEnvServe:
     def test_create_env_with_record_invokes(self, sagemaker):
         env = sagemaker.serve(ML2P_RECORD_INVOKES="true")
         assert env.record_invokes is True
+
+    class TestSageMakerEnvGenerateDataset:
+        def test_basic_env(self, sagemaker):
+            env = sagemaker.dataset()
+            assert env.env_type == env.DATASET
+            assert env.dataset_name == "test-dataset-2022-01-01"
+            assert env.model_version == None
+            assert env.record_invokes is False
+            assert env.training_job_name is None
+            assert env.project == "test-project"
 
 
 class TestSageMakerEnvLocal:
@@ -403,6 +414,13 @@ class TestModelPredictor:
         }
 
 
+class TestModelDatasetGenerator:
+    def test_create(self, sagemaker):
+        env = sagemaker.dataset()
+        dataset_generator = ModelDatasetGenerator(env)
+        assert dataset_generator.env is env
+
+
 class TestModel:
     def test_trainer_not_set(self, sagemaker):
         with pytest.raises(ValueError) as exc_info:
@@ -433,3 +451,20 @@ class TestModel:
         predictor = MyModel().predictor(env)
         assert predictor.__class__ is ModelPredictor
         assert predictor.env is env
+
+    def test_datatest_generator_not_set(self, sagemaker):
+        with pytest.raises(ValueError) as exc_info:
+            Model().dataset_generator(sagemaker.dataset())
+        assert (
+            str(exc_info.value)
+            == ".DATASET_GENERATOR should be an instance of ModelDatasetGenerator"
+        )
+
+    def test_predictor_set(self, sagemaker):
+        class MyModel(Model):
+            DATASET_GENERATOR = ModelDatasetGenerator
+
+        env = sagemaker.dataset()
+        dataset_generator = MyModel().dataset_generator(env)
+        assert dataset_generator.__class__ is ModelDatasetGenerator
+        assert dataset_generator.env is env
