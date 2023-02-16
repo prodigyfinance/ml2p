@@ -420,6 +420,32 @@ class TestModelDatasetGenerator:
         dataset_generator = ModelDatasetGenerator(env)
         assert dataset_generator.env is env
 
+    def test_upload_to_s3(self, sagemaker, tmpdir):
+        dataset_generator = ModelDatasetGenerator(sagemaker.dataset())
+        my_file = tmpdir / "dataset.txt"
+        with tmpdir.as_cwd():
+            with my_file.open("w") as f:
+                f.write("This is my dataset!")
+            dataset_generator.upload_to_s3("dataset.txt")
+        s3_file = sagemaker.s3.get_object(
+            Bucket="foo", Key="bar/datasets/test-dataset-2022-01-01/dataset.txt"
+        )
+        assert s3_file["Body"].read().decode() == "This is my dataset!"
+
+    def test_upload_to_s3_custom_directory(self, sagemaker, tmpdir):
+        dataset_generator = ModelDatasetGenerator(sagemaker.dataset())
+        my_directory = tmpdir.join("my_directory").mkdir()
+        my_file = my_directory / "my_other_dataset.txt"
+        with tmpdir.as_cwd():
+            with my_file.open("w") as f:
+                f.write("This is my other dataset!")
+            dataset_generator.upload_to_s3("./my_directory/my_other_dataset.txt")
+        s3_file = sagemaker.s3.get_object(
+            Bucket="foo",
+            Key="bar/datasets/test-dataset-2022-01-01/my_other_dataset.txt",
+        )
+        assert s3_file["Body"].read().decode() == "This is my other dataset!"
+
 
 class TestModel:
     def test_trainer_not_set(self, sagemaker):
