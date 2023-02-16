@@ -158,8 +158,9 @@ def generate_dataset(opt, env):
     """Generates a dataset for training the model."""
     if opt.model is None:
         raise click.UsageError(
-            "The global parameter --model must either be given when calling the serve"
-            " command or --model-type must be given when creating the model."
+            "The global parameter --model must either be given when calling the"
+            " generate-dataset command or --model-type must be given when"
+            " generating the dataset."
         )
     click.echo(f"Starting generation of dataset {env.dataset_name}.")
     try:
