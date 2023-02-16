@@ -417,3 +417,45 @@ class TestML2PDockerGenerateDataset:
             model=HappyModel,
         )
         assert dataset_folder.join("output.txt").read() == "Yess!!"
+
+    def test_generate_dataset_failure_no_model(self, sagemaker):
+        sagemaker.dataset()
+        self.check_generate_dataset(
+            [
+                "Usage: ml2p-docker generate-dataset [OPTIONS]",
+                "Try 'ml2p-docker generate-dataset --help' for help.",
+                "",
+                "Error: The global parameter --model must either be given when calling"
+                " the generate-dataset command or --model-type must be given when"
+                " generating the dataset.",
+            ],
+            exit_code=2,
+            exception=SystemExit(2),
+            sagemaker=sagemaker,
+            model=None,
+        )
+
+    def test_generate_dataset_exception(self, sagemaker):
+        output_folder = sagemaker.ml_folder.join("output").mkdir()
+        sagemaker.dataset()
+        self.check_generate_dataset(
+            ["Starting generation of dataset test-dataset-20220112."],
+            exit_code=1,
+            exception=ValueError("Much failure"),
+            sagemaker=sagemaker,
+            model=UnhappyModel,
+        )
+        breakpoint()
+        assert_traceback(
+            output_folder.join("failure").read(),
+            "\n".join(
+                [
+                    r"Traceback (most recent call last):",
+                    r'  File ".../ml2p/docker.py", line XX, in generate_dataset',
+                    r"    dataset_generator.generate()",
+                    r'  File ".../tests/test_docker.py", line XX, in generate',
+                    r'    raise ValueError("Much failure")',
+                    r"ValueError: Much failure",
+                ]
+            ),
+        )
