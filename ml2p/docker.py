@@ -161,7 +161,7 @@ def generate_dataset(opt, env):
             "The global parameter --model must either be given when calling the serve"
             " command or --model-type must be given when creating the model."
         )
-    click.echo(f"Starting dataset creation for model version {env.model_version}.")
+    click.echo(f"Starting generation of dataset {env.dataset_name}.")
     try:
         dataset_generator = opt.model().dataset_generator(env)
         dataset_generator.generate()
