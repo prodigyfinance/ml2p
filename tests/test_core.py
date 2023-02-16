@@ -142,7 +142,7 @@ class TestSageMakerEnvServe:
             env = sagemaker.dataset()
             assert env.env_type == env.DATASET
             assert env.dataset_name == "test-dataset-2022-01-01"
-            assert env.model_version == None
+            assert env.model_version is None
             assert env.record_invokes is False
             assert env.training_job_name is None
             assert env.project == "test-project"
@@ -486,7 +486,7 @@ class TestModel:
             == ".DATASET_GENERATOR should be an instance of ModelDatasetGenerator"
         )
 
-    def test_predictor_set(self, sagemaker):
+    def test_datatest_generator_set(self, sagemaker):
         class MyModel(Model):
             DATASET_GENERATOR = ModelDatasetGenerator
 
