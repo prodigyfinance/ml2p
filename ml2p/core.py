@@ -380,14 +380,15 @@ class ModelDatasetGenerator:
         """
         raise NotImplementedError("Sub-classes should implement .generate()")
 
-    def upload_to_s3(self, file_name):
+    def upload_to_s3(self, file_path):
         """Uploads the file to the S3 dataset folder
 
-        :param str file_name"
-            The name of the file to upload to S3.
+        :param str file_path"
+            The path of the file to upload to S3.
         """
+        file_name = os.path.basename(file_path)
         s3_key = self.env.s3.path(f"/datasets/{self.env.dataset_name}/{file_name}")
-        filepath = pathlib.Path(file_name)
+        filepath = pathlib.Path(file_path)
         with filepath.open("rb") as f:
             self.s3_client.upload_fileobj(
                 Fileobj=f,
