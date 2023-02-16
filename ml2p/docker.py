@@ -121,7 +121,7 @@ def train(opt, env):
             "The global parameter --model must either be given when calling the train"
             " command or --model-type must be given when creating the training job."
         )
-    click.echo("Starting training job {}.".format(env.training_job_name))
+    click.echo(f"Starting training job {env.training_job_name}.")
     try:
         trainer = opt.model().trainer(env)
         trainer.train()
@@ -142,10 +142,30 @@ def serve(opt, env, debug):
             "The global parameter --model must either be given when calling the serve"
             " command or --model-type must be given when creating the model."
         )
-    click.echo("Starting server for model version {}.".format(env.model_version))
+    click.echo(f"Starting server for model version {env.model_version}.")
     predictor = opt.model().predictor(env)
     predictor.setup()
     app.predictor = predictor
     atexit.register(predictor.teardown)
     app.run(host="0.0.0.0", port=8080, debug=debug)
+    click.echo("Done.")
+
+
+@ml2p_docker.command("generate-dataset")
+@pass_sagemaker_env
+@pass_ml2p_docker_options
+def generate_dataset(opt, env):
+    """Generates a dataset for training the model."""
+    if opt.model is None:
+        raise click.UsageError(
+            "The global parameter --model must either be given when calling the serve"
+            " command or --model-type must be given when creating the model."
+        )
+    click.echo(f"Starting dataset creation for model version {env.model_version}.")
+    try:
+        dataset_generator = opt.model().dataset_generator(env)
+        dataset_generator.generate()
+    except Exception:
+        env.write_failure(traceback.format_exc())
+        raise
     click.echo("Done.")
