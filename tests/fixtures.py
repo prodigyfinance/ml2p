@@ -71,20 +71,22 @@ class SageMakerFixture:
         return SageMakerEnv(str(self.ml_folder))
 
     def train(self, **kw):
-        self.monkeypatch.setenv("TRAINING_JOB_NAME", "test-train-1.2.3")
-        params = {"ML2P_PROJECT": "test-project", "ML2P_S3_URL": "s3://foo/bar"}
-        params.update(kw)
-        for k, v in kw.items():
+        envvars = {
+            "ML2P_TRAINING_JOB": "test-train-1.2.3",
+            "ML2P_PROJECT": "test-project",
+            "ML2P_S3_URL": "s3://foo/bar",
+        }
+        envvars.update(kw)
+        for k, v in envvars.items():
             if v is None:
-                del params[k]
-        self.ml_folder.mkdir("input").mkdir("config").join(
-            "hyperparameters.json"
-        ).write(json.dumps(hyperparameters.encode({"ML2P_ENV": params})))
+                self.monkeypatch.delenv(k, raising=False)
+            else:
+                self.monkeypatch.setenv(k, v)
         return SageMakerEnv(str(self.ml_folder))
 
     def serve(self, **kw):
         self.s3_create_bucket("foo")
-        self.monkeypatch.delenv("TRAINING_JOB_NAME", raising=False)
+        self.monkeypatch.delenv("ML2P_TRAINING_JOB", raising=False)
         envvars = {
             "ML2P_MODEL_VERSION": "test-model-1.2.3",
             "ML2P_PROJECT": "test-project",
