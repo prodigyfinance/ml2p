@@ -410,9 +410,9 @@ class TestML2PDockerGenerateDataset:
         dataset_folder = sagemaker.ml_folder.join("input/data/training").ensure(
             dir=True
         )
-        sagemaker.serve()
+        sagemaker.dataset()
         self.check_generate_dataset(
-            ["Starting generation of dataset 'my-dataset-20220112'.", "Done."],
+            ["Starting generation of dataset test-dataset-20220112.", "Done."],
             sagemaker=sagemaker,
             model=HappyModel,
         )
