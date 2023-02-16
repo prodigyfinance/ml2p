@@ -12,7 +12,7 @@ from flask_api.exceptions import APIException
 
 import ml2p.docker
 from ml2p import __version__ as ml2p_version
-from ml2p.core import Model, ModelDatasetGenerator, ModelPredictor, ModelTrainer
+from ml2p.core import Model, ModelPredictor, ModelTrainer
 from ml2p.docker import ml2p_docker
 from ml2p.errors import ClientError, ServerError
 
@@ -33,7 +33,7 @@ def model_cls_path(model):
     return "{}.{}".format(model.__module__, model.__qualname__)
 
 
-def invoke_and_check_command(
+def check_train_or_serve(
     cmd, output, args=None, sagemaker=None, model=None, exit_code=0, exception=None
 ):
     """Invoke the train or serve command of ml2p_docker and check the result."""
@@ -59,18 +59,6 @@ def assert_traceback(tb, expected):
     assert re.match(pattern, tb), "Traceback:\n{}\ndoes not match expected:\n{}".format(
         tb, expected
     )
-
-
-class HappyModelDatasetGenerator(ModelDatasetGenerator):
-    def generate(self):
-        output = self.env.dataset_folder() / "output.txt"
-        with output.open("w") as f:
-            f.write("Yess!!")
-
-
-class UnhappyModelDatasetGenerator(ModelDatasetGenerator):
-    def generate(self):
-        raise ValueError("Much failure")
 
 
 class HappyModelTrainer(ModelTrainer):
@@ -104,13 +92,11 @@ class HappyModelPredictor(ModelPredictor):
 
 
 class HappyModel(Model):
-    DATASET_GENERATOR = HappyModelDatasetGenerator
     TRAINER = HappyModelTrainer
     PREDICTOR = HappyModelPredictor
 
 
 class UnhappyModel(Model):
-    DATASET_GENERATOR = UnhappyModelDatasetGenerator
     TRAINER = UnhappyModelTrainer
     PREDICTOR = HappyModelPredictor
 
@@ -149,7 +135,7 @@ class TestML2PDocker:
 
 class TestML2PDockerTrain:
     def check_train(self, *args, **kw):
-        return invoke_and_check_command("train", *args, **kw)
+        return check_train_or_serve("train", *args, **kw)
 
     def test_help(self):
         self.check_train(
@@ -236,7 +222,7 @@ def docker_serve(monkeypatch):
 
 class TestML2PDockerServe:
     def check_serve(self, *args, **kw):
-        return invoke_and_check_command("serve", *args, **kw)
+        return check_train_or_serve("serve", *args, **kw)
 
     def test_help(self):
         self.check_serve(
@@ -390,30 +376,3 @@ class TestAPI:
             "BatchStrategy": "MULTI_RECORD",
             "MaxPayloadInMB": 6,
         }
-
-
-class TestML2PDockerGenerateDataset:
-    def check_generate_dataset(self, *args, **kw):
-        return invoke_and_check_command("generate-dataset", *args, **kw)
-
-    def test_help(self):
-        self.check_generate_dataset(
-            [
-                "Usage: ml2p-docker generate-dataset [OPTIONS]",
-                "",
-                "  Generates a dataset for training the model.",
-            ],
-            args=["--help"],
-        )
-
-    def test_generate_dataset_success(self, sagemaker):
-        dataset_folder = sagemaker.ml_folder.join("input/data/training").ensure(
-            dir=True
-        )
-        sagemaker.serve()
-        self.check_generate_dataset(
-            ["Starting generation of dataset 'my-dataset-20220112'.", "Done."],
-            sagemaker=sagemaker,
-            model=HappyModel,
-        )
-        assert dataset_folder.join("output.txt").read() == "Yess!!"
