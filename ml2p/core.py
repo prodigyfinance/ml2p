@@ -375,7 +375,7 @@ def import_string(name):
 
 
 class ModelDatasetGenerator:
-    """An interface that allows ml2p-docker to generate dataset within SageMaker."""
+    """An interface that allows ml2p-docker to generate a dataset within SageMaker."""
 
     def __init__(self, env):
         self.env = env
