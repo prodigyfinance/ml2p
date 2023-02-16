@@ -104,6 +104,24 @@ listing the files in it:
 
    $ ml2p dataset ls boston-20200901
 
+It is also possible to generate a dataset by implementing a subclass of
+`ml2p.core.ModelDatasetGenerator`. The subclass needs to define a 
+`.generate(...)` method that will generate the dataset and store it.
+
+A simple implementation for the Boston house price dataset generator 
+can be found in `model.py`:
+
+.. literalinclude:: model.py
+   :language: python
+   :emphasize-lines: 16-20
+   :linenos:
+
+The dataset can then be generated using the following command:
+
+.. code-block:: console
+
+  $ ml2p dataset generate boston-20200901 --model-type boston
+
 
 Training a model
 ----------------
@@ -117,7 +135,7 @@ A simple implementation for the Boston house price model can be found in
 
 .. literalinclude:: model.py
    :language: python
-   :emphasize-lines: 14-27
+   :emphasize-lines: 23-36
    :linenos:
 
 The training data should be read from `self.env.dataset_folder()`. This is the
@@ -193,7 +211,7 @@ You might have seen the implementation for the Boston house price model in
 
 .. literalinclude:: model.py
    :language: python
-   :emphasize-lines: 30-51
+   :emphasize-lines: 39-59
    :linenos:
 
 The `.setup()` method is called only once when starting up a prediction instance.
