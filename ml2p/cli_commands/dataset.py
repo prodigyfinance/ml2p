@@ -159,7 +159,7 @@ def dataset_rm(prj, dataset, filename):
 )
 @click.pass_obj
 def dataset_generate(prj, dataset, model_type):
-    """Delete a file from a dataset."""
+    """Launch a processing job that generates a dataset."""
     validate_name(dataset, "dataset")
     processing_job_params = mk_processing_job(prj, dataset, model_type)
     response = prj.client.create_processing_job(**processing_job_params)
