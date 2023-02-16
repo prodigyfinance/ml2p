@@ -406,12 +406,14 @@ class TestML2PDockerGenerateDataset:
             args=["--help"],
         )
 
-    def test_training_success(self, sagemaker):
-        model_folder = sagemaker.ml_folder.join("model").mkdir()
+    def test_generate_dataset_success(self, sagemaker):
+        dataset_folder = sagemaker.ml_folder.join("input/data/training").ensure(
+            dir=True
+        )
         sagemaker.serve()
         self.check_generate_dataset(
             ["Starting generation of dataset 'my-dataset-20220112'.", "Done."],
             sagemaker=sagemaker,
             model=HappyModel,
         )
-        assert model_folder.join("output.txt").read() == "Yess!!"
+        assert dataset_folder.join("output.txt").read() == "Yess!!"
