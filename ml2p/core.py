@@ -126,6 +126,7 @@ class SageMakerEnvType(enum.Enum):
     SERVE = "serve"
     DATASET = "dataset"
     LOCAL = "local"
+    UNKNOWN = "unknown"
 
 
 class SageMakerEnv:
@@ -170,6 +171,7 @@ class SageMakerEnv:
     SERVE = SageMakerEnvType.SERVE
     DATASET = SageMakerEnvType.DATASET
     LOCAL = SageMakerEnvType.LOCAL
+    UNKNOWN = SageMakerEnvType.UNKNOWN
 
     def __init__(self, ml_folder, environ=None):
         self._ml_folder = pathlib.Path(ml_folder)
@@ -202,6 +204,8 @@ class SageMakerEnv:
             environ["env_type"] = self.TRAIN
         elif environ["model_version"]:
             environ["env_type"] = self.SERVE
+        else:
+            environ["env_type"] = self.UNKNOWN
         return environ
 
     def resourceconfig(self):
@@ -275,6 +279,7 @@ class LocalEnv(SageMakerEnv):
     def _local_environ(self):
         return {
             "env_type": self.LOCAL,
+            "dataset_name": None,
             "training_job_name": None,
             "model_version": "local",
             "record_invokes": False,
