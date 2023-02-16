@@ -17,7 +17,7 @@ def_requirements = [
 
 setup(
     name="ml2p",
-    version="0.2.4",
+    version="0.3.0",
     url="http://github.com/prodigyfinance/ml2p",
     license="ISCL",
     description=(
