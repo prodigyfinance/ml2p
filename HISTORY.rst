@@ -1,5 +1,17 @@
 History
 =======
+
+0.3.0 (2023-02-16)
+------------------
+
+* Replace Sagefaker by moto sagemaker client to mock sagemaker.
+* Refactor CLI commands.
+* Add ml2p dataset generate command to generate datasets using the CLI.
+* Add ModelDatasetGenerator class.
+* Simplify how environment variables are passed to training job.
+* Add ml2p-docker generate-dataset command.
+* Update documentation.
+
 0.2.4 (2022-02-21)
 ------------------
 
