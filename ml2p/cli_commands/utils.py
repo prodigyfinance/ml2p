@@ -87,15 +87,6 @@ def mk_training_job(prj, training_job, dataset, model_type=None):
         },
         # training shouldn't make network calls
         "EnableNetworkIsolation": True,
-        "HyperParameters": hyperparameters.encode(
-            {
-                "ML2P_ENV": {
-                    "ML2P_PROJECT": prj.project,
-                    "ML2P_S3_URL": prj.s3.url(),
-                    **extra_env,
-                }
-            }
-        ),
         "InputDataConfig": [
             {
                 "ChannelName": "training",
@@ -104,6 +95,12 @@ def mk_training_job(prj, training_job, dataset, model_type=None):
                 },
             }
         ],
+        "Environment": {
+            "ML2P_TRAINING_JOB": prj.full_job_name(training_job),
+            "ML2P_PROJECT": prj.project,
+            "ML2P_S3_URL": prj.s3.url(),
+            **extra_env,
+        },
         "OutputDataConfig": {"S3OutputPath": model_path},
         "ResourceConfig": {
             "InstanceCount": 1,
