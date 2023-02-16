@@ -33,6 +33,7 @@ class ModellingProject:
         self.s3 = S3URL(self.cfg["s3folder"])
         self.train = ModellingSubCfg(self.cfg, "train")
         self.deploy = ModellingSubCfg(self.cfg, "deploy")
+        self.dataset = ModellingSubCfg(self.cfg, "dataset")
         self.notebook = ModellingSubCfg(self.cfg, "notebook")
         self.models = ModellingSubCfg(self.cfg, "models", defaults="models")
 
@@ -123,6 +124,7 @@ class SageMakerEnvType(enum.Enum):
 
     TRAIN = "train"
     SERVE = "serve"
+    DATASET = "dataset"
     LOCAL = "local"
 
 
@@ -166,6 +168,7 @@ class SageMakerEnv:
 
     TRAIN = SageMakerEnvType.TRAIN
     SERVE = SageMakerEnvType.SERVE
+    DATASET = SageMakerEnvType.DATASET
     LOCAL = SageMakerEnvType.LOCAL
 
     def __init__(self, ml_folder, environ=None):
@@ -371,6 +374,25 @@ def import_string(name):
     return getattr(mod, classname)
 
 
+class ModelDatasetGenerator:
+    """An interface that allows ml2p-docker to generate a dataset within SageMaker."""
+
+    def __init__(self, env):
+        self.env = env
+
+    def generate(self):
+        """Generates and stores a dataset to S3.
+
+        This method should:
+
+        * Read data from source (e.g. S3, Redshift, ...).
+        * Process the dataset.
+        * Write the dataset to S3 (using self.env to determine where to write the data
+          to).
+        """
+        raise NotImplementedError("Sub-classes should implement .generate()")
+
+
 class ModelTrainer:
     """An interface that allows ml2p-docker to train models within SageMaker."""
 
@@ -554,16 +576,25 @@ class ModelPredictor:
 
 
 class Model:
-    """A holder for a trainer and predictor.
+    """A holder for dataset generator, trainer and predictor.
 
     Sub-classes should:
 
+    * Set the attribute DATASET_GENERATOR to a ModelDatasetGenerator sub-class.
     * Set the attribute TRAINER to a ModelTrainer sub-class.
     * Set the attribute PREDICTOR to a ModelPredictor sub-class.
     """
 
+    DATASET_GENERATOR = None
     TRAINER = None
     PREDICTOR = None
+
+    def dataset_generator(self, env):
+        if self.DATASET_GENERATOR is None:
+            raise ValueError(
+                ".DATASET_GENERATOR should be an instance of ModelDatasetGenerator"
+            )
+        return self.DATASET_GENERATOR(env)
 
     def trainer(self, env):
         if self.TRAINER is None:

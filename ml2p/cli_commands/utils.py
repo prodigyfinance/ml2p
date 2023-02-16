@@ -293,3 +293,42 @@ def validate_model_type(ctx, param, value):
         "Model type may only be omitted if zero or one models are listed in the ML2P"
         " config YAML file."
     )
+
+
+def mk_processing_job(prj, dataset, model_type=None):
+    """Return processing job creation parameters."""
+    extra_env = {}
+    if model_type is not None:
+        extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
+    extra_network_params = {}
+    vpc_config = mk_vpc_config(prj.dataset)
+    if vpc_config is not None:
+        extra_network_params["VpcConfig"] = vpc_config
+    return {
+        "ProcessingJobName": prj.full_job_name(dataset),
+        "ProcessingResources": {
+            "ClusterConfig": {
+                "InstanceCount": 1,
+                "InstanceType": prj.dataset.instance_type,
+                "VolumeSizeInGB": 20,
+            }
+        },
+        "AppSpecification": {
+            "ImageUri": prj.dataset.image,
+            "ContainerArguments": ["generate-dataset"],
+        },
+        "Environment": {
+            "ML2P_DATASET": prj.full_job_name(dataset),
+            "ML2P_PROJECT": prj.project,
+            "ML2P_S3_URL": prj.s3.url(),
+            **extra_env,
+        },
+        "NetworkConfig": {
+            "EnableInterContainerTrafficEncryption": False,
+            "EnableNetworkIsolation": True,
+            **extra_network_params,
+        },
+        "RoleArn": prj.dataset.role,
+        "StoppingCondition": {"MaxRuntimeInSeconds": 10 * 60 * 60},
+        "Tags": prj.tags(),
+    }
