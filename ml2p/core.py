@@ -391,9 +391,7 @@ class ModelDatasetGenerator:
         filepath = pathlib.Path(file_path)
         with filepath.open("rb") as f:
             self.s3_client.upload_fileobj(
-                Fileobj=f,
-                Bucket=self.env.s3.bucket(),
-                Key=s3_key,
+                Fileobj=f, Bucket=self.env.s3.bucket(), Key=s3_key
             )
 
 
