@@ -397,7 +397,7 @@ class TestCliUtils:
                 "ContainerArguments": ["generate-dataset"],
             },
             "Environment": {
-                "ML2P_DATASET": "modelling-project-my-dataset-2022-12-25",
+                "ML2P_DATASET": "my-dataset-2022-12-25",
                 "ML2P_PROJECT": "modelling-project",
                 "ML2P_S3_URL": "s3://prodigyfinance-modelling-"
                 "project-sagemaker-production/",

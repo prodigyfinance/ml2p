@@ -315,7 +315,7 @@ def mk_processing_job(prj, dataset, model_type=None):
             "ContainerArguments": ["generate-dataset"],
         },
         "Environment": {
-            "ML2P_DATASET": prj.full_job_name(dataset),
+            "ML2P_DATASET": dataset,
             "ML2P_PROJECT": prj.project,
             "ML2P_S3_URL": prj.s3.url(),
             **extra_env,
