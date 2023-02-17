@@ -1,6 +1,12 @@
 History
 =======
 
+0.3.1 (2023-02-16)
+------------------
+
+* Disable network isolation for generating datasets.
+* Change order in which notebooks resources are deleted.
+
 0.3.0 (2023-02-16)
 ------------------
 
