@@ -404,7 +404,7 @@ class TestCliUtils:
             },
             "NetworkConfig": {
                 "EnableInterContainerTrafficEncryption": False,
-                "EnableNetworkIsolation": True,
+                "EnableNetworkIsolation": False,
             },
             "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
             "StoppingCondition": {"MaxRuntimeInSeconds": 36000},
