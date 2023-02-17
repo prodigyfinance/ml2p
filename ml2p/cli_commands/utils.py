@@ -322,7 +322,7 @@ def mk_processing_job(prj, dataset, model_type=None):
         },
         "NetworkConfig": {
             "EnableInterContainerTrafficEncryption": False,
-            "EnableNetworkIsolation": True,
+            "EnableNetworkIsolation": False,
             **extra_network_params,
         },
         "RoleArn": prj.dataset.role,
