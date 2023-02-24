@@ -363,6 +363,7 @@ def import_string(name):
 
 
 def setup_logging():
+    """Ensures that the logging gets passed."""
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(sys.stdout)
