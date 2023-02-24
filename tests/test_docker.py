@@ -78,9 +78,6 @@ def assert_traceback(tb, expected):
     )
 
 
-import sys
-
-
 class HappyModelDatasetGenerator(ModelDatasetGenerator):
     def generate(self):
         logging.info("This looks good!")
