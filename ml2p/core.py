@@ -374,7 +374,6 @@ class ModelDatasetGenerator:
     """An interface that allows ml2p-docker to generate a dataset within SageMaker."""
 
     def __init__(self, env):
-
         self.env = env
         self.s3_client = boto3.client("s3")
         self.setup_logging()
