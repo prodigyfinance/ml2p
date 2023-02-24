@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-""" ML2P core utilities.
-"""
+""" ML2P core utilities. """
+
 import datetime
 import enum
 import importlib
