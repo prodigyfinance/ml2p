@@ -4,6 +4,7 @@
 
 import atexit
 import collections
+import logging
 import re
 
 import pytest
@@ -17,10 +18,13 @@ from ml2p.docker import ml2p_docker
 from ml2p.errors import ClientError, ServerError
 
 
-def assert_cli_result(result, output, exit_code=0, exception=None):
+def assert_cli_result(result, output, exit_code=0, exception=None, starts_with=False):
     """Assert that a CliRunner invocation returned the expected results."""
     assert result.exit_code == exit_code
-    assert result.output.splitlines()[: len(output)] == output
+    if starts_with:
+        assert result.output.splitlines()[: len(output)] == output
+    else:
+        assert result.output.splitlines() == output
     if exception is not None:
         assert type(result.exception) is type(exception)
         assert str(result.exception) == str(exception)
@@ -34,7 +38,14 @@ def model_cls_path(model):
 
 
 def invoke_and_check_command(
-    cmd, output, args=None, sagemaker=None, model=None, exit_code=0, exception=None
+    cmd,
+    output,
+    args=None,
+    sagemaker=None,
+    model=None,
+    exit_code=0,
+    exception=None,
+    starts_with=False,
 ):
     """Invoke the train or serve command of ml2p_docker and check the result."""
     runner = CliRunner()
@@ -47,7 +58,13 @@ def invoke_and_check_command(
     if args:
         cmd_args += args
     result = runner.invoke(ml2p_docker, cmd_args)
-    assert_cli_result(result, output, exit_code=exit_code, exception=exception)
+    assert_cli_result(
+        result,
+        output,
+        exit_code=exit_code,
+        exception=exception,
+        starts_with=starts_with,
+    )
     return result
 
 
@@ -63,6 +80,7 @@ def assert_traceback(tb, expected):
 
 class HappyModelDatasetGenerator(ModelDatasetGenerator):
     def generate(self):
+        logging.info("This looks good!")
         output = self.env.dataset_folder() / "output.txt"
         with output.open("w") as f:
             f.write("Yess!!")
@@ -70,11 +88,14 @@ class HappyModelDatasetGenerator(ModelDatasetGenerator):
 
 class UnhappyModelDatasetGenerator(ModelDatasetGenerator):
     def generate(self):
+        logging.warning("This is not looking good")
         raise ValueError("Much failure")
 
 
 class HappyModelTrainer(ModelTrainer):
     def train(self):
+        logger = logging.getLogger(__name__)
+        logger.info("Look at all the training happening!")
         output = self.env.model_folder() / "output.txt"
         with output.open("w") as f:
             f.write("Success!")
@@ -82,6 +103,7 @@ class HappyModelTrainer(ModelTrainer):
 
 class UnhappyModelTrainer(ModelTrainer):
     def train(self):
+        logging.info("Oulala! C'est pas possible!")
         raise ValueError("Much unhappiness")
 
 
@@ -89,9 +111,11 @@ class HappyModelPredictor(ModelPredictor):
     setup_called = False
 
     def setup(self):
+        logging.info("So much set up to do!")
         self.setup_called = True
 
     def result(self, data):
+        logging.info("These predictions are going to be great!")
         if "client_error" in data:
             raise ClientError("client", data["client_error"])
         if "server_error" in data:
@@ -136,6 +160,7 @@ class TestML2PDocker:
                 "",
                 "  ML2P Sagemaker Docker container helper CLI.",
             ],
+            starts_with=True,
         )
 
     def test_version(self):
@@ -155,13 +180,18 @@ class TestML2PDockerTrain:
         self.check_train(
             ["Usage: ml2p-docker train [OPTIONS]", "", "  Train the model."],
             args=["--help"],
+            starts_with=True,
         )
 
     def test_training_success(self, sagemaker):
         model_folder = sagemaker.ml_folder.join("model").mkdir()
         sagemaker.train()
         self.check_train(
-            ["Starting training job test-train-1.2.3.", "Done."],
+            [
+                "Starting training job test-train-1.2.3.",
+                "Look at all the training happening!",
+                "Done.",
+            ],
             sagemaker=sagemaker,
             model=HappyModel,
         )
@@ -171,7 +201,11 @@ class TestML2PDockerTrain:
         model_folder = sagemaker.ml_folder.join("model").mkdir()
         sagemaker.train(ML2P_MODEL_CLS=model_cls_path(HappyModel))
         self.check_train(
-            ["Starting training job test-train-1.2.3.", "Done."],
+            [
+                "Starting training job test-train-1.2.3.",
+                "Look at all the training happening!",
+                "Done.",
+            ],
             sagemaker=sagemaker,
             model=None,
         )
@@ -198,7 +232,7 @@ class TestML2PDockerTrain:
         output_folder = sagemaker.ml_folder.join("output").mkdir()
         sagemaker.train()
         self.check_train(
-            ["Starting training job test-train-1.2.3."],
+            ["Starting training job test-train-1.2.3.", "Oulala! C'est pas possible!"],
             exit_code=1,
             exception=ValueError("Much unhappiness"),
             sagemaker=sagemaker,
@@ -246,12 +280,17 @@ class TestML2PDockerServe:
                 "  Serve the model and make predictions.",
             ],
             args=["--help"],
+            starts_with=True,
         )
 
     def test_serve(self, docker_serve, sagemaker):
         env = sagemaker.serve()
         self.check_serve(
-            ["Starting server for model version test-model-1.2.3.", "Done."],
+            [
+                "Starting server for model version test-model-1.2.3.",
+                "So much set up to do!",
+                "Done.",
+            ],
             sagemaker=sagemaker,
             model=HappyModel,
         )
@@ -266,7 +305,11 @@ class TestML2PDockerServe:
     def test_serve_model_passed_via_hyperparameters(self, docker_serve, sagemaker):
         sagemaker.serve(ML2P_MODEL_CLS=model_cls_path(HappyModel))
         self.check_serve(
-            ["Starting server for model version test-model-1.2.3.", "Done."],
+            [
+                "Starting server for model version test-model-1.2.3.",
+                "So much set up to do!",
+                "Done.",
+            ],
             sagemaker=sagemaker,
             model=None,
         )
@@ -404,6 +447,7 @@ class TestML2PDockerGenerateDataset:
                 "  Generates a dataset for training the model.",
             ],
             args=["--help"],
+            starts_with=True,
         )
 
     def test_generate_dataset_success(self, sagemaker):
@@ -412,7 +456,11 @@ class TestML2PDockerGenerateDataset:
         )
         sagemaker.dataset()
         self.check_generate_dataset(
-            ["Starting generation of dataset test-dataset-20220112.", "Done."],
+            [
+                "Starting generation of dataset test-dataset-20220112.",
+                "This looks good!",
+                "Done.",
+            ],
             sagemaker=sagemaker,
             model=HappyModel,
         )
@@ -439,7 +487,10 @@ class TestML2PDockerGenerateDataset:
         output_folder = sagemaker.ml_folder.join("output").mkdir()
         sagemaker.dataset()
         self.check_generate_dataset(
-            ["Starting generation of dataset test-dataset-20220112."],
+            [
+                "Starting generation of dataset test-dataset-20220112.",
+                "This is not looking good",
+            ],
             exit_code=1,
             exception=ValueError("Much failure"),
             sagemaker=sagemaker,
