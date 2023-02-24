@@ -2,14 +2,15 @@
 
 """ ML2P core utilities.
 """
-
 import datetime
 import enum
 import importlib
 import json
+import logging
 import os
 import pathlib
 import shutil
+import sys
 import tarfile
 import urllib.parse
 import uuid
@@ -361,12 +362,22 @@ def import_string(name):
     return getattr(mod, classname)
 
 
+def setup_logging():
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    logger.addHandler(handler)
+
+
 class ModelDatasetGenerator:
     """An interface that allows ml2p-docker to generate a dataset within SageMaker."""
 
     def __init__(self, env):
+
         self.env = env
         self.s3_client = boto3.client("s3")
+        self.setup_logging()
 
     def generate(self):
         """Generates and stores a dataset to S3.
@@ -379,6 +390,9 @@ class ModelDatasetGenerator:
           to).
         """
         raise NotImplementedError("Sub-classes should implement .generate()")
+
+    def setup_logging(self):
+        setup_logging()
 
     def upload_to_s3(self, file_path):
         """Uploads the file to the S3 dataset folder
@@ -400,6 +414,7 @@ class ModelTrainer:
 
     def __init__(self, env):
         self.env = env
+        self.setup_logging()
 
     def train(self):
         """Train the model.
@@ -414,6 +429,9 @@ class ModelTrainer:
         """
         raise NotImplementedError("Sub-classes should implement .train()")
 
+    def setup_logging(self):
+        setup_logging()
+
 
 class ModelPredictor:
     """An interface that allows ml2p-docker to make predictions from a model within
@@ -423,6 +441,10 @@ class ModelPredictor:
     def __init__(self, env):
         self.env = env
         self.s3_client = boto3.client("s3")
+        self.setup_logging()
+
+    def setup_logging(self):
+        setup_logging()
 
     def setup(self):
         """Called once before any calls to .predict(...) are made.
