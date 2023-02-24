@@ -97,7 +97,8 @@ class UnhappyModelDatasetGenerator(ModelDatasetGenerator):
 
 class HappyModelTrainer(ModelTrainer):
     def train(self):
-        logging.info("Look at all the training happening!")
+        logger = logging.getLogger(__name__)
+        logger.info("Look at all the training happening!")
         output = self.env.model_folder() / "output.txt"
         with output.open("w") as f:
             f.write("Success!")
