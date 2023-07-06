@@ -88,7 +88,8 @@ class TestModel:
         )
         assert model_output == {
             "ModelArn": (
-                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-test-multimodel-0-0-1"
+                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-test-"
+                "multimodel-0-0-1"
             ),
             "ResponseMetadata": {
                 "HTTPStatusCode": 200,
@@ -108,7 +109,8 @@ class TestModel:
         )
         assert model_output == {
             "ModelArn": (
-                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-test-multimodeltwo-0-0-1"
+                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-test-"
+                "multimodeltwo-0-0-1"
             ),
             "ResponseMetadata": {
                 "HTTPStatusCode": 200,
@@ -131,7 +133,8 @@ class TestModel:
             {
                 "ContainerHostname": "model-0-0-1",
                 "Image": "123.ecr.com/repo:0.0.1",
-                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-test-repo-model-0-0-1/output/model.tar.gz",
+                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-test-repo-"
+                "model-0-0-1/output/model.tar.gz",
                 "Environment": {
                     "ML2P_MODEL_VERSION": "my-models-model-0-0-1",
                     "ML2P_PROJECT": "my-models",
@@ -142,7 +145,8 @@ class TestModel:
             {
                 "ContainerHostname": "model-0-0-2",
                 "Image": "123.ecr.com/repo:0.0.1",
-                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-test-repo-model-0-0-2/output/model.tar.gz",
+                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-test-repo-"
+                "model-0-0-2/output/model.tar.gz",
                 "Environment": {
                     "ML2P_MODEL_VERSION": "my-models-model-0-0-2",
                     "ML2P_PROJECT": "my-models",
