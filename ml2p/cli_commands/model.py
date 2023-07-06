@@ -62,18 +62,11 @@ def model_create(prj, model_name, training_job, model_type):
 @model.command("create-multi")
 @click.argument("model-name")
 @click.argument("multicfg")
-@click.option(
-    "--model-type",
-    "-m",
-    default=None,
-    callback=validate_model_type,
-    help="The name of the type of model.",
-)
 @click.pass_obj
-def multimodel_create(prj, model_name, multicfg, model_type):
+def multimodel_create(prj, model_name, multicfg):
     """Create a model."""
     validate_name(model_name, "model")
-    model_params = mk_multimodel(prj, model_name, multicfg, model_type)
+    model_params = mk_multimodel(prj, model_name, multicfg)
     response = prj.client.create_model(**model_params)
     click_echo_json(response)
 

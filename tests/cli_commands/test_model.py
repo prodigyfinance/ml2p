@@ -97,6 +97,26 @@ class TestModel:
             },
         }
 
+    def test_create_mutlimodel_and_list_second_model(self, cli_helper, data_fixtures):
+        cfg = self.cfg()
+        multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
+        model_output = json.loads(
+            cli_helper.invoke(
+                ["model", "create-multi", "test-multimodeltwo-0-0-1", multimodel_cfg],
+                cfg=cfg,
+            )
+        )
+        assert model_output == {
+            "ModelArn": (
+                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-test-multimodeltwo-0-0-1"
+            ),
+            "ResponseMetadata": {
+                "HTTPStatusCode": 200,
+                "HTTPHeaders": {"server": "amazon.com"},
+                "RetryAttempts": 0,
+            },
+        }
+
     def test_multimodel_create_and_describe(self, cli_helper, data_fixtures):
         cfg = self.cfg()
         multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
@@ -117,7 +137,6 @@ class TestModel:
                     "ML2P_PROJECT": "my-models",
                     "ML2P_S3_URL": "s3://my-bucket/my-models/",
                     "ML2P_MODEL_CLS": "test_repo.ml2p.MultiModelML2P",
-                    "ML2P_RECORD_INVOKES": "false",
                 },
             },
             {
@@ -129,7 +148,6 @@ class TestModel:
                     "ML2P_PROJECT": "my-models",
                     "ML2P_S3_URL": "s3://my-bucket/my-models/",
                     "ML2P_MODEL_CLS": "test_repo.ml2p.extra_dir.MultiModelML2P",
-                    "ML2P_RECORD_INVOKES": "false",
                 },
             },
         ]

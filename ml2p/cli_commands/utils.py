@@ -149,11 +149,13 @@ def mk_model(prj, model_name, training_job, model_type=None):
     }
 
 
-def mk_multimodel(prj, model_name, multicfg, model_type=None):
+def mk_multimodel(prj, model_name, multicfg):
     """Return model creation parameters."""
     multicfg = yaml.safe_load(open(multicfg))
     multicfg = multicfg.pop(model_name)
-    # extra_env = {} TODO
+    extra_env = {}
+    if prj.deploy.get("record_invokes", False):
+        extra_env["ML2P_RECORD_INVOKES"] = "true"
     vpc_config = mk_vpc_config(prj.deploy)
     extra_model_params = {}
     if vpc_config is not None:
@@ -166,7 +168,7 @@ def mk_multimodel(prj, model_name, multicfg, model_type=None):
                 "Image": cfg["image"],
                 "ModelDataUrl": (
                     f"{prj.s3.url('/models')}/"
-                    f"{prj.full_job_name(cfg['training_job'])}"
+                    f"{prj.full_job_name(cfg['training-job'])}"
                     "/output/model.tar.gz"
                 ),
                 "Environment": {
@@ -174,7 +176,7 @@ def mk_multimodel(prj, model_name, multicfg, model_type=None):
                     "ML2P_PROJECT": prj.project,
                     "ML2P_S3_URL": prj.s3.url(),
                     "ML2P_MODEL_CLS": cfg["cls"],
-                    "ML2P_RECORD_INVOKES": prj.deploy.get("record_invokes", "false"),
+                    **extra_env,
                 },
             }
             for model_name, cfg in multicfg.items()
@@ -182,6 +184,7 @@ def mk_multimodel(prj, model_name, multicfg, model_type=None):
         "ExecutionRoleArn": prj.deploy.role,
         "Tags": prj.tags(),
         "EnableNetworkIsolation": False,
+        "InferenceExecutionConfig": {"Mode": "Direct"},
         **extra_model_params,
     }
 
