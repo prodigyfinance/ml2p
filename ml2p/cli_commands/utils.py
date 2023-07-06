@@ -8,6 +8,7 @@ import json
 import re
 
 import click
+import yaml
 
 from .. import errors
 
@@ -141,6 +142,43 @@ def mk_model(prj, model_name, training_job, model_type=None):
                 **extra_env,
             },
         },
+        "ExecutionRoleArn": prj.deploy.role,
+        "Tags": prj.tags(),
+        "EnableNetworkIsolation": False,
+        **extra_model_params,
+    }
+
+
+def mk_multimodel(prj, model_name, multicfg, model_type=None):
+    """Return model creation parameters."""
+    multicfg = yaml.safe_load(open(multicfg))
+    multicfg = multicfg.pop(model_name)
+    # extra_env = {} TODO
+    vpc_config = mk_vpc_config(prj.deploy)
+    extra_model_params = {}
+    if vpc_config is not None:
+        extra_model_params["VpcConfig"] = vpc_config
+    return {
+        "ModelName": prj.full_job_name(model_name),
+        "Containers": [
+            {
+                "ContainerHostname": model_name,
+                "Image": cfg["image"],
+                "ModelDataUrl": (
+                    f"{prj.s3.url('/models')}/"
+                    f"{prj.full_job_name(cfg['training_job'])}"
+                    "/output/model.tar.gz"
+                ),
+                "Environment": {
+                    "ML2P_MODEL_VERSION": prj.full_job_name(model_name),
+                    "ML2P_PROJECT": prj.project,
+                    "ML2P_S3_URL": prj.s3.url(),
+                    "ML2P_MODEL_CLS": cfg["cls"],
+                    "ML2P_RECORD_INVOKES": prj.deploy.get("record_invokes", "false"),
+                },
+            }
+            for model_name, cfg in multicfg.items()
+        ],
         "ExecutionRoleArn": prj.deploy.role,
         "Tags": prj.tags(),
         "EnableNetworkIsolation": False,

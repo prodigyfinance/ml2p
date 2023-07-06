@@ -76,3 +76,80 @@ class TestModel:
                 "RetryAttempts": 0,
             }
         }
+
+    def test_create_mutlimodel_and_list(self, cli_helper, data_fixtures):
+        cfg = self.cfg()
+        multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
+        model_output = json.loads(
+            cli_helper.invoke(
+                ["model", "create-multi", "test-multimodel-0-0-1", multimodel_cfg],
+                cfg=cfg,
+            )
+        )
+        assert model_output == {
+            "ModelArn": (
+                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-test-multimodel-0-0-1"
+            ),
+            "ResponseMetadata": {
+                "HTTPStatusCode": 200,
+                "HTTPHeaders": {"server": "amazon.com"},
+                "RetryAttempts": 0,
+            },
+        }
+
+    def test_multimodel_create_and_describe(self, cli_helper, data_fixtures):
+        cfg = self.cfg()
+        multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
+        cli_helper.invoke(
+            ["model", "create-multi", "test-multimodel-0-0-1", multimodel_cfg], cfg=cfg
+        )
+        describe_output = json.loads(
+            cli_helper.invoke(["model", "describe", "test-multimodel-0-0-1"])
+        )
+        assert describe_output["ModelName"] == "my-models-test-multimodel-0-0-1"
+        assert describe_output["Containers"] == [
+            {
+                "ContainerHostname": "model-0-0-1",
+                "Image": "123.ecr.com/repo:0.0.1",
+                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-test-repo-model-0-0-1/output/model.tar.gz",
+                "Environment": {
+                    "ML2P_MODEL_VERSION": "my-models-model-0-0-1",
+                    "ML2P_PROJECT": "my-models",
+                    "ML2P_S3_URL": "s3://my-bucket/my-models/",
+                    "ML2P_MODEL_CLS": "test_repo.ml2p.MultiModelML2P",
+                    "ML2P_RECORD_INVOKES": "false",
+                },
+            },
+            {
+                "ContainerHostname": "model-0-0-2",
+                "Image": "123.ecr.com/repo:0.0.1",
+                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-test-repo-model-0-0-2/output/model.tar.gz",
+                "Environment": {
+                    "ML2P_MODEL_VERSION": "my-models-model-0-0-2",
+                    "ML2P_PROJECT": "my-models",
+                    "ML2P_S3_URL": "s3://my-bucket/my-models/",
+                    "ML2P_MODEL_CLS": "test_repo.ml2p.extra_dir.MultiModelML2P",
+                    "ML2P_RECORD_INVOKES": "false",
+                },
+            },
+        ]
+        assert (
+            describe_output["ExecutionRoleArn"] == "arn:aws:iam::12345:role/role-name"
+        )
+
+    def test_multimodel_create_and_delete(self, cli_helper, data_fixtures):
+        cfg = self.cfg()
+        multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
+        cli_helper.invoke(
+            ["model", "create-multi", "test-multimodel-0-0-1", multimodel_cfg], cfg=cfg
+        )
+        delete_output = json.loads(
+            cli_helper.invoke(["model", "delete", "test-multimodel-0-0-1"], cfg=cfg)
+        )
+        assert delete_output == {
+            "ResponseMetadata": {
+                "HTTPStatusCode": 200,
+                "HTTPHeaders": {"server": "amazon.com"},
+                "RetryAttempts": 0,
+            }
+        }

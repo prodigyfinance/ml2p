@@ -7,6 +7,7 @@ import click
 from .utils import (
     click_echo_json,
     mk_model,
+    mk_multimodel,
     training_job_name_for_model,
     validate_model_type,
     validate_name,
@@ -54,6 +55,25 @@ def model_create(prj, model_name, training_job, model_type):
     if training_job is None:
         training_job = training_job_name_for_model(model_name)
     model_params = mk_model(prj, model_name, training_job, model_type)
+    response = prj.client.create_model(**model_params)
+    click_echo_json(response)
+
+
+@model.command("create-multi")
+@click.argument("model-name")
+@click.argument("multicfg")
+@click.option(
+    "--model-type",
+    "-m",
+    default=None,
+    callback=validate_model_type,
+    help="The name of the type of model.",
+)
+@click.pass_obj
+def multimodel_create(prj, model_name, multicfg, model_type):
+    """Create a model."""
+    validate_name(model_name, "model")
+    model_params = mk_multimodel(prj, model_name, multicfg, model_type)
     response = prj.client.create_model(**model_params)
     click_echo_json(response)
 
