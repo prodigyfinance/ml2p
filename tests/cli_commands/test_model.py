@@ -36,7 +36,7 @@ class TestModel:
     def test_list_empty(self, cli_helper):
         cli_helper.invoke(["model", "list"], output_jsonl=[])
 
-    def test_create_and_list(self, cli_helper):
+    def test_create_and_list(self, cli_helper, fake_utcnow):
         cfg = self.cfg()
         model_output = json.loads(
             cli_helper.invoke(["model", "create", "mdl-0-1-12"], cfg=cfg)
@@ -47,7 +47,10 @@ class TestModel:
             ),
             "ResponseMetadata": {
                 "HTTPStatusCode": 200,
-                "HTTPHeaders": {"server": "amazon.com"},
+                "HTTPHeaders": {
+                    "server": "amazon.com",
+                    "date": "Thu, 31 Jan 2019 12:00:02 GMT",
+                },
                 "RetryAttempts": 0,
             },
         }
@@ -71,7 +74,7 @@ class TestModel:
             describe_output["ExecutionRoleArn"] == "arn:aws:iam::12345:role/role-name"
         )
 
-    def test_create_and_delete(self, cli_helper):
+    def test_create_and_delete(self, cli_helper, fake_utcnow):
         cfg = self.cfg()
         cli_helper.invoke(["model", "create", "mdl-0-1-12"], cfg=cfg)
         delete_output = json.loads(
@@ -80,7 +83,10 @@ class TestModel:
         assert delete_output == {
             "ResponseMetadata": {
                 "HTTPStatusCode": 200,
-                "HTTPHeaders": {"server": "amazon.com"},
+                "HTTPHeaders": {
+                    "server": "amazon.com",
+                    "date": "Thu, 31 Jan 2019 12:00:02 GMT",
+                },
                 "RetryAttempts": 0,
             }
         }
