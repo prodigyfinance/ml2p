@@ -4,6 +4,14 @@
 
 import json
 
+from pkg_resources import resource_filename
+from pytest import fixture
+
+
+@fixture
+def fake_multimodel_cfg():
+    return resource_filename("tests.fixture_files", "multimodel-cfg.yml")
+
 
 class TestModel:
     def cfg(self):
@@ -77,12 +85,11 @@ class TestModel:
             }
         }
 
-    def test_create_mutlimodel_and_list(self, cli_helper, data_fixtures):
+    def test_create_mutlimodel_and_list(self, cli_helper, fake_multimodel_cfg):
         cfg = self.cfg()
-        multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
         model_output = json.loads(
             cli_helper.invoke(
-                ["model", "create-multi", "test-multimodel-0-0-1", multimodel_cfg],
+                ["model", "create-multi", "test-multimodel-0-0-1", fake_multimodel_cfg],
                 cfg=cfg,
             )
         )
@@ -98,12 +105,18 @@ class TestModel:
             },
         }
 
-    def test_create_mutlimodel_and_list_second_model(self, cli_helper, data_fixtures):
+    def test_create_mutlimodel_and_list_second_model(
+        self, cli_helper, fake_multimodel_cfg
+    ):
         cfg = self.cfg()
-        multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
         model_output = json.loads(
             cli_helper.invoke(
-                ["model", "create-multi", "test-multimodeltwo-0-0-1", multimodel_cfg],
+                [
+                    "model",
+                    "create-multi",
+                    "test-multimodeltwo-0-0-1",
+                    fake_multimodel_cfg,
+                ],
                 cfg=cfg,
             )
         )
@@ -119,11 +132,11 @@ class TestModel:
             },
         }
 
-    def test_multimodel_create_and_describe(self, cli_helper, data_fixtures):
+    def test_multimodel_create_and_describe(self, cli_helper, fake_multimodel_cfg):
         cfg = self.cfg()
-        multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
         cli_helper.invoke(
-            ["model", "create-multi", "test-multimodel-0-0-1", multimodel_cfg], cfg=cfg
+            ["model", "create-multi", "test-multimodel-0-0-1", fake_multimodel_cfg],
+            cfg=cfg,
         )
         describe_output = json.loads(
             cli_helper.invoke(["model", "describe", "test-multimodel-0-0-1"])
@@ -159,11 +172,11 @@ class TestModel:
             describe_output["ExecutionRoleArn"] == "arn:aws:iam::12345:role/role-name"
         )
 
-    def test_multimodel_create_and_delete(self, cli_helper, data_fixtures):
+    def test_multimodel_create_and_delete(self, cli_helper, fake_multimodel_cfg):
         cfg = self.cfg()
-        multimodel_cfg = str(data_fixtures / "multimodel-cfg.yml")
         cli_helper.invoke(
-            ["model", "create-multi", "test-multimodel-0-0-1", multimodel_cfg], cfg=cfg
+            ["model", "create-multi", "test-multimodel-0-0-1", fake_multimodel_cfg],
+            cfg=cfg,
         )
         delete_output = json.loads(
             cli_helper.invoke(["model", "delete", "test-multimodel-0-0-1"], cfg=cfg)
