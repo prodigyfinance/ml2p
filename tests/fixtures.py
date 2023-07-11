@@ -27,6 +27,10 @@ def fake_utcnow(monkeypatch):
         def utcnow(cls):
             return utcnow
 
+        @classmethod
+        def now(cls):
+            return datetime.datetime(2019, 1, 31, 12, 0, 2)
+
     monkeypatch.setattr(datetime, "datetime", fake_datetime)
     return utcnow
 
