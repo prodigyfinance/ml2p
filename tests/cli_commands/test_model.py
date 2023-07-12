@@ -4,13 +4,6 @@
 
 import json
 
-from pytest import fixture
-
-
-@fixture
-def fake_multimodel_cfg(fixture_files):
-    return str(fixture_files / "multimodel-cfg.yml")
-
 
 class TestModel:
     def cfg(self):
@@ -22,15 +15,37 @@ class TestModel:
         }
         return cfg
 
-    def cfg_with_cls(self):
+    def cfg_multimodels(self):
         cfg = {
+            "models": {
+                "model-type-1": {
+                    "model-0-0-1": {
+                        "training_job": "model-0-0-1",
+                        "image_tag": "0.0.1",
+                        "cls": "my.pkg.module.model",
+                    },
+                    "model-0-0-2": {
+                        "training_job": "0-0-2",
+                        "image_tag": "0.0.1-updated",
+                        "cls": "my.pkg.module.model",
+                    },
+                },
+                "model-type-2": {
+                    "defaults": {"cls": "my.pkg.module.modeltwo"},
+                    "model-0-0-1": {
+                        "training_job": "test-repo-model-0-0-1",
+                        "image_tag": "0.0.1",
+                    },
+                    "model-0-0-2": {
+                        "training_job": "test-repo-model-0-0-2",
+                        "image_tag": "0.0.2",
+                        "cls": "my.pkg.module.submodule.modeltwo",
+                    },
+                },
+            },
             "defaults": {
                 "image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2",
                 "role": "arn:aws:iam::12345:role/role-name",
-            },
-            "models": {
-                "model-0-0-1": "test_repo.ml2p.MultiModelML2P",
-                "modeltwo-0-0-1": "test_repo.ml2p.MultiModelML2P",
             },
         }
         return cfg
@@ -103,27 +118,24 @@ class TestModel:
             }
         }
 
-    def test_create_mutlimodel_and_list(
-        self, cli_helper, fake_multimodel_cfg, fake_utcnow
-    ):
-        cfg = self.cfg_with_cls()
+    def test_create_mutlimodel_and_list(self, cli_helper, fake_utcnow):
+        cfg = self.cfg_multimodels()
         model_output = json.loads(
             cli_helper.invoke(
                 [
                     "model",
-                    "create-multi",
+                    "create",
                     "model-0-0-1",
                     "-m",
-                    "model",
-                    fake_multimodel_cfg,
+                    "model-type-1",
                 ],
                 cfg=cfg,
             )
         )
         assert model_output == {
             "ModelArn": (
-                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-test-"
-                "multimodel-0-0-1"
+                "arn:aws:sagemaker:us-east-1:123456789012:model/"
+                "my-models-model-0-0-1"
             ),
             "ResponseMetadata": {
                 "HTTPStatusCode": 200,
@@ -135,25 +147,24 @@ class TestModel:
             },
         }
 
-    def test_create_mutlimodel_and_list_second_model(
-        self, cli_helper, fake_multimodel_cfg, fake_utcnow
-    ):
-        cfg = self.cfg()
+    def test_create_mutlimodel_and_list_second_model(self, cli_helper, fake_utcnow):
+        cfg = self.cfg_multimodels()
         model_output = json.loads(
             cli_helper.invoke(
                 [
                     "model",
-                    "create-multi",
-                    "test-multimodeltwo-0-0-1",
-                    fake_multimodel_cfg,
+                    "create",
+                    "model-type-two-0-0-1",
+                    "-m",
+                    "model-type-2",
                 ],
                 cfg=cfg,
             )
         )
         assert model_output == {
             "ModelArn": (
-                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-test-"
-                "multimodeltwo-0-0-1"
+                "arn:aws:sagemaker:us-east-1:123456789012:model/"
+                "my-models-model-type-two-0-0-1"
             ),
             "ResponseMetadata": {
                 "HTTPStatusCode": 200,
@@ -165,39 +176,43 @@ class TestModel:
             },
         }
 
-    def test_multimodel_create_and_describe(self, cli_helper, fake_multimodel_cfg):
-        cfg = self.cfg_with_cls()
+    def test_multimodel_create_and_describe(self, cli_helper):
+        cfg = self.cfg_multimodels()
         cli_helper.invoke(
-            ["model", "create-multi", "test-multimodel-0-0-1", fake_multimodel_cfg],
+            [
+                "model",
+                "create",
+                "multi-model-0-0-1",
+                "-m",
+                "model-type-1",
+            ],
             cfg=cfg,
         )
         describe_output = json.loads(
-            cli_helper.invoke(["model", "describe", "test-multimodel-0-0-1"])
+            cli_helper.invoke(["model", "describe", "multi-model-0-0-1"])
         )
-        assert describe_output["ModelName"] == "my-models-test-multimodel-0-0-1"
+        assert describe_output["ModelName"] == "my-models-multi-model-0-0-1"
         assert describe_output["Containers"] == [
             {
                 "ContainerHostname": "model-0-0-1",
-                "Image": "123.ecr.com/repo:0.0.1",
-                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-test-repo-"
-                "model-0-0-1/output/model.tar.gz",
+                "Image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.1",
+                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-model-0-0-1/output/model.tar.gz",
                 "Environment": {
                     "ML2P_MODEL_VERSION": "my-models-model-0-0-1",
                     "ML2P_PROJECT": "my-models",
                     "ML2P_S3_URL": "s3://my-bucket/my-models/",
-                    "ML2P_MODEL_CLS": "test_repo.ml2p.MultiModelML2P",
+                    "ML2P_MODEL_CLS": "my.pkg.module.model",
                 },
             },
             {
                 "ContainerHostname": "model-0-0-2",
-                "Image": "123.ecr.com/repo:0.0.1",
-                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-test-repo-"
-                "model-0-0-2/output/model.tar.gz",
+                "Image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.1-updated",
+                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-0-0-2/output/model.tar.gz",
                 "Environment": {
                     "ML2P_MODEL_VERSION": "my-models-model-0-0-2",
                     "ML2P_PROJECT": "my-models",
                     "ML2P_S3_URL": "s3://my-bucket/my-models/",
-                    "ML2P_MODEL_CLS": "test_repo.ml2p.extra_dir.MultiModelML2P",
+                    "ML2P_MODEL_CLS": "my.pkg.module.model",
                 },
             },
         ]
@@ -205,16 +220,20 @@ class TestModel:
             describe_output["ExecutionRoleArn"] == "arn:aws:iam::12345:role/role-name"
         )
 
-    def test_multimodel_create_and_delete(
-        self, cli_helper, fake_multimodel_cfg, fake_utcnow
-    ):
-        cfg = self.cfg()
+    def test_multimodel_create_and_delete(self, cli_helper, fake_utcnow):
+        cfg = self.cfg_multimodels()
         cli_helper.invoke(
-            ["model", "create-multi", "test-multimodel-0-0-1", fake_multimodel_cfg],
+            [
+                "model",
+                "create",
+                "multi-model-0-0-1",
+                "-m",
+                "model-type-1",
+            ],
             cfg=cfg,
         )
         delete_output = json.loads(
-            cli_helper.invoke(["model", "delete", "test-multimodel-0-0-1"], cfg=cfg)
+            cli_helper.invoke(["model", "delete", "multi-model-0-0-1"], cfg=cfg)
         )
         assert delete_output == {
             "ResponseMetadata": {
