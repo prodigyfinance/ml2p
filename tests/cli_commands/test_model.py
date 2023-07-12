@@ -196,7 +196,10 @@ class TestModel:
             {
                 "ContainerHostname": "model-0-0-1",
                 "Image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.1",
-                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-model-0-0-1/output/model.tar.gz",
+                "ModelDataUrl": (
+                    "s3://my-bucket/my-models/models/my-models-model-0-0-1/"
+                    "output/model.tar.gz"
+                ),
                 "Environment": {
                     "ML2P_MODEL_VERSION": "my-models-model-0-0-1",
                     "ML2P_PROJECT": "my-models",
@@ -206,8 +209,14 @@ class TestModel:
             },
             {
                 "ContainerHostname": "model-0-0-2",
-                "Image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.1-updated",
-                "ModelDataUrl": "s3://my-bucket/my-models/models/my-models-0-0-2/output/model.tar.gz",
+                "Image": (
+                    "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:"
+                    "0.0.1-updated"
+                ),
+                "ModelDataUrl": (
+                    "s3://my-bucket/my-models/models/my-models-0-0-2/"
+                    "output/model.tar.gz"
+                ),
                 "Environment": {
                     "ML2P_MODEL_VERSION": "my-models-model-0-0-2",
                     "ML2P_PROJECT": "my-models",
