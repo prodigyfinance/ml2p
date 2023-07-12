@@ -1,0 +1,42 @@
+project: "modelling-project"
+s3folder: "s3://prodigyfinance-modelling-project-sagemaker-production/"
+models:
+  model-type-1:
+    model-0-0-1:
+      training_job: "model-0-0-1"
+      image_tag: "0.0.1"
+      cls: "my.pkg.module.model"
+    model-0-0-2:
+      training_job: "0-0-2"
+      image_tag: "0.0.1-updated"
+      cls: "my.pkg.module.model"
+  model-type-2:
+    defaults:
+      cls: "my.pkg.module.modeltwo"
+    model-0-0-1:
+      training_job: "test-repo-model-0-0-1"
+      image_tag: "0.0.1"
+    model-0-0-2:
+      training_job: "test-repo-model-0-0-2"
+      image_tag: "0.0.2"
+      cls: "my.pkg.module.submodule.modeltwo"
+defaults:
+  image: "123456789012.dkr.ecr.eu-west-1.amazonaws.com/modelling-project-sagemaker:latest"
+  role: "arn:aws:iam::111111111111:role/modelling-project"
+dataset:
+  instance_type: "ml.m5.2xlarge"
+train:
+  instance_type: "ml.m5.2xlarge"
+deploy:
+  instance_type: "ml.t2.medium"
+notebook:
+  instance_type: "ml.t2.medium"
+  volume_size: 8
+  repo_url: "https://github.example.com/modelling-project"
+  repo_branch: "master"
+  repo_secret_arn: "arn:aws:secretsmanager:eu-west-1:111111111111:secret:sagemaker-github-authentication-fLJGfa"
+  security_group_ids:
+    - "sg-1"
+  subnet_id: "subnet-1"
+  on_start: "./tests/fixture_files/on_start.sh"
+  on_create: "./tests/fixture_files/on_create.sh"

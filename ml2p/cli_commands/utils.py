@@ -8,7 +8,6 @@ import json
 import re
 
 import click
-import yaml
 
 from .. import errors
 
@@ -149,10 +148,11 @@ def mk_model(prj, model_name, training_job, model_type=None):
     }
 
 
-def mk_multimodel(prj, model_name, multicfg):
+def mk_multimodel(prj, model_name, model_type):
     """Return model creation parameters."""
-    multicfg = yaml.safe_load(open(multicfg))
-    multicfg = multicfg.pop(model_name)
+    multicfg = prj.models[model_type]
+    defaults = multicfg.pop("defaults", {})
+    base_image = prj.deploy.image.split(":")[0]
     extra_env = {}
     if prj.deploy.get("record_invokes", False):
         extra_env["ML2P_RECORD_INVOKES"] = "true"
@@ -160,27 +160,31 @@ def mk_multimodel(prj, model_name, multicfg):
     extra_model_params = {}
     if vpc_config is not None:
         extra_model_params["VpcConfig"] = vpc_config
-    return {
-        "ModelName": prj.full_job_name(model_name),
-        "Containers": [
+    containers = []
+    for container_name, cfg in multicfg.items():
+        extra_env["ML2P_MODEL_CLS"] = cfg.get("cls", defaults.get("cls"))
+        training_job_name = cfg.get("training_job", container_name)
+        data_url = (
+            f"{prj.s3.url('/models')}/"
+            f"{prj.full_job_name(training_job_name)}"
+            "/output/model.tar.gz"
+        )
+        containers.append(
             {
-                "ContainerHostname": model_name,
-                "Image": cfg["image"],
-                "ModelDataUrl": (
-                    f"{prj.s3.url('/models')}/"
-                    f"{prj.full_job_name(cfg['training-job'])}"
-                    "/output/model.tar.gz"
-                ),
+                "ContainerHostname": container_name,
+                "Image": f"{base_image}:{cfg['image_tag']}",
+                "ModelDataUrl": data_url,
                 "Environment": {
-                    "ML2P_MODEL_VERSION": prj.full_job_name(model_name),
+                    "ML2P_MODEL_VERSION": prj.full_job_name(container_name),
                     "ML2P_PROJECT": prj.project,
                     "ML2P_S3_URL": prj.s3.url(),
-                    "ML2P_MODEL_CLS": cfg["cls"],
                     **extra_env,
                 },
             }
-            for model_name, cfg in multicfg.items()
-        ],
+        )
+    return {
+        "ModelName": prj.full_job_name(model_name),
+        "Containers": containers,
         "ExecutionRoleArn": prj.deploy.role,
         "Tags": prj.tags(),
         "EnableNetworkIsolation": False,

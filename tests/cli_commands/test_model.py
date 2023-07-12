@@ -4,13 +4,12 @@
 
 import json
 
-from pkg_resources import resource_filename
 from pytest import fixture
 
 
 @fixture
-def fake_multimodel_cfg():
-    return resource_filename("tests.fixture_files", "multimodel-cfg.yml")
+def fake_multimodel_cfg(fixture_files):
+    return str(fixture_files / "multimodel-cfg.yml")
 
 
 class TestModel:
@@ -20,6 +19,19 @@ class TestModel:
                 "image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2",
                 "role": "arn:aws:iam::12345:role/role-name",
             }
+        }
+        return cfg
+
+    def cfg_with_cls(self):
+        cfg = {
+            "defaults": {
+                "image": "12345.dkr.ecr.us-east-1.amazonaws.com/docker-image:0.0.2",
+                "role": "arn:aws:iam::12345:role/role-name",
+            },
+            "models": {
+                "model-0-0-1": "test_repo.ml2p.MultiModelML2P",
+                "modeltwo-0-0-1": "test_repo.ml2p.MultiModelML2P",
+            },
         }
         return cfg
 
@@ -94,10 +106,17 @@ class TestModel:
     def test_create_mutlimodel_and_list(
         self, cli_helper, fake_multimodel_cfg, fake_utcnow
     ):
-        cfg = self.cfg()
+        cfg = self.cfg_with_cls()
         model_output = json.loads(
             cli_helper.invoke(
-                ["model", "create-multi", "test-multimodel-0-0-1", fake_multimodel_cfg],
+                [
+                    "model",
+                    "create-multi",
+                    "model-0-0-1",
+                    "-m",
+                    "model",
+                    fake_multimodel_cfg,
+                ],
                 cfg=cfg,
             )
         )
@@ -147,7 +166,7 @@ class TestModel:
         }
 
     def test_multimodel_create_and_describe(self, cli_helper, fake_multimodel_cfg):
-        cfg = self.cfg()
+        cfg = self.cfg_with_cls()
         cli_helper.invoke(
             ["model", "create-multi", "test-multimodel-0-0-1", fake_multimodel_cfg],
             cfg=cfg,

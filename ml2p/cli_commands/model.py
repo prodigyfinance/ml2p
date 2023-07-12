@@ -54,19 +54,9 @@ def model_create(prj, model_name, training_job, model_type):
     validate_name(model_name, "model")
     if training_job is None:
         training_job = training_job_name_for_model(model_name)
+    if isinstance(prj.models.get("model_type"), dict):
+        model_params = mk_multimodel(prj, model_name, model_type)
     model_params = mk_model(prj, model_name, training_job, model_type)
-    response = prj.client.create_model(**model_params)
-    click_echo_json(response)
-
-
-@model.command("create-multi")
-@click.argument("model-name")
-@click.argument("multicfg")
-@click.pass_obj
-def multimodel_create(prj, model_name, multicfg):
-    """Create a model."""
-    validate_name(model_name, "model")
-    model_params = mk_multimodel(prj, model_name, multicfg)
     response = prj.client.create_model(**model_params)
     click_echo_json(response)
 
