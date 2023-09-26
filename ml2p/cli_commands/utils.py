@@ -151,7 +151,7 @@ def mk_model(prj, model_name, training_job, model_type=None):
 def mk_multimodel(prj, model_name, model_type):
     """Return model creation parameters."""
     multicfg = prj.models[model_type]
-    defaults = multicfg.pop("defaults", {})
+    model_defaults = multicfg.pop("model-defaults", {})
     base_image = prj.deploy.image.split(":")[0]
     extra_env = {}
     if prj.deploy.get("record_invokes", False):
@@ -162,7 +162,7 @@ def mk_multimodel(prj, model_name, model_type):
         extra_model_params["VpcConfig"] = vpc_config
     containers = []
     for container_name, cfg in multicfg.items():
-        extra_env["ML2P_MODEL_CLS"] = cfg.get("cls", defaults.get("cls"))
+        extra_env["ML2P_MODEL_CLS"] = cfg.get("cls", model_defaults.get("cls"))
         training_job_name = cfg.get("training_job", container_name)
         data_url = (
             f"{prj.s3.url('/models')}/"

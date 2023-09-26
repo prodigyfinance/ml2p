@@ -345,7 +345,7 @@ class TestCliUtils:
                 ),
                 "ModelDataUrl": (
                     "s3://prodigyfinance-modelling-project-sagemaker-production/"
-                    "models/modelling-project-test-repo-model-0-0-2/output/model.tar.gz"
+                    "models/modelling-project-model-0-2-0/output/model.tar.gz"
                 ),
                 "Environment": {
                     "ML2P_MODEL_VERSION": "modelling-project-model-0-0-2",
@@ -353,7 +353,7 @@ class TestCliUtils:
                     "ML2P_S3_URL": (
                         "s3://prodigyfinance-modelling-project-sagemaker-" "production/"
                     ),
-                    "ML2P_MODEL_CLS": "my.pkg.module.submodule.modeltwo",
+                    "ML2P_MODEL_CLS": "my.pkg.module.modeltwo",
                 },
             },
         ]

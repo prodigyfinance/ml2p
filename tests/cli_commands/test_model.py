@@ -25,13 +25,13 @@ class TestModel:
                         "cls": "my.pkg.module.model",
                     },
                     "model-0-0-2": {
-                        "training_job": "0-0-2",
+                        "training_job": "0-2-0",
                         "image_tag": "0.0.1-updated",
                         "cls": "my.pkg.module.model",
                     },
                 },
                 "model-type-2": {
-                    "defaults": {"cls": "my.pkg.module.modeltwo"},
+                    "model-defaults": {"cls": "my.pkg.module.modeltwo"},
                     "model-0-0-1": {
                         "training_job": "test-repo-model-0-0-1",
                         "image_tag": "0.0.1",
@@ -214,7 +214,7 @@ class TestModel:
                     "0.0.1-updated"
                 ),
                 "ModelDataUrl": (
-                    "s3://my-bucket/my-models/models/my-models-0-0-2/"
+                    "s3://my-bucket/my-models/models/my-models-0-2-0/"
                     "output/model.tar.gz"
                 ),
                 "Environment": {
