@@ -40,12 +40,7 @@ class TestNotebook:
         )
 
     def test_list_empty(self, cli_helper):
-        with pytest.raises(NotImplementedError) as err:
-            cli_helper.invoke(["notebook", "list"], output_jsonl=[])
-        assert (
-            str(err.value)
-            == "The list_notebook_instances action has not been implemented"
-        )
+        cli_helper.invoke(["notebook", "list"], output_jsonl=None)
 
     def test_create_and_list(self, cli_helper):
         cfg = self.cfg()
@@ -57,11 +52,26 @@ class TestNotebook:
             "notebook-instance/my-models-notebook-test"
         )
         assert create_output["ResponseMetadata"]["HTTPStatusCode"] == 200
-        with pytest.raises(NotImplementedError) as err:
-            cli_helper.invoke(["notebook", "list"], output_jsonl=[])
+        list_output = json.loads(
+            cli_helper.invoke(
+                ["notebook", "list"],
+            )
+        )
+        assert list_output["NotebookInstanceName"] == "my-models-notebook-test"
         assert (
-            str(err.value)
-            == "The list_notebook_instances action has not been implemented"
+            list_output["NotebookInstanceArn"]
+            == "arn:aws:sagemaker:us-east-1:123456789012:notebook-instance/my-models-"
+            "notebook-test"
+        )
+        assert (
+            list_output["Url"]
+            == "my-models-notebook-test.notebook.us-east-1.sagemaker.aws"
+        )
+        assert list_output["NotebookInstanceStatus"] == "InService"
+        assert list_output["InstanceType"] == "ml.t2.medium"
+        assert (
+            list_output["NotebookInstanceLifecycleConfigName"]
+            == "my-models-notebook-test-lifecycle-config"
         )
 
     def test_create_and_list_with_repo_url(self, cli_helper):
@@ -72,12 +82,7 @@ class TestNotebook:
             str(err.value)
             == "The create_code_repository action has not been implemented"
         )
-        with pytest.raises(NotImplementedError) as err:
-            cli_helper.invoke(["notebook", "list"], output_jsonl=[])
-        assert (
-            str(err.value)
-            == "The list_notebook_instances action has not been implemented"
-        )
+        cli_helper.invoke(["notebook", "list"], output_jsonl=None)
 
     def test_create_and_describe(self, cli_helper):
         cfg = self.cfg()

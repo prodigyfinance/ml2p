@@ -4,6 +4,7 @@ requirements = [
     "boto3",
     "click",
     "Flask<2.3",
+    "werkzeug<3",
     "Flask-API",
     "PyYAML",
 ]
