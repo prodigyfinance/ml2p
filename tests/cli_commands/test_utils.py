@@ -31,6 +31,14 @@ def prj_no_vpc():
     return prj_no_vpc
 
 
+@pytest.fixture
+def prj_multimodel():
+    with patch("boto3.client"):
+        cfg_mm = resource_filename("tests.fixture_files", "ml2p-multimodel.yml")
+        prj_mm = ModellingProject(cfg_mm)
+    return prj_mm
+
+
 def on_start_fixture():
     with open(resource_filename("tests.fixture_files", "on_start.sh"), "rb") as f:
         return f.read()
@@ -252,6 +260,103 @@ class TestCliUtils:
                 "s3://prodigyfinance-modelling-project-sagemaker-production/"
             ),
         }
+
+    def test_mk_multimodel(self, prj_multimodel):
+        model_cfg = utils.mk_multimodel(
+            prj_multimodel,
+            "test-multimodel-0-0-1",
+            "model-type-1",
+        )
+        assert model_cfg["ModelName"] == "modelling-project-test-multimodel-0-0-1"
+        assert model_cfg["InferenceExecutionConfig"] == {"Mode": "Direct"}
+        assert model_cfg["Containers"] == [
+            {
+                "ContainerHostname": "model-0-0-1",
+                "Image": (
+                    "123456789012.dkr.ecr.eu-west-1.amazonaws.com/modelling-project-"
+                    "sagemaker:0.0.1"
+                ),
+                "ModelDataUrl": (
+                    "s3://prodigyfinance-modelling-project-sagemaker-production/models/"
+                    "modelling-project-model-0-0-1/output/model.tar.gz"
+                ),
+                "Environment": {
+                    "ML2P_MODEL_VERSION": "modelling-project-model-0-0-1",
+                    "ML2P_PROJECT": "modelling-project",
+                    "ML2P_S3_URL": (
+                        "s3://prodigyfinance-modelling-project-sagemaker-" "production/"
+                    ),
+                    "ML2P_MODEL_CLS": "my.pkg.module.model",
+                },
+            },
+            {
+                "ContainerHostname": "model-0-0-2",
+                "Image": (
+                    "123456789012.dkr.ecr.eu-west-1.amazonaws.com/modelling-project-"
+                    "sagemaker:0.0.1-updated"
+                ),
+                "ModelDataUrl": (
+                    "s3://prodigyfinance-modelling-project-sagemaker-production/models/"
+                    "modelling-project-0-0-2/output/model.tar.gz"
+                ),
+                "Environment": {
+                    "ML2P_MODEL_VERSION": "modelling-project-model-0-0-2",
+                    "ML2P_PROJECT": "modelling-project",
+                    "ML2P_S3_URL": (
+                        "s3://prodigyfinance-modelling-project-sagemaker-" "production/"
+                    ),
+                    "ML2P_MODEL_CLS": "my.pkg.module.model",
+                },
+            },
+        ]
+
+    def test_mk_multimodel_two(self, prj_multimodel):
+        model_cfg = utils.mk_multimodel(
+            prj_multimodel,
+            "test-multimodel-1-0-0",
+            "model-type-2",
+        )
+        assert model_cfg["ModelName"] == "modelling-project-test-multimodel-1-0-0"
+        assert model_cfg["Containers"] == [
+            {
+                "ContainerHostname": "model-0-0-1",
+                "Image": (
+                    "123456789012.dkr.ecr.eu-west-1.amazonaws.com/modelling-project-"
+                    "sagemaker:0.0.1"
+                ),
+                "ModelDataUrl": (
+                    "s3://prodigyfinance-modelling-project-sagemaker-production/"
+                    "models/modelling-project-test-repo-model-0-0-1/output/model.tar.gz"
+                ),
+                "Environment": {
+                    "ML2P_MODEL_VERSION": "modelling-project-model-0-0-1",
+                    "ML2P_PROJECT": "modelling-project",
+                    "ML2P_S3_URL": (
+                        "s3://prodigyfinance-modelling-project-sagemaker-" "production/"
+                    ),
+                    "ML2P_MODEL_CLS": "my.pkg.module.modeltwo",
+                },
+            },
+            {
+                "ContainerHostname": "model-0-0-2",
+                "Image": (
+                    "123456789012.dkr.ecr.eu-west-1.amazonaws.com/modelling-project-"
+                    "sagemaker:0.0.2"
+                ),
+                "ModelDataUrl": (
+                    "s3://prodigyfinance-modelling-project-sagemaker-production/"
+                    "models/modelling-project-model-0-2-0/output/model.tar.gz"
+                ),
+                "Environment": {
+                    "ML2P_MODEL_VERSION": "modelling-project-model-0-0-2",
+                    "ML2P_PROJECT": "modelling-project",
+                    "ML2P_S3_URL": (
+                        "s3://prodigyfinance-modelling-project-sagemaker-" "production/"
+                    ),
+                    "ML2P_MODEL_CLS": "my.pkg.module.modeltwo",
+                },
+            },
+        ]
 
     def test_mk_model_with_missing_model_type(self, prj):
         with pytest.raises(KeyError) as err:

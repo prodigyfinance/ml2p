@@ -7,6 +7,7 @@ import click
 from .utils import (
     click_echo_json,
     mk_model,
+    mk_multimodel,
     training_job_name_for_model,
     validate_model_type,
     validate_name,
@@ -53,7 +54,10 @@ def model_create(prj, model_name, training_job, model_type):
     validate_name(model_name, "model")
     if training_job is None:
         training_job = training_job_name_for_model(model_name)
-    model_params = mk_model(prj, model_name, training_job, model_type)
+    if isinstance(prj.models.get(model_type), dict):
+        model_params = mk_multimodel(prj, model_name, model_type)
+    else:
+        model_params = mk_model(prj, model_name, training_job, model_type)
     response = prj.client.create_model(**model_params)
     click_echo_json(response)
 
