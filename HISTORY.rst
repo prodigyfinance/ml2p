@@ -1,6 +1,13 @@
 History
 =======
 
+0.4.0 (2023-10-02)
+------------------
+
+* Add the ability to create multi-container endpoints.
+* Pin Zerkzeug version.
+
+
 0.3.5 (2023-05-16)
 ------------------
 
