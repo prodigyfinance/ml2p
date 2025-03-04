@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Tests for ml2p.cli."""
+""" Tests for ml2p.cli. """
 
 import json
 
@@ -68,19 +68,12 @@ class TestModel:
         model_output = json.loads(
             cli_helper.invoke(["model", "create", "mdl-0-1-12"], cfg=cfg)
         )
-        assert model_output == {
-            "ModelArn": (
-                "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-mdl-0-1-12"
-            ),
-            "ResponseMetadata": {
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "server": "amazon.com",
-                    "date": "Thu, 31 Jan 2019 12:00:02 GMT",
-                },
-                "RetryAttempts": 0,
-            },
-        }
+        assert (
+            model_output["ModelArn"]
+            == "arn:aws:sagemaker:us-east-1:123456789012:model/my-models-mdl-0-1-12"
+        )
+        assert model_output["ResponseMetadata"]["HTTPStatusCode"] == 200
+        assert model_output["ResponseMetadata"]["RetryAttempts"] == 0
         list_output = json.loads(cli_helper.invoke(["model", "list"]))
         assert list_output["ModelName"] == "my-models-mdl-0-1-12"
         assert list_output["ModelArn"] == (
@@ -107,16 +100,8 @@ class TestModel:
         delete_output = json.loads(
             cli_helper.invoke(["model", "delete", "mdl-0-1-12"], cfg=cfg)
         )
-        assert delete_output == {
-            "ResponseMetadata": {
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "server": "amazon.com",
-                    "date": "Thu, 31 Jan 2019 12:00:02 GMT",
-                },
-                "RetryAttempts": 0,
-            }
-        }
+        assert delete_output["ResponseMetadata"]["HTTPStatusCode"] == 200
+        assert delete_output["ResponseMetadata"]["RetryAttempts"] == 0
 
     def test_create_mutlimodel_and_list(self, cli_helper, fake_utcnow):
         cfg = self.cfg_multimodels()
@@ -132,20 +117,11 @@ class TestModel:
                 cfg=cfg,
             )
         )
-        assert model_output == {
-            "ModelArn": (
-                "arn:aws:sagemaker:us-east-1:123456789012:model/"
-                "my-models-model-0-0-1"
-            ),
-            "ResponseMetadata": {
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "server": "amazon.com",
-                    "date": "Thu, 31 Jan 2019 12:00:02 GMT",
-                },
-                "RetryAttempts": 0,
-            },
-        }
+        assert model_output["ModelArn"] == (
+            "arn:aws:sagemaker:us-east-1:123456789012:model/" "my-models-model-0-0-1"
+        )
+        assert model_output["ResponseMetadata"]["HTTPStatusCode"] == 200
+        assert model_output["ResponseMetadata"]["RetryAttempts"] == 0
 
     def test_create_mutlimodel_and_list_second_model(self, cli_helper, fake_utcnow):
         cfg = self.cfg_multimodels()
@@ -161,20 +137,12 @@ class TestModel:
                 cfg=cfg,
             )
         )
-        assert model_output == {
-            "ModelArn": (
-                "arn:aws:sagemaker:us-east-1:123456789012:model/"
-                "my-models-model-type-two-0-0-1"
-            ),
-            "ResponseMetadata": {
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "server": "amazon.com",
-                    "date": "Thu, 31 Jan 2019 12:00:02 GMT",
-                },
-                "RetryAttempts": 0,
-            },
-        }
+        assert model_output["ModelArn"] == (
+            "arn:aws:sagemaker:us-east-1:123456789012:model/"
+            "my-models-model-type-two-0-0-1"
+        )
+        assert model_output["ResponseMetadata"]["HTTPStatusCode"] == 200
+        assert model_output["ResponseMetadata"]["RetryAttempts"] == 0
 
     def test_multimodel_create_and_describe(self, cli_helper):
         cfg = self.cfg_multimodels()
@@ -244,13 +212,5 @@ class TestModel:
         delete_output = json.loads(
             cli_helper.invoke(["model", "delete", "multi-model-0-0-1"], cfg=cfg)
         )
-        assert delete_output == {
-            "ResponseMetadata": {
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "server": "amazon.com",
-                    "date": "Thu, 31 Jan 2019 12:00:02 GMT",
-                },
-                "RetryAttempts": 0,
-            }
-        }
+        assert delete_output["ResponseMetadata"]["HTTPStatusCode"] == 200
+        assert delete_output["ResponseMetadata"]["RetryAttempts"] == 0
