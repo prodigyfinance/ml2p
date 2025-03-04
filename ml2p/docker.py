@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-""" ML2P SageMaker training and prediction server for use in SageMaker docker
-    containers.
+"""ML2P SageMaker training and prediction server for use in SageMaker docker
+containers.
 """
 
 import atexit

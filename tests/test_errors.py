@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.errors. """
+"""Tests for ml2p.errors."""
 
 from flask_api.exceptions import APIException
 

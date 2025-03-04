@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.cli_utils. """
+"""Tests for ml2p.cli_utils."""
 
 import base64
 import datetime

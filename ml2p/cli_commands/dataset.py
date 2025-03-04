@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" CLI commands for interating with S3 datasets. """
+"""CLI commands for interating with S3 datasets."""
 
 import pathlib
 
