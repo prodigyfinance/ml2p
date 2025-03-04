@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.cli_commands.dataset. """
+"""Tests for ml2p.cli_commands.dataset."""
 
 import json
 

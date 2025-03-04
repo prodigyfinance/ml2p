@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.core. """
+"""Tests for ml2p.core."""
 
 import io
 import pathlib

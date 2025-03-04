@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.cli. """
+"""Tests for ml2p.cli."""
 
 import json
 
@@ -29,9 +29,7 @@ class TestEndpoint:
         )
 
     def test_list_empty(self, cli_helper):
-        with pytest.raises(NotImplementedError) as err:
-            cli_helper.invoke(["endpoint", "list"], output_jsonl=[])
-        assert str(err.value) == "The list_endpoints action has not been implemented"
+        cli_helper.invoke(["endpoint", "list"]) == ""
 
     def test_create_and_list(self, cli_helper):
         cfg = self.cfg()
@@ -43,9 +41,19 @@ class TestEndpoint:
             "arn:aws:sagemaker:us-east-1:123456789012:"
             "endpoint/my-models-endpoint-0-1-12"
         )
-        with pytest.raises(NotImplementedError) as err:
-            cli_helper.invoke(["endpoint", "list"], output_jsonl=[])
-        assert str(err.value) == "The list_endpoints action has not been implemented"
+        cli_helper.invoke(
+            ["endpoint", "list"],
+            output_jsonl=[
+                {
+                    "EndpointName": "my-models-endpoint-0-1-12",
+                    "EndpointArn": "arn:aws:sagemaker:us-east-1:123456789012:endpoint/"
+                    "my-models-endpoint-0-1-12",
+                    "CreationTime": "2019-01-31 12:00:02",
+                    "LastModifiedTime": "2019-01-31 12:00:02",
+                    "EndpointStatus": "InService",
+                }
+            ],
+        )
 
     def test_create_and_describe(self, cli_helper):
         cfg = self.cfg()

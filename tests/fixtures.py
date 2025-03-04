@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Pytest fixtures for tests. """
+"""Pytest fixtures for tests."""
 
 import datetime
 import json
@@ -18,7 +18,7 @@ from ml2p.core import LocalEnv, SageMakerEnv
 MOTO_TEST_REGION = "us-east-1"
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def fake_utcnow(monkeypatch):
     utcnow = datetime.datetime(2019, 1, 31, 12, 0, 2, tzinfo=datetime.timezone.utc)
 
@@ -149,7 +149,7 @@ def moto_session(monkeypatch):
     monkeypatch.setitem(os.environ, "AWS_SECURITY_TOKEN", "dummy-security-token")
     monkeypatch.setitem(os.environ, "AWS_SESSION_TOKEN", "dummy-session-token")
     monkeypatch.setitem(os.environ, "AWS_DEFAULT_REGION", MOTO_TEST_REGION)
-    with moto.mock_s3(), moto.mock_ssm(), moto.mock_sagemaker():
+    with moto.mock_aws():
         yield boto3.Session(region_name=MOTO_TEST_REGION)
 
 

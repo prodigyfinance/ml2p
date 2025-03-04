@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.docker. """
+"""Tests for ml2p.docker."""
 
 import atexit
 import collections

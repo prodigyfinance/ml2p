@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" CLI commands for interating with SageMaker notebooks. """
+"""CLI commands for interating with SageMaker notebooks."""
 
 import click
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" CLI commands for interating with SageMaker training jobs. """
+"""CLI commands for interating with SageMaker training jobs."""
 
 import click
 

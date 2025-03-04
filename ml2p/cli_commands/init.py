@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" CLI command for initializing ML2P projects. """
+"""CLI command for initializing ML2P projects."""
 
 import boto3
 import click

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Hyperparameter encoder and decoder.
-"""
+"""Hyperparameter encoder and decoder."""
 
 import json
 

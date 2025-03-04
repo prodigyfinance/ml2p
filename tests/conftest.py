@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Configuration for pytest. """
+"""Configuration for pytest."""
 
 from .fixtures import (  # noqa: imported so that pytest can find the fixtures
     data_fixtures,
