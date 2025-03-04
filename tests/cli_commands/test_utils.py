@@ -218,6 +218,47 @@ class TestCliUtils:
             utils.mk_training_job(prj, "training-job-1", "dataset-1", "model-type-1")
         assert str(err.value) == "'model-type-1'"
 
+    def test_mk_training_job_with_multimodel_cfg(self, prj_multimodel):
+        training_job_cfg = utils.mk_training_job(
+            prj_multimodel, "training-job-1", "dataset-1", "model-type-2"
+        )
+        assert training_job_cfg == {
+            "TrainingJobName": "modelling-project-training-job-1",
+            "AlgorithmSpecification": {
+                "TrainingImage": "123456789012.dkr.ecr.eu-west-1.amazonaws.com/modelling-project-sagemaker:latest",
+                "TrainingInputMode": "File",
+            },
+            "EnableNetworkIsolation": True,
+            "InputDataConfig": [
+                {
+                    "ChannelName": "training",
+                    "DataSource": {
+                        "S3DataSource": {
+                            "S3DataType": "S3Prefix",
+                            "S3Uri": "s3://prodigyfinance-modelling-project-sagemaker-production/datasets/dataset-1",
+                        }
+                    },
+                }
+            ],
+            "Environment": {
+                "ML2P_TRAINING_JOB": "modelling-project-training-job-1",
+                "ML2P_PROJECT": "modelling-project",
+                "ML2P_S3_URL": "s3://prodigyfinance-modelling-project-sagemaker-production/",
+                "ML2P_MODEL_CLS": "my.pkg.module.modeltwo",
+            },
+            "OutputDataConfig": {
+                "S3OutputPath": "s3://prodigyfinance-modelling-project-sagemaker-production/models/"
+            },
+            "ResourceConfig": {
+                "InstanceCount": 1,
+                "InstanceType": "ml.m5.2xlarge",
+                "VolumeSizeInGB": 20,
+            },
+            "RoleArn": "arn:aws:iam::111111111111:role/modelling-project",
+            "StoppingCondition": {"MaxRuntimeInSeconds": 3600},
+            "Tags": [{"Key": "ml2p-project", "Value": "modelling-project"}],
+        }
+
     def test_mk_model(self, prj):
         model_cfg = utils.mk_model(prj, "model-1", "training-job-1")
         assert model_cfg == {
