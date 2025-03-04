@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.cli_commands.init. """
+"""Tests for ml2p.cli_commands.init."""
 
 
 class TestInit:

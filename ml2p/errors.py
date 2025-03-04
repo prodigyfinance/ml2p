@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" ML2P exceptions.
-"""
+"""ML2P exceptions."""
 
 from flask_api.exceptions import APIException
 

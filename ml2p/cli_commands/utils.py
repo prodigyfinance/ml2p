@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Helper functions for the ml2p CLI. """
+"""Helper functions for the ml2p CLI."""
 
 import base64
 import datetime

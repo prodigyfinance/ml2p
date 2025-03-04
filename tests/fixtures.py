@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Pytest fixtures for tests. """
+"""Pytest fixtures for tests."""
 
 import datetime
 import json

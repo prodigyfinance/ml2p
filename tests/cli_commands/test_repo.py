@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.cli. """
+"""Tests for ml2p.cli."""
 
 import pytest
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.cli. """
+"""Tests for ml2p.cli."""
 
 import json
 
@@ -47,6 +47,7 @@ class TestEndpoint:
                 {
                     "EndpointName": "my-models-endpoint-0-1-12",
                     "EndpointArn": "arn:aws:sagemaker:us-east-1:123456789012:endpoint/my-models-endpoint-0-1-12",
+                    "my-models-endpoint-0-1-12",
                     "CreationTime": "2019-01-31 12:00:02",
                     "LastModifiedTime": "2019-01-31 12:00:02",
                     "EndpointStatus": "InService",

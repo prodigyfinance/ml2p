@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Tests for ml2p.hyperparameters. """
+"""Tests for ml2p.hyperparameters."""
 
 import pytest
 

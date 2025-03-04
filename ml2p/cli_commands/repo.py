@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" CLI commands for interating with repositories. """
+"""CLI commands for interating with repositories."""
 
 import click
 
