@@ -2,6 +2,8 @@ project: "modelling-project"
 s3folder: "s3://prodigyfinance-modelling-project-sagemaker-production/"
 models:
   model-type-1:
+    model-defaults:
+      cls: "my.pkg.module.model"
     model-0-0-1:
       training_job: "model-0-0-1"
       image_tag: "0.0.1"

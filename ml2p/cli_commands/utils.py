@@ -74,7 +74,13 @@ def mk_training_job(prj, training_job, dataset, model_type=None):
     train_path = prj.s3.url("/datasets/" + dataset)
     extra_env = {}
     if model_type is not None:
-        extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
+        model_config = prj.models[model_type]
+        if isinstance(model_config, dict):
+            extra_env["ML2P_MODEL_CLS"] = model_config.pop("model-defaults", {}).get(
+                "cls"
+            )
+        elif isinstance(model_config, str):
+            extra_env["ML2P_MODEL_CLS"] = model_config
     extra_training_params = {}
     vpc_config = mk_vpc_config(prj.train)
     if vpc_config is not None:
@@ -122,7 +128,13 @@ def mk_model(prj, model_name, training_job, model_type=None):
     )
     extra_env = {}
     if model_type is not None:
-        extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
+        model_config = prj.models[model_type]
+        if isinstance(model_config, dict):
+            extra_env["ML2P_MODEL_CLS"] = model_config.pop("model-defaults", {}).get(
+                "cls"
+            )
+        elif isinstance(model_config, str):
+            extra_env["ML2P_MODEL_CLS"] = model_config
     if prj.deploy.get("record_invokes", False):
         extra_env["ML2P_RECORD_INVOKES"] = "true"
     extra_model_params = {}
@@ -341,7 +353,13 @@ def mk_processing_job(prj, dataset, model_type=None):
     """Return processing job creation parameters."""
     extra_env = {}
     if model_type is not None:
-        extra_env["ML2P_MODEL_CLS"] = prj.models[model_type]
+        model_config = prj.models[model_type]
+        if isinstance(model_config, dict):
+            extra_env["ML2P_MODEL_CLS"] = model_config.pop("model-defaults", {}).get(
+                "cls"
+            )
+        elif isinstance(model_config, str):
+            extra_env["ML2P_MODEL_CLS"] = model_config
     extra_network_params = {}
     vpc_config = mk_vpc_config(prj.dataset)
     if vpc_config is not None:
