@@ -1,6 +1,11 @@
 History
 =======
 
+0.5.0 (2023-10-02)
+------------------
+
+* Bugfix for multi-container configs not being able to generate datasets or training jobs.
+
 0.4.0 (2023-10-02)
 ------------------
 
