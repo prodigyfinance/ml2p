@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-"""ML2P exceptions."""
+"""ML2P exceptions without relying on Flask-API."""
 
-from flask_api.exceptions import APIException
+from werkzeug.exceptions import HTTPException
 
 
 class NamingError(Exception):
@@ -19,41 +19,49 @@ class LocalEnvError(Exception):
     """Raised when an error specific to working with a local environment occurs."""
 
 
-class APIError(APIException):
+class APIError(HTTPException):
     """Raised when an error occurs in the ML2P prediction API.
 
     :param str message:
         An error message.
-    :type details:
-        None, str or list of str
     :param details:
-        Details of the errors that occurred.
-    :type status_code:
-        None or int
+        None, str or list of str
     :param status_code:
         The HTTP status code associated with the exception.
-        Defaults to the `status_code` attribute of the
-        exception class, which is 500 for this base exception class.
+        Defaults to 500.
     """
 
-    status_code = 500
+    code = 500
 
     def __init__(self, message, details=None, status_code=None):
+        # Initialize HTTPException with description
+        super().__init__(description=message)
         if details is None:
             details = []
         elif isinstance(details, str):
             details = [details]
-        if status_code is None:
-            status_code = self.__class__.status_code
-        self.message = message
         self.details = details
-        self.status_code = status_code
+        if status_code is not None:
+            self.code = status_code
+        self.message = message
+
+    @property
+    def status_code(self):
+        return self.code
+
+    def get_body(self, environ=None):  # noqa: unused-argument
+        # Response body as JSON-like dict
+        return {"message": self.message, "details": self.details}
+
+    def get_headers(self, environ=None):  # noqa: unused-argument
+        # Ensure JSON content type
+        return [("Content-Type", "application/json")]
 
 
 class ServerError(APIError):
     """Raised when the HTTP server fails while trying to process a request."""
 
-    status_code = 500
+    code = 500
 
 
 class ClientError(APIError):
@@ -61,4 +69,4 @@ class ClientError(APIError):
     invalid inputs.
     """
 
-    status_code = 400
+    code = 400
