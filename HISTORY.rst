@@ -1,6 +1,10 @@
 History
 =======
 
+0.6.0 (2025-05-12)
+------------------
+* Remove support for Flask-API which is deprecated.
+
 0.5.0 (2023-10-02)
 ------------------
 
