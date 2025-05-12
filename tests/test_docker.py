@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-"""Tests for ml2p.docker."""
+"""Tests for ml2p.docker with Flask and Werkzeug HTTPException."""
 
 import atexit
 import collections
@@ -9,22 +8,21 @@ import re
 
 import pytest
 from click.testing import CliRunner
-from flask_api.exceptions import APIException
 
 import ml2p.docker
 from ml2p import __version__ as ml2p_version
 from ml2p.core import Model, ModelDatasetGenerator, ModelPredictor, ModelTrainer
 from ml2p.docker import ml2p_docker
-from ml2p.errors import ClientError, ServerError
+from ml2p.errors import APIError, ClientError, ServerError
 
 
 def assert_cli_result(result, output, exit_code=0, exception=None, starts_with=False):
-    """Assert that a CliRunner invocation returned the expected results."""
     assert result.exit_code == exit_code
+    lines = result.output.splitlines()
     if starts_with:
-        assert result.output.splitlines()[: len(output)] == output
+        assert lines[: len(output)] == output
     else:
-        assert result.output.splitlines() == output
+        assert lines == output
     if exception is not None:
         assert type(result.exception) is type(exception)
         assert str(result.exception) == str(exception)
@@ -121,7 +119,7 @@ class HappyModelPredictor(ModelPredictor):
         if "server_error" in data:
             raise ServerError("server", data["server_error"])
         if "flask_api_error" in data:
-            raise APIException(data["flask_api_error"])
+            raise APIError(data["flask_api_error"])
         if "generic_error" in data:
             raise Exception(data["generic_error"])
         return {"probability": 0.5, "input": data["input"]}
@@ -410,7 +408,7 @@ class TestAPI:
         )
         assert response.status_code == 500
         assert response.content_type == "application/json"
-        assert response.get_json() == {"message": "message eep"}
+        assert response.get_json() == {"details": [], "message": "message eep"}
 
     def test_invocation_with_client_error(self, api_client, fake_utcnow):
         response = api_client.post("/invocations", json={"client_error": "bad param"})

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-
 """ML2P SageMaker training and prediction server for use in SageMaker docker
-containers.
-"""
+containers, without Flask-API."""
 
 import atexit
 import collections
@@ -10,29 +8,27 @@ import traceback
 from functools import update_wrapper
 
 import click
-from flask import request
-from flask_api import FlaskAPI
+from flask import Flask, jsonify, request
+from werkzeug.exceptions import HTTPException
 
 from . import __version__ as ml2p_version
 from .core import SageMakerEnv, import_string
 from .errors import APIError
 
 
-class ML2PAPI(FlaskAPI):
-    """Improved error handling for ML2P API."""
+class ML2PAPI(Flask):
+    """Improved error handling for ML2P API using Flask and Werkzeug."""
 
-    def __init__(self, *args, **kw):
-        super(ML2PAPI, self).__init__(*args, **kw)
-        # FlaskAPI requires error_handler_spec to have a key for None (i.e. undefined
-        # error) but does not set it itself, so we do so here:
-        self.error_handler_spec.setdefault(None, {})
-
-    def handle_api_exception(self, exc):
-        if not isinstance(exc, APIError):
-            return super(ML2PAPI, self).handle_api_exception(exc)
-        # Enhanced error support for errors raised by the ML2P API:
-        content = {"message": exc.message, "details": exc.details}
-        return self.response_class(content, status=exc.status_code)
+    def handle_user_exception(self, exc):
+        # Handle our APIError with JSON response
+        if isinstance(exc, APIError):
+            return jsonify(message=exc.message, details=exc.details), exc.status_code
+        # Handle generic HTTP exceptions (including those from werkzeug)
+        if isinstance(exc, HTTPException):
+            # Use description for message
+            return jsonify(message=exc.description), exc.code
+        # Default Flask behavior for other exceptions
+        return super().handle_user_exception(exc)
 
 
 app = ML2PAPI(__name__)
@@ -40,10 +36,10 @@ app = ML2PAPI(__name__)
 
 @app.route("/invocations", methods=["POST"])
 def invocations():
-    if "instances" in request.data:
-        response = app.predictor.batch_invoke(request.data["instances"])
+    if "instances" in request.get_json(force=True):
+        response = app.predictor.batch_invoke(request.get_json(force=True)["instances"])
     else:
-        response = app.predictor.invoke(request.data)
+        response = app.predictor.invoke(request.get_json(force=True))
     return response
 
 

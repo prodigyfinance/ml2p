@@ -3,9 +3,8 @@ from setuptools import find_packages, setup
 requirements = [
     "boto3",
     "click",
-    "Flask<2.3",
-    "werkzeug<3",
-    "Flask-API",
+    "Flask",
+    "werkzeug",
     "PyYAML",
 ]
 
