@@ -19,7 +19,7 @@ from .errors import APIError
 class ML2PAPI(Flask):
     """Improved error handling for ML2P API using Flask and Werkzeug."""
 
-    def handle_user_exception(self, exc):  # noqa: F841
+    def handle_user_exception(self, exc):
         # Handle our APIError with JSON response
         if isinstance(exc, APIError):
             return jsonify(message=exc.message, details=exc.details), exc.status_code

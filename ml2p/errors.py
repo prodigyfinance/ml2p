@@ -49,11 +49,11 @@ class APIError(HTTPException):
     def status_code(self):
         return self.code
 
-    def get_body(self, environ=None):  # noqa: unused-argument
+    def get_body(self, environ=None):
         # Response body as JSON-like dict
         return {"message": self.message, "details": self.details}
 
-    def get_headers(self, environ=None):  # noqa: unused-argument
+    def get_headers(self, environ=None):
         # Ensure JSON content type
         return [("Content-Type", "application/json")]
 
