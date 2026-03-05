@@ -23,7 +23,7 @@ class TestNotebook:
         cfg["notebook"].update(
             **{
                 "repo_url": "https://example.com/repo-1234",
-                "repo_branch": "master",
+                "repo_branch": "main",
                 "repo_secret_arn": "arn:secret:1234",
             }
         )

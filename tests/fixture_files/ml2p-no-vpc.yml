@@ -13,5 +13,5 @@ notebook:
   instance_type: "ml.t2.medium"
   volume_size: 8
   repo_url: "https://github.example.com/modelling-project"
-  repo_branch: "master"
+  repo_branch: "main"
   repo_secret_arn: "arn:aws:secretsmanager:eu-west-1:111111111111:secret:sagemaker-github-authentication-fLJGfa"
