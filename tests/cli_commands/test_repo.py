@@ -11,7 +11,7 @@ class TestRepo:
             "CodeRepositoryName": "my-models-repo-1234",
             "GitConfig": {
                 "RepositoryUrl": "https://example.com/repo-1234",
-                "Branch": "master",
+                "Branch": "main",
                 "SecretArn": "arn:secret:repo-1234",
             },
         }
