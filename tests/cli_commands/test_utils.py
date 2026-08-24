@@ -4,15 +4,19 @@
 
 import base64
 import datetime
+from importlib.resources import files
 from unittest.mock import patch
 
 import click
 import pytest
-from pkg_resources import resource_filename
 
 from ml2p.cli import ModellingProject
 from ml2p.cli_commands import utils
 from ml2p.errors import ConfigError, NamingError
+
+
+def resource_filename(package, resource):
+    return str(files(package) / resource)
 
 
 @pytest.fixture

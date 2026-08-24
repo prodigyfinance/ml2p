@@ -68,6 +68,10 @@ def invoke_and_check_command(
 
 def assert_traceback(tb, expected):
     """Assert that a traceback matches a given pattern."""
+    # Strip PEP 657 error location markers (e.g. "    ~~~~^^").
+    tb = "\n".join(
+        line for line in tb.splitlines() if not re.fullmatch(r"[ \t]*[~^]+[ \t]*", line)
+    )
     pattern = re.escape(expected)
     pattern = pattern.replace(r"\.\.\.", '[^"]*')
     pattern = pattern.replace(r"XX", "[0-9]+")

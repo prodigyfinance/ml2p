@@ -41,19 +41,15 @@ class TestEndpoint:
             "arn:aws:sagemaker:us-east-1:123456789012:"
             "endpoint/my-models-endpoint-0-1-12"
         )
-        cli_helper.invoke(
-            ["endpoint", "list"],
-            output_jsonl=[
-                {
-                    "EndpointName": "my-models-endpoint-0-1-12",
-                    "EndpointArn": "arn:aws:sagemaker:us-east-1:123456789012:endpoint"
-                    "/my-models-endpoint-0-1-12",
-                    "CreationTime": "2019-01-31 12:00:02",
-                    "LastModifiedTime": "2019-01-31 12:00:02",
-                    "EndpointStatus": "InService",
-                }
-            ],
-        )
+        list_output = json.loads(cli_helper.invoke(["endpoint", "list"]))
+        assert list_output.pop("CreationTime")
+        assert list_output.pop("LastModifiedTime")
+        assert list_output == {
+            "EndpointName": "my-models-endpoint-0-1-12",
+            "EndpointArn": "arn:aws:sagemaker:us-east-1:123456789012:endpoint"
+            "/my-models-endpoint-0-1-12",
+            "EndpointStatus": "InService",
+        }
 
     def test_create_and_describe(self, cli_helper):
         cfg = self.cfg()

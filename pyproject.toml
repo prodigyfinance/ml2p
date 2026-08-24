@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=83.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ml2p"
+version = "0.7.0"
+description = "A minimum-lovable machine-learning pipeline, built on top of AWS SageMaker."
+readme = "README.rst"
+requires-python = ">=3.13"
+license = "ISC"
+authors = [
+    {name = "Prodigy Finance", email = "devops@prodigyfinance.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Operating System :: POSIX",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "boto3",
+    "click",
+    "Flask",
+    "werkzeug",
+    "PyYAML",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "bumpversion",
+    "coverage",
+    "flake8",
+    "isort",
+    "pytest",
+    "pytest-cov",
+    "radon[flake8]",
+    "tox",
+    "moto",
+]
+
+[project.scripts]
+ml2p = "ml2p.cli:ml2p"
+ml2p-docker = "ml2p.docker:ml2p_docker"
+
+[project.urls]
+Homepage = "http://github.com/prodigyfinance/ml2p"
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["ml2p*"]

@@ -1,6 +1,13 @@
 History
 =======
 
+0.7.0 (2026-08-21)
+------------------
+* Drop Python 3.8/3.9 support; test only against Python 3.13.
+* Migrate ``setup.py`` to ``pyproject.toml`` and pin ``setuptools>=83.0.0``.
+* Replace ``pkg_resources.resource_filename`` with ``importlib.resources``
+  in the test suite.
+
 0.6.0 (2025-05-12)
 ------------------
 * Remove support for Flask-API which is deprecated.

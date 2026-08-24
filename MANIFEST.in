@@ -5,6 +5,7 @@ include Dockerfile
 include HISTORY.rst
 include Jenkinsfile
 include Makefile
+include pyproject.toml
 include README.rst
 include requirements-dev.txt
 include requirements.txt
